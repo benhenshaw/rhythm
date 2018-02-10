@@ -20,6 +20,9 @@ Above this layer, I will have a simple, relatively (but not militantly) modular 
     - Mixer
     - Synthesiser
     - Sequencer
++ Input
+    - Buttom mapping
+    - Timing
 + Scene
     - Loads assets
     - Swaps out frame and input callbacks
