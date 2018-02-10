@@ -1,9 +1,7 @@
 # Final Project
-BSc Games Programming
-
-Year 3, 2017 - 2018
-
-Benedict Henshaw
+BSc Games Programming</br>
+Year 3, 2017 - 2018</br>
+Benedict Henshaw</br>
 
 ## Overview
 > Competitive local multi-player one-button rhythm game.
