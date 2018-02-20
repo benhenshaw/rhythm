@@ -133,3 +133,38 @@ void draw_animated_image_frames_and_wait(Animated_Image animated_image, int star
     };
     draw_image(frame, x, y);
 }
+
+typedef struct {
+    u32 * pixels;
+    int char_width;
+    int char_height;
+} Font;
+
+void draw_text(Font font, int x, int y, char * text, ...) {
+#define TEXT_MAX 64
+    char formatted_text[TEXT_MAX];
+    va_list args;
+    va_start(args, text);
+    int char_count = vsnprintf(formatted_text, TEXT_MAX, text, args);
+    char_count = min(char_count, TEXT_MAX);
+    va_end(args);
+    // 95 is the number of drawable characters including the single space.
+    int total_width = 95 * font.char_width;
+    int x_offset = 0;
+    for (int c = 0; c < char_count; ++c) {
+        int text_start_x = font.char_width * (formatted_text[c] - ' ');
+        int max_x = min(x + font.char_width, WIDTH);
+        int max_y = min(y + font.char_height, HEIGHT);
+        for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy) {
+            for (int sx = x, ix = text_start_x; sx < max_x; ++sx, ++ix) {
+                // TODO: Checks done by set pixel can be moved outside the loop.
+                // TODO: Find out why font is rendering red, and remove this ?: hack.
+                u32 p = font.pixels[ix + iy * total_width] ? ~0 : 0;
+                if (get_alpha(p) != 0) {
+                    set_pixel(sx + x_offset, sy, p);
+                }
+            }
+        }
+        x_offset += font.char_width;
+    }
+}

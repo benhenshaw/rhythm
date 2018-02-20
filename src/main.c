@@ -46,7 +46,15 @@ int main(int argument_count, char ** arguments) {
         animated_image.pixels = temp.pixels;
     }
 
+    Image font_image = load_pam(PERSIST_POOL, "../assets/font.pam");
+    Font font = {
+        .pixels = font_image.pixels,
+        .char_width  = 6,
+        .char_height = 12,
+    };
+
     bool pump = false;
+    int presses = 0;
 
     while (true) {
         SDL_Event event;
@@ -56,9 +64,13 @@ int main(int argument_count, char ** arguments) {
                 exit(0);
             } else if (event.type == SDL_KEYDOWN) {
                 if (!event.key.repeat) {
-                    pump = !pump;
+                    pump = true;
                     animated_image.start_time_ms = SDL_GetTicks();
                 }
+            } else if (event.type == SDL_KEYUP) {
+                pump = false;
+                animated_image.start_time_ms = SDL_GetTicks();
+                ++presses;
             }
         }
 
@@ -70,7 +82,7 @@ int main(int argument_count, char ** arguments) {
             draw_animated_image_frames_and_wait(animated_image, 0, 2, 0, 0);
         }
 
-        draw_image(font_image, 0, 0);
+        draw_text(font, 10, 10, "Pumps: %d", presses);
 
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * sizeof(pixels[0]));
