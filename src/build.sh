@@ -3,7 +3,7 @@
 # Uncomment the line for your platform.
 
 # Common flags.
-FLAGS="main.c -o rhythm -Wall"
+FLAGS="main.c -o rhythm -Wall -O2"
 
 # macOS (clang)
 clang $FLAGS -framework SDL2
