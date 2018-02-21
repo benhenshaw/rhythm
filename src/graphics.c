@@ -1,3 +1,14 @@
+//
+// graphics.c
+//
+// This file contains:
+//     - Pixel manipulation utilities
+//     - Graphical primitive rendering.
+//     - Bitmap rendering.
+//     - Animated bitmap handling and rendering.
+//     - Bitmap font rendering.
+//
+
 #define WIDTH 320
 #define HEIGHT 200
 

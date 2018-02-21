@@ -1,3 +1,11 @@
+//
+// scene.c
+//
+// This file contains:
+//     - Scene handling
+//     - Scene definitions (e.g. the mini-games)
+//
+
 typedef void (* Audio_Func)(void * state, float * samples, int sample_count);
 typedef void (* Frame_Func)(void * state);
 typedef void (* Start_Func)(void * state);
@@ -25,53 +33,6 @@ void set_scene(Scene scene) {
 
     current_scene.start(current_scene.state);
 }
-
-
-//
-// Menu scene;
-//
-
-typedef struct {
-    Font font;
-} Menu_State;
-
-Menu_State menu_state;
-
-void menu_audio(void * state, float * samples, int sample_count) {
-
-}
-
-void menu_frame(void * state) {
-    Menu_State * s = state;
-
-    clear(rgba(200, 100, 100, 255));
-    draw_text(s->font, 20, 75,  rgba(200, 200, 200, 255), "Rhythm Game");
-    draw_text(s->font, 20, 94,  rgba(200, 200, 200, 255), "PLAY");
-    draw_text(s->font, 20, 106, rgba(200, 200, 200, 255), "QUIT");
-}
-
-void menu_start(void * state) {
-    Menu_State * s = state;
-
-    Image font_image = load_pam(SCENE_POOL, "../assets/font.pam");
-    s->font = (Font){
-        .pixels = font_image.pixels,
-        .char_width  = 6,
-        .char_height = 12,
-    };
-}
-
-void menu_input(void * state, int player, bool pressed) {
-
-}
-
-Scene menu_scene = {
-    .audio = menu_audio,
-    .frame = menu_frame,
-    .start = menu_start,
-    .input = menu_input,
-    .state = &menu_state,
-};
 
 
 
@@ -173,4 +134,54 @@ Scene heart_scene = {
     .start = heart_start,
     .input = heart_input,
     .state = &heart_state,
+};
+
+
+
+//
+// Menu scene.
+//
+
+typedef struct {
+    Font font;
+} Menu_State;
+
+Menu_State menu_state;
+
+void menu_audio(void * state, float * samples, int sample_count) {
+
+}
+
+void menu_frame(void * state) {
+    Menu_State * s = state;
+
+    clear(rgba(200, 100, 100, 255));
+    draw_text(s->font, 20, 75,  rgba(200, 200, 200, 255), "Rhythm Game");
+    draw_text(s->font, 20, 94,  rgba(200, 200, 200, 255), "PLAY");
+    draw_text(s->font, 20, 106, rgba(200, 200, 200, 255), "QUIT");
+}
+
+void menu_start(void * state) {
+    Menu_State * s = state;
+
+    Image font_image = load_pam(SCENE_POOL, "../assets/font.pam");
+    s->font = (Font){
+        .pixels = font_image.pixels,
+        .char_width  = 6,
+        .char_height = 12,
+    };
+}
+
+void menu_input(void * state, int player, bool pressed) {
+    if (pressed) {
+        set_scene(heart_scene);
+    }
+}
+
+Scene menu_scene = {
+    .audio = menu_audio,
+    .frame = menu_frame,
+    .start = menu_start,
+    .input = menu_input,
+    .state = &menu_state,
 };

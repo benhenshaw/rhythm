@@ -1,3 +1,11 @@
+//
+// assets.c
+//
+// This file contains:
+//     - Image loader.
+//     - Image writer.
+//
+
 // Reads a .pam image file.
 // Only allows RGBA format.
 Image load_pam(int pool_index, char * file_name) {

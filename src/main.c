@@ -1,3 +1,12 @@
+//
+// main.c
+//
+// This file contains:
+//     - Program entry point
+//     - Initialisation for graphics and audio.
+//     - Frame loop.
+//
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_stdinc.h>
 #include <sys/mman.h>
