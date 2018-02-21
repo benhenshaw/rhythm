@@ -116,6 +116,7 @@ void pool_unalloc(int pool_index) {
 void flush_pool(int pool_index) {
     // TODO: Should flushed memory be zeroed?
     memory_pools[pool_index].bytes_filled = 0;
+    memory_pools[pool_index].byte_count_of_last_alloc = 0;
 }
 
 // Returns true if the pointer points to memory inside the given pool.

@@ -41,7 +41,7 @@ typedef void (*Basic_Function)(void);
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) > (b)) ? (a) : (b))
-#define clamp(low, value, high) max(low, (min(val, high)))
+#define clamp(low, value, high) max(low, (min(value, high)))
 
 
 

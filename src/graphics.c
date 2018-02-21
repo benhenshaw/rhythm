@@ -140,7 +140,7 @@ typedef struct {
     int char_height;
 } Font;
 
-void draw_text(Font font, int x, int y, char * text, ...) {
+void draw_text(Font font, int x, int y, u32 colour, char * text, ...) {
 #define TEXT_MAX 64
     char formatted_text[TEXT_MAX];
     va_list args;
@@ -159,9 +159,8 @@ void draw_text(Font font, int x, int y, char * text, ...) {
             for (int sx = x, ix = text_start_x; sx < max_x; ++sx, ++ix) {
                 // TODO: Checks done by set pixel can be moved outside the loop.
                 // TODO: Find out why font is rendering red, and remove this ?: hack.
-                u32 p = font.pixels[ix + iy * total_width] ? ~0 : 0;
-                if (get_alpha(p) != 0) {
-                    set_pixel(sx + x_offset, sy, p);
+                if (font.pixels[ix + iy * total_width]) {
+                    set_pixel(sx + x_offset, sy, colour);
                 }
             }
         }

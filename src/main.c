@@ -9,6 +9,7 @@
 #include "memory.c"
 #include "graphics.c"
 #include "assets.c"
+#include "scene.c"
 
 int main(int argument_count, char ** arguments) {
     setbuf(stdout, 0);
@@ -19,7 +20,7 @@ int main(int argument_count, char ** arguments) {
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE);
+        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
 
     SDL_SetWindowMinimumSize(window, WIDTH, HEIGHT);
 
@@ -27,34 +28,12 @@ int main(int argument_count, char ** arguments) {
         SDL_RENDERER_PRESENTVSYNC);
 
     SDL_Texture * screen_texture = SDL_CreateTexture(renderer,
-        SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+        SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
         WIDTH, HEIGHT);
 
     pixels = pool_alloc(PERSIST_POOL, WIDTH * HEIGHT * sizeof(u32));
 
-    Animated_Image animated_image = {
-        .width = 320,
-        .height = 200,
-        .frame_count = 7,
-        .frame_duration_ms = 30,
-        .start_time_ms = SDL_GetTicks(),
-    };
-
-    {
-        Image temp = load_pam(PERSIST_POOL, "../assets/heart.pam");
-        SDL_assert(temp.pixels);
-        animated_image.pixels = temp.pixels;
-    }
-
-    Image font_image = load_pam(PERSIST_POOL, "../assets/font.pam");
-    Font font = {
-        .pixels = font_image.pixels,
-        .char_width  = 6,
-        .char_height = 12,
-    };
-
-    bool pump = false;
-    int presses = 0;
+    set_scene(heart_scene);
 
     while (true) {
         SDL_Event event;
@@ -62,27 +41,27 @@ int main(int argument_count, char ** arguments) {
             if (event.type == SDL_QUIT) {
                 print_memory_stats();
                 exit(0);
-            } else if (event.type == SDL_KEYDOWN) {
+            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 if (!event.key.repeat) {
-                    pump = true;
-                    animated_image.start_time_ms = SDL_GetTicks();
+                    SDL_Scancode sc = event.key.keysym.scancode;
+                    if (sc == SDL_SCANCODE_LSHIFT) {
+                        current_scene.input(current_scene.state, 0, event.key.state);
+                    } else if (sc == SDL_SCANCODE_RSHIFT) {
+                        current_scene.input(current_scene.state, 1, event.key.state);
+                    }
+
+                    // DEBUG
+
+                    else if (sc == SDL_SCANCODE_1) {
+                        set_scene(menu_scene);
+                    } else if (sc == SDL_SCANCODE_2) {
+                        set_scene(heart_scene);
+                    }
                 }
-            } else if (event.type == SDL_KEYUP) {
-                pump = false;
-                animated_image.start_time_ms = SDL_GetTicks();
-                ++presses;
             }
         }
 
-        clear(0);
-
-        if (pump) {
-            draw_animated_image_frames_and_wait(animated_image, 3, 5, 0, 0);
-        } else {
-            draw_animated_image_frames_and_wait(animated_image, 0, 2, 0, 0);
-        }
-
-        draw_text(font, 10, 10, "Pumps: %d", presses);
+        current_scene.frame(current_scene.state);
 
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * sizeof(pixels[0]));
