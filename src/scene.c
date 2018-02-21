@@ -1,4 +1,4 @@
-typedef void (* Audio_Func)(void * state);
+typedef void (* Audio_Func)(void * state, float * samples, int sample_count);
 typedef void (* Frame_Func)(void * state);
 typedef void (* Start_Func)(void * state);
 typedef void (* Input_Func)(void * state, int player, bool pressed);
@@ -37,9 +37,18 @@ typedef struct {
 
 Menu_State menu_state;
 
-void menu_audio(void * state) {}
+void menu_audio(void * state, float * samples, int sample_count) {
 
-void menu_frame(void * state) {}
+}
+
+void menu_frame(void * state) {
+    Menu_State * s = state;
+
+    clear(rgba(200, 100, 100, 255));
+    draw_text(s->font, 20, 75,  rgba(200, 200, 200, 255), "Rhythm Game");
+    draw_text(s->font, 20, 94,  rgba(200, 200, 200, 255), "PLAY");
+    draw_text(s->font, 20, 106, rgba(200, 200, 200, 255), "QUIT");
+}
 
 void menu_start(void * state) {
     Menu_State * s = state;
@@ -50,12 +59,8 @@ void menu_start(void * state) {
         .char_width  = 6,
         .char_height = 12,
     };
-
-    clear(rgba(200, 100, 100, 255));
-    draw_text(s->font, 20, 75, rgba(200, 200, 200, 255), "Rhythm Game");
-    draw_text(s->font, 20, 94, rgba(200, 200, 200, 255), "PLAY");
-    draw_text(s->font, 20, 106, rgba(200, 200, 200, 255), "QUIT");
 }
+
 void menu_input(void * state, int player, bool pressed) {
 
 }
@@ -84,8 +89,10 @@ typedef struct {
 
 Heart_State heart_state;
 
-void heart_audio(void * state) {
-
+void heart_audio(void * state, float * samples, int sample_count) {
+    for (int i = 0; i < sample_count; ++i) {
+        samples[i] = random_f32_range(-0.03f, 0.03f);
+    }
 }
 
 void heart_frame(void * state) {

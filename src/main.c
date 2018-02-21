@@ -8,15 +8,29 @@
 #include "common.c"
 #include "memory.c"
 #include "graphics.c"
+#include "audio.c"
 #include "assets.c"
 #include "scene.c"
 
+void audio_callback(void * data, u8 * stream, int byte_count) {
+    f32 * samples = (f32 *)stream;
+    int sample_count = byte_count / sizeof(samples[0]);
+    set_memory(samples, byte_count, 0);
+    current_scene.audio(current_scene.state, samples, sample_count);
+}
+
 int main(int argument_count, char ** arguments) {
+    // TODO: Error handling for init.
+
     setbuf(stdout, 0);
 
     init_memory_pools(megabytes(64), megabytes(32), megabytes(8));
 
     SDL_Init(SDL_INIT_EVERYTHING);
+
+    //
+    // Init graphics.
+    //
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -32,6 +46,28 @@ int main(int argument_count, char ** arguments) {
         WIDTH, HEIGHT);
 
     pixels = pool_alloc(PERSIST_POOL, WIDTH * HEIGHT * sizeof(u32));
+
+    SDL_ShowCursor(false);
+
+    //
+    // Init audio.
+    //
+
+    SDL_AudioSpec audio_output_spec = {
+        .freq = 48000,
+        .format = AUDIO_F32,
+        .channels = 2,
+        .callback = audio_callback,
+    };
+
+    SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, false,
+        &audio_output_spec, NULL, 0);
+
+    SDL_PauseAudioDevice(audio_device, false);
+
+    //
+    // Start the game.
+    //
 
     set_scene(heart_scene);
 
@@ -50,8 +86,7 @@ int main(int argument_count, char ** arguments) {
                         current_scene.input(current_scene.state, 1, event.key.state);
                     }
 
-                    // DEBUG
-
+                    // DEBUG scene switching.
                     else if (sc == SDL_SCANCODE_1) {
                         set_scene(menu_scene);
                     } else if (sc == SDL_SCANCODE_2) {
