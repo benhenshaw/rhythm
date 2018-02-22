@@ -51,15 +51,20 @@ typedef struct {
 Heart_State heart_state;
 
 void heart_audio(void * state, float * samples, int sample_count) {
-    for (int i = 0; i < sample_count; ++i) {
-        samples[i] = random_f32_range(-0.03f, 0.03f);
+    Heart_State * s = state;
+    static float phase = 0.0f;
+    if (s->pumping) {
+        for (int i = 0; i < sample_count; ++i) {
+            samples[i] = sinf(phase) * 0.1f;
+            phase += 0.02;
+        }
     }
 }
 
 void heart_frame(void * state) {
     Heart_State * s = state;
 
-    clear(0);
+    clear(rgba(80, 30, 30, 255));
 
     if (s->pumping) {
         draw_animated_image_frames_and_wait(s->heart, 3, 5, 0, 0);
@@ -69,12 +74,17 @@ void heart_frame(void * state) {
 
     draw_text(s->font, 10, 10, ~0, "Pumps: %4d", s->pump_count);
 
-    float pumps_per_minute = (float)s->pump_count / ((SDL_GetTicks() - s->start_ms) * 0.00001f);
+    float minutes_since_start = ((SDL_GetTicks() - s->start_ms) * 0.00001f);
+    float pumps_per_minute = (float)s->pump_count / minutes_since_start;
 
     float distance_from_target = fabs(pumps_per_minute - 90.0) / 20.0;
     distance_from_target = clamp(0.0f, distance_from_target, 1.0f);
 
-    u32 colour = rgba(255.0f * distance_from_target, 100, 100, 255);
+    u32 colour = rgba(
+        55 + 200.0f * distance_from_target,
+        100 + 80 * (1.0f - distance_from_target),
+        100,
+        255);
 
     draw_text(s->font, 10, 22, colour, "BPM: %6.1f", pumps_per_minute);
 }
@@ -90,7 +100,7 @@ void heart_start(void * state) {
         .width = 320,
         .height = 200,
         .frame_count = 7,
-        .frame_duration_ms = 30,
+        .frame_duration_ms = 20,
         .start_time_ms = SDL_GetTicks(),
     };
 

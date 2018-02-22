@@ -9,7 +9,6 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_stdinc.h>
-#include <sys/mman.h>
 
 #define POOL_STATIC_ALLOCATE
 #define POOL_STATIC_PERSIST_BYTE_COUNT (64 * 1000 * 1000)
@@ -20,13 +19,6 @@
 #include "audio.c"
 #include "assets.c"
 #include "scene.c"
-
-void audio_callback(void * data, u8 * stream, int byte_count) {
-    f32 * samples = (f32 *)stream;
-    int sample_count = byte_count / sizeof(samples[0]);
-    set_memory(samples, byte_count, 0);
-    current_scene.audio(current_scene.state, samples, sample_count);
-}
 
 int main(int argument_count, char ** arguments) {
     // TODO: Error handling for init.
@@ -48,7 +40,7 @@ int main(int argument_count, char ** arguments) {
     SDL_SetWindowMinimumSize(window, WIDTH, HEIGHT);
 
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_PRESENTVSYNC);
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     SDL_Texture * screen_texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
@@ -62,11 +54,16 @@ int main(int argument_count, char ** arguments) {
     // Init audio.
     //
 
+    int audio_sample_count = (48000 / 60) * 2;
+    // int audio_sample_count = 100;
+    f32 * audio_samples = pool_alloc(PERSIST_POOL,
+        audio_sample_count * sizeof(f32));
+
     SDL_AudioSpec audio_output_spec = {
         .freq = 48000,
         .format = AUDIO_F32,
         .channels = 2,
-        .callback = audio_callback,
+        .samples = 1,
     };
 
     SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, false,
@@ -75,12 +72,34 @@ int main(int argument_count, char ** arguments) {
     SDL_PauseAudioDevice(audio_device, false);
 
     //
+    // Set up the timers.
+    //
+
+    u64 previous_counter_ticks = SDL_GetPerformanceCounter();
+    f32 counter_ticks_per_second = SDL_GetPerformanceFrequency();
+
+    //
+    // Debug.
+    //
+
+    Image font_image = load_pam(PERSIST_POOL, "../assets/font.pam");
+    Font debug_font = {
+        .pixels = font_image.pixels,
+        .char_width  = 6,
+        .char_height = 12,
+    };
+
+    //
     // Start the game.
     //
 
     set_scene(heart_scene);
 
     while (true) {
+        f32 delta_time = (SDL_GetPerformanceCounter() - previous_counter_ticks)
+                            / counter_ticks_per_second;
+        previous_counter_ticks = SDL_GetPerformanceCounter();
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -105,7 +124,14 @@ int main(int argument_count, char ** arguments) {
             }
         }
 
+        set_memory(audio_samples, audio_sample_count * sizeof(f32), 0);
+        current_scene.audio(current_scene.state, audio_samples, audio_sample_count);
+        SDL_QueueAudio(audio_device, audio_samples, audio_sample_count * sizeof(f32));
+
         current_scene.frame(current_scene.state);
+
+        draw_text(debug_font, 250, 160, ~0, "FPS: %.0f", ceilf(1.0f / delta_time));
+        draw_text(debug_font, 250, 172, ~0, "BUF: %d", SDL_GetQueuedAudioSize(audio_device) / sizeof(f32) / 2);
 
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * sizeof(pixels[0]));
