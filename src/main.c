@@ -130,8 +130,9 @@ int main(int argument_count, char ** arguments) {
 
         current_scene.frame(current_scene.state);
 
-        draw_text(debug_font, 250, 160, ~0, "FPS: %.0f", ceilf(1.0f / delta_time));
-        draw_text(debug_font, 250, 172, ~0, "BUF: %d", SDL_GetQueuedAudioSize(audio_device) / sizeof(f32) / 2);
+        draw_text(debug_font, 250, 160, ~0, "FPS: %.0f", 1.0f / delta_time);
+        draw_text(debug_font, 250, 172, ~0, "BUF: %d",
+            SDL_GetQueuedAudioSize(audio_device) / sizeof(f32) / 2);
 
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * sizeof(pixels[0]));
