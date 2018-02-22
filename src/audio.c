@@ -6,6 +6,11 @@
 //
 
 typedef struct {
+    f32 * samples;
+    int sample_count;
+} Sound;
+
+typedef struct {
     float * samples;    // The audio data itself.
     int sample_count;   // Number of samples in the data.
     int sample_index;   // Index of the last sample written.

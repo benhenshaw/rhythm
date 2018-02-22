@@ -15,3 +15,6 @@ clang $FLAGS -framework SDL2
 if [[ $? -eq 0 ]]; then
     ./rhythm
 fi
+
+# Build the sound converter
+cc sound_converter.c -o af32c -Wall -Wextra -O2
