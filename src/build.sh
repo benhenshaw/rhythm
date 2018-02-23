@@ -3,7 +3,7 @@
 # Uncomment the line for your platform.
 
 # Common flags.
-FLAGS="main.c -o rhythm -Wall -O2"
+FLAGS="main.c -o rhythm -Wall"
 
 # macOS (clang)
 clang $FLAGS -framework SDL2
@@ -17,4 +17,4 @@ if [[ $? -eq 0 ]]; then
 fi
 
 # Build the sound converter
-cc sound_converter.c -o af32c -Wall -Wextra -O2
+cc sound_converter.c -o sc -Wall -Wextra -O2

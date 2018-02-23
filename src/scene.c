@@ -46,6 +46,7 @@ typedef struct {
     int start_ms;
     Animated_Image heart;
     Font font;
+    Sound sound;
 } Heart_State;
 
 Heart_State heart_state;
@@ -67,9 +68,9 @@ void heart_frame(void * state) {
     clear(rgba(80, 30, 30, 255));
 
     if (s->pumping) {
-        draw_animated_image_frames_and_wait(s->heart, 3, 5, 0, 0);
+        draw_animated_image_frames_and_wait(s->heart, 3, 6, 0, 0);
     } else {
-        draw_animated_image_frames_and_wait(s->heart, 0, 2, 0, 0);
+        draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 0);
     }
 
     draw_text(s->font, 10, 10, ~0, "Pumps: %4d", s->pump_count);
@@ -100,7 +101,7 @@ void heart_start(void * state) {
         .width = 320,
         .height = 200,
         .frame_count = 7,
-        .frame_duration_ms = 20,
+        .frame_duration_ms = 30,
         .start_time_ms = SDL_GetTicks(),
     };
 
@@ -117,6 +118,18 @@ void heart_start(void * state) {
         .char_width  = 6,
         .char_height = 12,
     };
+
+    // TODO: Use custom sound file loader!
+    {
+        SDL_AudioSpec spec = {};
+        u8 * samples = 0;
+        u32 byte_count = 0;
+        SDL_LoadWAV("../assets/woodblock.wav", &spec, &samples, &byte_count);
+        SDL_assert(samples);
+        s->sound.samples = (f32 * )samples;
+        s->sound.sample_count = byte_count / sizeof(f32);
+    }
+
 }
 
 void heart_input(void * state, int player, bool pressed) {
@@ -127,12 +140,19 @@ void heart_input(void * state, int player, bool pressed) {
             if (!s->pumping) {
                 s->pumping = true;
                 s->heart.start_time_ms = SDL_GetTicks();
+                SDL_LockAudioDevice(audio_device);
+                play_sound(&mixer, s->sound, 1.0f, 0.0f, false);
+                SDL_UnlockAudioDevice(audio_device);
             }
         } else if (player == 1) {
             if (s->pumping) {
                 s->pumping = false;
                 s->heart.start_time_ms = SDL_GetTicks();
                 ++s->pump_count;
+                SDL_LockAudioDevice(audio_device);
+                play_sound(&mixer, s->sound, 0.0f, 1.0f, false);
+                SDL_UnlockAudioDevice(audio_device);
+                SDL_UnlockAudioDevice(audio_device);
             }
         }
     }
@@ -183,9 +203,6 @@ void menu_start(void * state) {
 }
 
 void menu_input(void * state, int player, bool pressed) {
-    if (pressed) {
-        set_scene(heart_scene);
-    }
 }
 
 Scene menu_scene = {

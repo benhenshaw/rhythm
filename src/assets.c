@@ -85,11 +85,11 @@ bool write_pam(Image image, char * file_name) {
     return byte_count == bytes_written;
 }
 
-Sound read_sound(int pool_index, char * file_name) {
+Sound load_sound(int pool_index, char * file_name) {
     Sound result = {};
 
     FILE * file = fopen(file_name, "r");
-    if (!file_name) return result;
+    if (!file) return result;
 
     fscanf(file, "%*[AUDIO_F32]\n");
 
@@ -100,7 +100,8 @@ Sound read_sound(int pool_index, char * file_name) {
 
     if (sample_count > 0) {
         f32 * samples = pool_alloc(pool_index, sample_count * sizeof(f32));
-        int samples_read = fread(result.samples, sizeof(f32), sample_count, file);
+        if (!samples) return result;
+        int samples_read = fread(samples, sizeof(f32), sample_count, file);
         fclose(file);
         if (samples_read == sample_count) {
             result.samples      = samples;
@@ -114,7 +115,7 @@ Sound read_sound(int pool_index, char * file_name) {
 bool write_sound(Sound sound, char * file_name) {
     FILE * file = fopen(file_name, "w");
     if (!file_name) return false;
-    fprintf(file, "AUDIO_F32\nSAMPLE_COUNT %d\nnENDHDR\n", sound.sample_count);
+    fprintf(file, "AUDIO_F32\nSAMPLE_COUNT %d\nENDHDR\n", sound.sample_count);
     int samples_written = fwrite(sound.samples, sizeof(f32), sound.sample_count, file);
     return samples_written == sound.sample_count;
 }

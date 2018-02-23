@@ -5,6 +5,8 @@
 //     - Audio Mixer.
 //
 
+u32 audio_device = 0;
+
 typedef struct {
     f32 * samples;
     int sample_count;
@@ -25,9 +27,11 @@ typedef struct {
     float gain;
 } Mixer;
 
+Mixer mixer;
+
 Mixer create_mixer(int channel_count, float gain) {
     Mixer mixer = {};
-    mixer.channels = calloc(channel_count, sizeof(Mixer_Channel));
+    mixer.channels = pool_alloc(PERSIST_POOL, channel_count * sizeof(Mixer_Channel));
     if (mixer.channels) {
         mixer.channel_count = channel_count;
         mixer.gain = gain;
@@ -36,7 +40,7 @@ Mixer create_mixer(int channel_count, float gain) {
 }
 
 void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
-    float * samples = (float *)stream;
+    float * samples = stream;
 
     for (int sample_index = 0; sample_index < samples_requested; ++sample_index) {
         samples[sample_index] = 0.0f;
@@ -74,11 +78,11 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
     }
 }
 
-int play_audio(Mixer * mixer, void * stream, int sample_count, float left_gain, float right_gain, int loop) {
+int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, int loop) {
     for (int i = 0; i < mixer->channel_count; ++i) {
         if (mixer->channels[i].samples == NULL) {
-            mixer->channels[i].samples      = stream;
-            mixer->channels[i].sample_count = sample_count;
+            mixer->channels[i].samples      = sound.samples;
+            mixer->channels[i].sample_count = sound.sample_count;
             mixer->channels[i].sample_index = 0;
             mixer->channels[i].left_gain    = left_gain;
             mixer->channels[i].right_gain   = right_gain;

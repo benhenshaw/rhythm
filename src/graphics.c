@@ -163,18 +163,20 @@ void draw_text(Font font, int x, int y, u32 colour, char * text, ...) {
     int total_width = 95 * font.char_width;
     int x_offset = 0;
     for (int c = 0; c < char_count; ++c) {
-        int text_start_x = font.char_width * (formatted_text[c] - ' ');
-        int max_x = min(x + font.char_width, WIDTH);
-        int max_y = min(y + font.char_height, HEIGHT);
-        for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy) {
-            for (int sx = x, ix = text_start_x; sx < max_x; ++sx, ++ix) {
-                // TODO: Checks done by set pixel can be moved outside the loop.
-                // TODO: Find out why font is rendering red, and remove this ?: hack.
-                if (font.pixels[ix + iy * total_width]) {
-                    set_pixel(sx + x_offset, sy, colour);
+        if (formatted_text[c] >= ' ' && formatted_text[c] <= '~') {
+            int text_start_x = font.char_width * (formatted_text[c] - ' ');
+            int max_x = min(x + font.char_width, WIDTH);
+            int max_y = min(y + font.char_height, HEIGHT);
+            for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy) {
+                for (int sx = x, ix = text_start_x; sx < max_x; ++sx, ++ix) {
+                    // TODO: Checks done by set pixel can be moved outside the loop.
+                    // TODO: Find out why font is rendering red, and remove this hack.
+                    if (font.pixels[ix + iy * total_width]) {
+                        set_pixel(sx + x_offset, sy, colour);
+                    }
                 }
             }
+            x_offset += font.char_width;
         }
-        x_offset += font.char_width;
     }
 }

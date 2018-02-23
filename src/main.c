@@ -20,6 +20,13 @@
 #include "assets.c"
 #include "scene.c"
 
+void audio_callback(void * data, u8 * stream, int byte_count) {
+    Mixer * mixer = data;
+    f32 * samples = (f32 * )stream;
+    int sample_count = byte_count / sizeof(f32);
+    mix_audio(mixer, samples, sample_count);
+}
+
 int main(int argument_count, char ** arguments) {
     // TODO: Error handling for init.
 
@@ -54,19 +61,18 @@ int main(int argument_count, char ** arguments) {
     // Init audio.
     //
 
-    int audio_sample_count = (48000 / 60) * 2;
-    // int audio_sample_count = 100;
-    f32 * audio_samples = pool_alloc(PERSIST_POOL,
-        audio_sample_count * sizeof(f32));
+    mixer = create_mixer(64, 1.0);
 
     SDL_AudioSpec audio_output_spec = {
         .freq = 48000,
         .format = AUDIO_F32,
         .channels = 2,
-        .samples = 1,
+        .samples = 64,
+        .callback = audio_callback,
+        .userdata = &mixer,
     };
 
-    SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, false,
+    audio_device = SDL_OpenAudioDevice(NULL, false,
         &audio_output_spec, NULL, 0);
 
     SDL_PauseAudioDevice(audio_device, false);
@@ -124,15 +130,9 @@ int main(int argument_count, char ** arguments) {
             }
         }
 
-        set_memory(audio_samples, audio_sample_count * sizeof(f32), 0);
-        current_scene.audio(current_scene.state, audio_samples, audio_sample_count);
-        SDL_QueueAudio(audio_device, audio_samples, audio_sample_count * sizeof(f32));
-
         current_scene.frame(current_scene.state);
 
-        draw_text(debug_font, 250, 160, ~0, "FPS: %.0f", 1.0f / delta_time);
-        draw_text(debug_font, 250, 172, ~0, "BUF: %d",
-            SDL_GetQueuedAudioSize(audio_device) / sizeof(f32) / 2);
+        draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * sizeof(pixels[0]));
