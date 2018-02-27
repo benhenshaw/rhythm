@@ -7,7 +7,7 @@
 //
 
 typedef void (* Audio_Func)(void * state, float * samples, int sample_count);
-typedef void (* Frame_Func)(void * state);
+typedef void (* Frame_Func)(void * state, float delta_time);
 typedef void (* Start_Func)(void * state);
 typedef void (* Input_Func)(void * state, int player, bool pressed);
 
@@ -20,6 +20,8 @@ typedef struct {
 } Scene;
 
 Scene current_scene;
+extern Scene heart_scene;
+extern Scene menu_scene;
 
 void set_scene(Scene scene) {
     // Clear scene and frame memory pools.
@@ -41,12 +43,19 @@ void set_scene(Scene scene) {
 //
 
 typedef struct {
+    bool complete;
     bool pumping;
     int pump_count;
     int start_ms;
+    int previous_beat_time_ms;
+    int most_recent_beat_time_ms;
+    int press_index;
+    float beats_per_minute;
+    float score;
     Animated_Image heart;
     Font font;
     Sound sound;
+    Sound yay;
 } Heart_State;
 
 Heart_State heart_state;
@@ -62,7 +71,7 @@ void heart_audio(void * state, float * samples, int sample_count) {
     }
 }
 
-void heart_frame(void * state) {
+void heart_frame(void * state, float delta_time) {
     Heart_State * s = state;
 
     clear(rgba(80, 30, 30, 255));
@@ -73,21 +82,55 @@ void heart_frame(void * state) {
         draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 0);
     }
 
-    draw_text(s->font, 10, 10, ~0, "Pumps: %4d", s->pump_count);
+    float bmp_target = 90.0f;
+    float allowance = 30.0f;
+    float distance_from_target = fabs(s->beats_per_minute - bmp_target);
+    float error = clamp(0.0f, distance_from_target / allowance, 1.0f);
 
-    float minutes_since_start = ((SDL_GetTicks() - s->start_ms) * 0.00001f);
-    float pumps_per_minute = (float)s->pump_count / minutes_since_start;
+    if (distance_from_target < allowance) {
+        s->score += delta_time;
+    } else {
+        s->score = 0;
+    }
 
-    float distance_from_target = fabs(pumps_per_minute - 90.0) / 20.0;
-    distance_from_target = clamp(0.0f, distance_from_target, 1.0f);
+    if (s->score > 5) {
+        s->complete = true;
+    }
 
-    u32 colour = rgba(
-        55 + 200.0f * distance_from_target,
-        100 + 80 * (1.0f - distance_from_target),
-        100,
-        255);
+    if (!s->complete) {
+        if (s->beats_per_minute > 1.0f) s->beats_per_minute *= 0.99f;
 
-    draw_text(s->font, 10, 22, colour, "BPM: %6.1f", pumps_per_minute);
+        int delta = s->most_recent_beat_time_ms - s->previous_beat_time_ms;
+        int since = SDL_GetTicks() - s->most_recent_beat_time_ms;
+        if (delta && since < 500) {
+            float target = 60000.0f / delta;
+            s->beats_per_minute += (target - s->beats_per_minute) * 0.1f;
+        }
+
+        u32 colour = rgba(
+            55 + 200.0f * error,
+            100 + 80 * (1.0f - error),
+            100,
+            255);
+
+        draw_text(s->font, 10, 10, colour, "BPM: %3.1f", s->beats_per_minute);
+
+        int y = s->beats_per_minute;
+        draw_line(0, y, WIDTH, y, ~0);
+        draw_line(0, bmp_target - allowance,
+                  WIDTH, bmp_target - allowance,
+                  rgba(100, 150, 100, 255));
+        draw_line(0, bmp_target, WIDTH, bmp_target,
+                  rgba(100, 255, 100, 255));
+        draw_line(0, bmp_target + allowance,
+                  WIDTH, bmp_target + allowance,
+                  rgba(100, 150, 100, 255));
+
+        draw_text(s->font, 10, 22, ~0, "Score: %1.0f", s->score);
+    } else {
+        play_sound(&mixer, s->yay, 0.5f, 0.5f, false);
+        set_scene(menu_scene);
+    }
 }
 
 void heart_start(void * state) {
@@ -96,6 +139,9 @@ void heart_start(void * state) {
     s->pumping = false;
     s->pump_count = 0;
     s->start_ms = SDL_GetTicks();
+    s->most_recent_beat_time_ms = 1;
+    s->previous_beat_time_ms = 1;
+    s->score = 0.0f;
 
     s->heart = (Animated_Image){
         .width = 320,
@@ -130,6 +176,15 @@ void heart_start(void * state) {
         s->sound.sample_count = byte_count / sizeof(f32);
     }
 
+    {
+        SDL_AudioSpec spec = {};
+        u8 * samples = 0;
+        u32 byte_count = 0;
+        SDL_LoadWAV("../assets/yay.wav", &spec, &samples, &byte_count);
+        SDL_assert(samples);
+        s->yay.samples = (f32 * )samples;
+        s->yay.sample_count = byte_count / sizeof(f32);
+    }
 }
 
 void heart_input(void * state, int player, bool pressed) {
@@ -147,8 +202,10 @@ void heart_input(void * state, int player, bool pressed) {
         } else if (player == 1) {
             if (s->pumping) {
                 s->pumping = false;
-                s->heart.start_time_ms = SDL_GetTicks();
-                ++s->pump_count;
+                int t = SDL_GetTicks();
+                s->heart.start_time_ms = t;
+                s->previous_beat_time_ms = s->most_recent_beat_time_ms;
+                s->most_recent_beat_time_ms = t;
                 SDL_LockAudioDevice(audio_device);
                 play_sound(&mixer, s->sound, 0.0f, 1.0f, false);
                 SDL_UnlockAudioDevice(audio_device);
@@ -182,7 +239,7 @@ void menu_audio(void * state, float * samples, int sample_count) {
 
 }
 
-void menu_frame(void * state) {
+void menu_frame(void * state, float delta_time) {
     Menu_State * s = state;
 
     clear(rgba(200, 100, 100, 255));
