@@ -3,6 +3,7 @@
 //
 // This file contains:
 //     - Primitive type definitions.
+//     - Pseudo-random number generator and utilities.
 //     - Error reporting functions.
 //
 
@@ -27,23 +28,14 @@ typedef _Bool bool;
 #define true 1
 #define false 0
 
-typedef void (*Basic_Function)(void);
-
-#define BIT(n) (1llu << (n))
-
-// Most significant bit for some types.
-#define MSB8 BIT(7)
-#define MSB16 BIT(15)
-#define MSB32 BIT(31)
-#define MSB64 BIT(63)
+//
+// Common utility functions.
+//
 
 #define swap(a, b) { __typeof__(a) tmp = a; a = b; b = tmp; }
-
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define clamp(low, value, high) max(low, (min(value, high)))
-
-
 
 //
 // Pseudo-random number generator.
@@ -53,14 +45,19 @@ typedef void (*Basic_Function)(void);
 u64 random_seed[2] = { (u64)__DATE__, (u64)__TIME__ };
 
 u64 random_u64() {
+    // Get the next random number.
     u64 s0 = random_seed[0];
     u64 s1 = random_seed[1];
     u64 result = s0 + s1;
+
+    // Increment the generator.
     s1 ^= s0;
     #define LS(x, k) ((x << k) | (x >> (64 - k)))
     random_seed[0] = LS(s0, 55) ^ s1 ^ (s1 << 14);
     random_seed[1] = LS(s1, 36);
     #undef LS
+
+    // Return the number.
     return result;
 }
 
@@ -68,6 +65,8 @@ u64 random_u64() {
 void set_seed(u64 a, u64 b) {
     random_seed[0] = a;
     random_seed[1] = b;
+    // The first few iterations generate poor results,
+    // so run the generator a few times to avoid this.
     for (int i = 0; i < 64; ++i) random_u64();
 }
 
@@ -93,65 +92,8 @@ bool chance(f32 chance_to_be_true) {
     return random_f32() <= chance_to_be_true;
 }
 
-
-
 //
-// Common data types.
-//
-
-// Flexible array.
-// Modified version of STB stretchy buffer (which is public domain).
-#define flex_free(a)   ((a) ? free(flex__raw(a)),0 : 0)
-#define flex_push(a,v) (flex__maybegrow(a,1), (a)[flex__raw_count(a)++] = (v))
-#define flex_count(a)  ((a) ? flex__raw_count(a) : 0)
-#define flex_add(a,n)  (flex__maybegrow(a,n), flex__raw_count(a)+=(n), &(a)[flex__raw_count(a)-(n)])
-#define flex_last(a)   ((a)[flex__raw_count(a)-1])
-
-#define flex__raw(a) ((int *) (a) - 2)
-#define flex__raw_size(a) flex__raw(a)[0]
-#define flex__raw_count(a) flex__raw(a)[1]
-#define flex__needgrow(a,n) ((a) == 0 || flex__raw_count(a)+(n) >= flex__raw_size(a))
-#define flex__maybegrow(a,n) (flex__needgrow(a,(n)) ? flex__grow(a,n) : 0)
-#define flex__grow(a,n) (*((void **)&(a)) = flex__raw_grow((a), (n), sizeof(*(a))))
-
-static inline void * flex__raw_grow(void * flex_array, int increment, int item_size) {
-    int double_size = flex_array ? 2 * flex__raw_size(flex_array) : 0;
-    int min_needed  = flex_count(flex_array) + increment;
-    int size = double_size > min_needed ? double_size : min_needed;
-    int * new_head = realloc(flex_array ? flex__raw(flex_array) : 0, item_size * size + sizeof(int) * 2);
-    if (new_head) {
-        if (!flex_array) new_head[1] = 0;
-        new_head[0] = size;
-        return new_head + 2;
-    } else {
-        return (void *) (2 * sizeof(int));
-    }
-}
-
-// Bit manipulation functions for any size bit array.
-// Bit order is descending (0 is highest).
-bool get_bit(void * bit_array, u64 bit) {
-    u8 * ba8 = bit_array;
-    u64 bucket = bit / 8;
-    u64 offset = bit % 8;
-    return ba8[bucket] & (MSB8 >> offset);
-}
-
-void set_bit(void * bit_array, u64 bit, bool on) {
-    u8 * ba8 = bit_array;
-    u64 bucket = bit / 8;
-    u64 offset = bit % 8;
-    if (on) {
-        ba8[bucket] |= (MSB8 >> offset);
-    } else {
-        ba8[bucket] &= ~(MSB8 >> offset);
-    }
-}
-
-
-
-//
-// Error reporting / debug functions.
+// Error reporting.
 //
 
 // Print a message and exit the program.
@@ -178,7 +120,10 @@ void issue_warning(char * message, ...) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Warning!", buffer, NULL);
 }
 
-// Generic type printer.
+//
+// Generic type printer. (Requires C11)
+//
+
 #define GFMT(x) _Generic((x),           \
     bool:                     "%d\n",   \
     char:                     "%c\n",   \
