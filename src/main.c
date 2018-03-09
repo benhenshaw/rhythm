@@ -120,7 +120,7 @@ int main(int argument_count, char ** arguments) {
     // DEBUG:
     //
 
-    Image font_image = load_pam(PERSIST_POOL, "../assets/font.pam");
+    Image font_image = read_image_file(PERSIST_POOL, "../assets/font.pam");
     Font debug_font = {
         .pixels = font_image.pixels,
         .char_width  = 6,

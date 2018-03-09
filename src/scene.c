@@ -142,12 +142,12 @@ void heart_start(void * state) {
 
     // TODO: Should all assets be loaded at launch?
     {
-        Image temp = load_pam(SCENE_POOL, "../assets/heart.pam");
+        Image temp = read_image_file(SCENE_POOL, "../assets/heart.pam");
         SDL_assert(temp.pixels);
         s->heart.pixels = temp.pixels;
     }
 
-    Image font_image = load_pam(SCENE_POOL, "../assets/font.pam");
+    Image font_image = read_image_file(SCENE_POOL, "../assets/font.pam");
     s->font = (Font){
         .pixels = font_image.pixels,
         .char_width  = 6,
@@ -244,7 +244,7 @@ void menu_frame(void * state, float delta_time) {
 void menu_start(void * state) {
     Menu_State * s = state;
 
-    Image font_image = load_pam(SCENE_POOL, "../assets/font.pam");
+    Image font_image = read_image_file(SCENE_POOL, "../assets/font.pam");
     s->font = (Font){
         .pixels = font_image.pixels,
         .char_width  = 6,

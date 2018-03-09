@@ -4,118 +4,112 @@
 // This file contains:
 //     - Image loader.
 //     - Image writer.
+//     - Sound loader.
+//     - Sound writer.
 //
 
-// Reads a .pam image file.
-// Only allows RGBA format.
-Image load_pam(int pool_index, char * file_name) {
-    Image result = {};
+//
+// Image files.
+//
+// The Portable Arbitrary Map image file format is used. It is one of the simplest
+// image formats that allows the RGBA pixel format (notably the alpha channel). It
+// stores the pixels uncompressed, with a simple header.
+//
+// An example of the .pam header:
+// P7                     <-- Magic number.
+// WIDTH 256              <-- Image width (in pixels).
+// HEIGHT 256             <-- Image height (in pixels).
+// DEPTH 4                <-- Number of channels per pixel.
+// MAXVAL 255             <-- Highest value a channel can be.
+// TUPLTYPE RGB_ALPHA     <-- The pixel format. (Can also be grayscale, etc.)
+// ENDHDR                 <-- Marker for the end of the header.
+//
 
-    // Attempt to open the file.
-    FILE * file = fopen(file_name, "r");
-    if (!file) return result;
-
-    bool success = true;
-
-    // Header example:
-    // P7
-    // WIDTH 256
-    // HEIGHT 256
-    // DEPTH 4
-    // MAXVAL 255
-    // TUPLTYPE RGB_ALPHA
-    // ENDHDR
-
-    // Read the file header.
-    int type_number = 0;
-    fscanf(file, "P%d\n", &type_number);
-    success = type_number == 7;
-
-    int width = 0;
-    fscanf(file, "WIDTH %d\n", &width);
-    success = width > 0;
-
-    int height = 0;
-    fscanf(file, "HEIGHT %d\n", &height);
-    success = height > 0;
-
-    int depth = 0;
-    fscanf(file, "DEPTH %d\n", &depth);
-    success = depth == 4;
-
-    int max_val = 0;
-    fscanf(file, "MAXVAL %d\n", &max_val);
-    success = max_val == 255;
-
-    char type[16];
-    #define RGBA_TYPE "RGB_ALPHA"
-    fscanf(file, "TUPLTYPE %16s\n", type);
-    success = equal(type, RGBA_TYPE, sizeof(RGBA_TYPE));
-    #undef RGBA_TYPE
-
-    fscanf(file, "%*[ENDHDR]\n");
-
-    if (success) {
-        result.pixels = pool_alloc(pool_index, width * height * sizeof(u32));
-        int pixels_read = fread(result.pixels, sizeof(u32), width * height, file);
-        fclose(file);
-
-        // Swap endianness of pixels.
-        for (int pixel_index = 0; pixel_index < pixels_read; ++pixel_index) {
-            u32 p = result.pixels[pixel_index];
-            result.pixels[pixel_index] = rgba((p & 0x000000ff) >> 0,
-                                              (p & 0x0000ff00) >> 8,
-                                              (p & 0x00ff0000) >> 16,
-                                              (p & 0xff000000) >> 24);
-        }
-
-        result.width = width;
-        result.height = height;
+// Reverse the order of the channels of a four channel pixel.
+void bgra_to_rgba(u32 * pixels, int pixel_count) {
+    for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index) {
+        u32 p = pixels[pixel_index];
+        pixels[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
     }
-
-    return result;
 }
 
-bool write_pam(Image image, char * file_name) {
+// Load an RGBA format .pam file into an image.
+// Returns a zero'd Image if unsuccessful.
+Image read_image_file(int pool_index, char * file_name) {
+    FILE * file = fopen(file_name, "r");
+    if (!file_name) return (Image){};
+    int width = 0, height = 0;
+    fscanf(file, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", &width, &height);
+    if (width && height) {
+        int pixel_count = width * height;
+        u32 * pixels = pool_alloc(pool_index, width * height * sizeof(u32));
+        int pixels_read = fread(pixels, sizeof(u32), pixel_count, file);
+        fclose(file);
+        if (pixels_read == pixel_count) {
+            bgra_to_rgba(pixels, pixel_count);
+            return (Image){
+                .pixels = pixels,
+                .width = width,
+                .height = height
+            };
+        }
+    }
+    return (Image){};
+}
+
+// Writes an Image to a .pam file.
+// Returns true if the entire Image was successfully written.
+bool write_image_file(Image image, char * file_name) {
     FILE * file = fopen(file_name, "w");
     if (!file_name) return false;
     fprintf(file, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", image.width, image.height);
     int byte_count = image.width * image.height * sizeof(image.pixels[0]);
     int bytes_written = fwrite(image.pixels, 1, byte_count, file);
+    fclose(file);
     return byte_count == bytes_written;
 }
 
-Sound load_sound(int pool_index, char * file_name) {
-    Sound result = {};
+//
+// Audio files.
+//
+// A simple custom file format is used to store audio data. It is derived from
+// the .pam format described above.
+//
+// An example of the file header:
+// SND                    <-- Magic number.
+// SAMPLE_COUNT 48000     <-- The number of samples in the file.
+// ENDHDR                 <-- Marker for the end of the header.
+//
 
+// Reads a mono f32 format audio file.
+// Returns a zero'd Sound if unsuccessful.
+Sound read_sound_file(int pool_index, char * file_name) {
     FILE * file = fopen(file_name, "r");
-    if (!file) return result;
-
-    fscanf(file, "%*[AUDIO_F32]\n");
-
+    if (!file_name) return (Sound){};
     int sample_count = 0;
-    fscanf(file, "SAMPLE_COUNT %d\n", &sample_count);
-
-    fscanf(file, "%*[ENDHDR]\n");
-
-    if (sample_count > 0) {
+    fscanf(file, "SND\nSAMPLE_COUNT %d\nENDHDR\n", &sample_count);
+    if (sample_count) {
         f32 * samples = pool_alloc(pool_index, sample_count * sizeof(f32));
-        if (!samples) return result;
-        int samples_read = fread(samples, sizeof(f32), sample_count, file);
+        int samples_read = fread(pixels, sizeof(f32), sample_count, file);
         fclose(file);
         if (samples_read == sample_count) {
-            result.samples      = samples;
-            result.sample_count = sample_count;
+            return (Sound){
+                .samples = samples,
+                .sample_count = sample_count,
+            };
         }
     }
-
-    return result;
+    return (Sound){};
 }
 
-bool write_sound(Sound sound, char * file_name) {
+// Writes a sound into a file.
+// Returns true if the entire Sound was successfully written.
+bool write_sound_file(Sound sound, char * file_name) {
     FILE * file = fopen(file_name, "w");
     if (!file_name) return false;
-    fprintf(file, "AUDIO_F32\nSAMPLE_COUNT %d\nENDHDR\n", sound.sample_count);
-    int samples_written = fwrite(sound.samples, sizeof(f32), sound.sample_count, file);
-    return samples_written == sound.sample_count;
+    fprintf(file, "SND\nSAMPLE_COUNT %d\nENDHDR\n", sound.sample_count);
+    int byte_count = sound.sample_count * sizeof(sound.samples[0]);
+    int bytes_written = fwrite(sound.samples, 1, byte_count, file);
+    fclose(file);
+    return byte_count == bytes_written;
 }
