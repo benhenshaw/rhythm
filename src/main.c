@@ -90,7 +90,7 @@ int main(int argument_count, char ** arguments) {
     // Init audio.
     //
 
-    mixer = create_mixer(64, 1.0);
+    mixer = create_mixer(PERSIST_POOL, 64, 1.0);
 
     SDL_AudioSpec audio_output_spec = {
         .freq = 48000,
