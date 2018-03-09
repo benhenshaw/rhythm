@@ -66,7 +66,8 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
         samples[sample_index] = 0.0f;
     }
 
-    // All of the data from a channel into to buffer, the move on to the next channel.
+    // Mix all of the data from a channel into to buffer,
+    // then move on to the next channel.
     for (int channel_index = 0; channel_index < mixer->channel_count; ++channel_index) {
         Mixer_Channel * channel = &mixer->channels[channel_index];
         if (channel->samples && channel->playing) {
@@ -78,7 +79,7 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
                 float new_left  = channel->samples[channel->sample_index];
                 float new_right = channel->samples[channel->sample_index];
 
-                // Multiply by the left and right channel gains.
+                // Apply the left and right channel gains.
                 new_left  *= channel->left_gain;
                 new_left  *= mixer->gain;
                 new_right *= channel->right_gain;
