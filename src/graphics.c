@@ -9,19 +9,25 @@
 //     - Bitmap font rendering.
 //
 
+// The fixed resolution of the internal pixel buffer.
 #define WIDTH 320
 #define HEIGHT 200
 
+// Points to the internal pixel buffer.
 u32 * pixels;
 
+// Pack an RGBA pixel from its components.
 static inline u32 rgba(u8 r, u8 g, u8 b, u8 a) {
     return (r << 24u) | (g << 16u) | (b << 8u) | a;
 }
 
-static inline u32 get_alpha(u32 colour) {
-    return (colour & 0x000000ff);
-}
+// Access individual components of an RGBA pixel.
+static inline u32 get_red(u32 colour)   { return (colour & 0xff000000) >> 24; }
+static inline u32 get_blue(u32 colour)  { return (colour & 0x00ff0000) >> 16; }
+static inline u32 get_green(u32 colour) { return (colour & 0x0000ff00) >> 8; }
+static inline u32 get_alpha(u32 colour) { return (colour & 0x000000ff) >> 0; }
 
+// Set every pixel of the internal buffer to a colour.
 void clear(u32 colour) {
     for (int y = 0; y < HEIGHT; ++y) {
         for (int x = 0; x < WIDTH; ++x) {
@@ -55,19 +61,25 @@ void draw_line(int ax, int ay, int bx, int by, u32 colour) {
     }
 }
 
+//
+// Image.
+//
+// An Image is just a rectangular chunk of pixels with a width and height.
+//
+
 typedef struct {
     u32 * pixels;
     int width;
     int height;
 } Image;
 
-// Draw a bitmap image to the screen.
+// Draw a bitmap image to the internal buffer.
 void draw_image(Image image, int x, int y) {
     int max_x = min(x + image.width, WIDTH);
     int max_y = min(y + image.height, HEIGHT);
     for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy) {
         for (int sx = x, ix = 0; sx < max_x; ++sx, ++ix) {
-            // TODO: Checks done by set pixel can be moved outside the loop.
+            // TODO: Checks done by set_pixel can be moved outside the loop.
             u32 p = image.pixels[ix + iy * image.width];
             if (get_alpha(p) != 0) {
                 set_pixel(sx, sy, p);
@@ -76,8 +88,15 @@ void draw_image(Image image, int x, int y) {
     }
 }
 
-// An animated_image is made up of several frames of animation,
-// packed on top of each other.
+//
+// Animated Images.
+//
+// Animated images are an extension of normal images. They are a collection
+// of frames, stored vertically in the same image. Some simple timing is used
+// to determine which frame should be displayed, or individual frames can be
+// displayed manually.
+//
+
 typedef struct {
     u32 * pixels;
     int width;
@@ -87,8 +106,11 @@ typedef struct {
     int start_time_ms;
 } Animated_Image;
 
+// Draw an animated image to the internal buffer. This function expects that
+// the object passed in has appropriate numbers in each of its fields.
 void draw_animated_image(Animated_Image animated_image, int x, int y) {
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
+    if (animated_image.frame_duration_ms == 0) return;
     int frames_passed = time_passed / animated_image.frame_duration_ms;
     int current_frame = frames_passed % animated_image.frame_count;
     int pixels_per_frame = animated_image.width * animated_image.height;
@@ -101,6 +123,7 @@ void draw_animated_image(Animated_Image animated_image, int x, int y) {
     draw_image(frame, x, y);
 }
 
+// Draw a single frame of an animation to the internal buffer.
 void draw_animated_image_frame(Animated_Image animated_image, int animation_frame, int x, int y) {
     int pixels_per_frame = animated_image.width * animated_image.height;
     int pixel_offset_to_current_frame = pixels_per_frame * animation_frame;
@@ -112,6 +135,7 @@ void draw_animated_image_frame(Animated_Image animated_image, int animation_fram
     draw_image(frame, x, y);
 }
 
+// Draw a range of frames from the animation to the screen.
 void draw_animated_image_frames(Animated_Image animated_image, int start_frame, int end_frame, int x, int y) {
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
     int frames_passed = time_passed / animated_image.frame_duration_ms;
@@ -127,6 +151,7 @@ void draw_animated_image_frames(Animated_Image animated_image, int start_frame, 
     draw_image(frame, x, y);
 }
 
+// Same as above but don't loop, stop and display the final frame once it is complete.
 void draw_animated_image_frames_and_wait(Animated_Image animated_image, int start_frame, int end_frame, int x, int y) {
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
     int frames_passed = time_passed / animated_image.frame_duration_ms;
@@ -144,6 +169,14 @@ void draw_animated_image_frames_and_wait(Animated_Image animated_image, int star
     };
     draw_image(frame, x, y);
 }
+
+//
+// Text rendering.
+//
+// This text rendering system uses mono-space bitmap fonts. The font data is
+// loaded as an image with each drawable ASCII character in it, in ascending
+// order from left to right (starting with the ' ' character).
+//
 
 typedef struct {
     u32 * pixels;
@@ -169,7 +202,7 @@ void draw_text(Font font, int x, int y, u32 colour, char * text, ...) {
             int max_y = min(y + font.char_height, HEIGHT);
             for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy) {
                 for (int sx = x, ix = text_start_x; sx < max_x; ++sx, ++ix) {
-                    // TODO: Checks done by set pixel can be moved outside the loop.
+                    // TODO: Checks done by set_pixel can be moved outside the loop.
                     // TODO: Find out why font is rendering red, and remove this hack.
                     if (font.pixels[ix + iy * total_width]) {
                         set_pixel(sx + x_offset, sy, colour);
