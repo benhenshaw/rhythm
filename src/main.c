@@ -5,20 +5,29 @@
 //     - Program entry point
 //     - Initialisation for graphics and audio.
 //     - Frame loop.
+//     - Main audio callback.
 //
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_stdinc.h>
-
+// Compile time options for the memory allocator.
 #define POOL_STATIC_ALLOCATE
 #define POOL_STATIC_PERSIST_BYTE_COUNT (64 * 1000 * 1000)
 
+// External includes here:
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_stdinc.h>
+
+// The entire project is a single compilation unit.
+// Everything is included here:
 #include "common.c"
 #include "memory.c"
 #include "graphics.c"
 #include "audio.c"
 #include "assets.c"
 #include "scene.c"
+
+//
+// Main audio callback.
+//
 
 void audio_callback(void * data, u8 * stream, int byte_count) {
     Mixer * mixer = data;
@@ -27,9 +36,17 @@ void audio_callback(void * data, u8 * stream, int byte_count) {
     mix_audio(mixer, samples, sample_count);
 }
 
+//
+// Program entry point.
+//
+
 int main(int argument_count, char ** arguments) {
-    // DEBUG:
+    // DEBUG: Unbuffered logging.
     setbuf(stdout, 0);
+
+    //
+    // Initialisation.
+    //
 
     if (!init_memory_pools(megabytes(64), megabytes(32), megabytes(8))) {
         panic_exit("Could not initialise memory pools.");
@@ -100,7 +117,7 @@ int main(int argument_count, char ** arguments) {
     f32 counter_ticks_per_second = SDL_GetPerformanceFrequency();
 
     //
-    // Debug.
+    // DEBUG:
     //
 
     Image font_image = load_pam(PERSIST_POOL, "../assets/font.pam");
@@ -117,10 +134,12 @@ int main(int argument_count, char ** arguments) {
     set_scene(heart_scene);
 
     while (true) {
+        // Update timers.
         f32 delta_time = (SDL_GetPerformanceCounter() - previous_counter_ticks)
                             / counter_ticks_per_second;
         previous_counter_ticks = SDL_GetPerformanceCounter();
 
+        // Handle events since last frame.
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -135,7 +154,7 @@ int main(int argument_count, char ** arguments) {
                         current_scene.input(current_scene.state, 1, event.key.state);
                     }
 
-                    // DEBUG scene switching.
+                    // DEBUG: scene switching.
                     else if (sc == SDL_SCANCODE_1) {
                         set_scene(menu_scene);
                     } else if (sc == SDL_SCANCODE_2) {
@@ -145,10 +164,13 @@ int main(int argument_count, char ** arguments) {
             }
         }
 
+        // Render the scene.
         current_scene.frame(current_scene.state, delta_time);
 
+        // DEBUG:
         draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
 
+        // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * sizeof(pixels[0]));
         SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
