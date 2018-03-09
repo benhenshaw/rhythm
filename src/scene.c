@@ -6,41 +6,54 @@
 //     - Scene definitions (e.g. the mini-games)
 //
 
-typedef void (* Audio_Func)(void * state, float * samples, int sample_count);
+//
+// Scene.
+//
+// A scene is a set of functions and a struct of state variables that can be
+// swapped out at will. The start function is called when the seen is entered,
+// the frame function is called when the frame needs to be redrawn, and the
+// input function is called when a player presses a button.
+//
+
 typedef void (* Frame_Func)(void * state, float delta_time);
 typedef void (* Start_Func)(void * state);
 typedef void (* Input_Func)(void * state, int player, bool pressed);
 
 typedef struct {
-    Audio_Func audio;
-    Frame_Func frame;
     Start_Func start;
+    Frame_Func frame;
     Input_Func input;
     void * state;
 } Scene;
 
+// TODO: Where should the scenes live?
 Scene current_scene;
 extern Scene heart_scene;
 extern Scene menu_scene;
-extern Scene blank_scene;
 
-void set_scene(Scene scene) {
+// Change the current scene.
+// Will call the start function for that scene.
+// Returns true if successful.
+bool set_scene(Scene scene) {
     // Clear scene and frame memory pools.
     flush_pool(SCENE_POOL);
     flush_pool(FRAME_POOL);
-
     // Set function pointers.
-    if (scene.audio && scene.frame && scene.start && scene.input && scene.state) {
+    if (scene.start && scene.frame && scene.input && scene.state) {
         current_scene = scene;
+        // Call the start function for the new scene.
+        current_scene.start(current_scene.state);
+        return true;
     }
-
-    current_scene.start(current_scene.state);
+    return false;
 }
-
-
 
 //
 // Heart scene.
+//
+// In this scene, players will need to work together to get a heart pumping at
+// a resonable rate. One player controls expansion of the heart, while the other
+// controls contraction.
 //
 
 typedef struct {
@@ -61,66 +74,6 @@ typedef struct {
 } Heart_State;
 
 Heart_State heart_state;
-
-void heart_audio(void * state, float * samples, int sample_count) {
-    Heart_State * s = state;
-    static float phase = 0.0f;
-    if (s->pumping) {
-        for (int i = 0; i < sample_count; ++i) {
-            samples[i] = sinf(phase) * 0.1f;
-            phase += 0.02;
-        }
-    }
-}
-
-void heart_frame(void * state, float delta_time) {
-    Heart_State * s = state;
-
-    if (!s->complete) {
-        float bmp_target = 90.0f;
-        float allowance = 20.0f;
-        float distance_from_target = fabs(s->beats_per_minute - bmp_target);
-        float error = clamp(0.0f, distance_from_target / allowance, 1.0f);
-        clear(rgba(
-            clamp(0, error * 100, 255),
-            clamp(0, error * 30, 255),
-            clamp(0, error * 30, 255),
-            255));
-
-        if (s->pumping) {
-            draw_animated_image_frames_and_wait(s->heart, 3, 6, 0, 0);
-        } else {
-            draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 0);
-        }
-
-        if (distance_from_target < allowance) {
-            s->score += delta_time;
-        } else {
-            s->score = 0;
-        }
-
-        if (s->score > 5) {
-            s->complete = true;
-        }
-
-        if (s->beats_per_minute > 1.0f) s->beats_per_minute *= 0.99f;
-
-        int delta = s->most_recent_beat_time_ms - s->previous_beat_time_ms;
-        int since = SDL_GetTicks() - s->most_recent_beat_time_ms;
-        if (delta && since < 500) {
-            float target = 60000.0f / delta;
-            s->beats_per_minute += (target - s->beats_per_minute) * 0.1f;
-        }
-    } else {
-        SDL_LockAudioDevice(audio_device);
-        play_channel(&mixer, s->yay_channel);
-        SDL_UnlockAudioDevice(audio_device);
-
-        clear(rgba(80, 30, 30, 255));
-        s->heart.frame_duration_ms = 60;
-        draw_animated_image(s->heart, 0, 0);
-    }
-}
 
 void heart_start(void * state) {
     Heart_State * s = state;
@@ -180,6 +133,55 @@ void heart_start(void * state) {
     SDL_UnlockAudioDevice(audio_device);
 }
 
+void heart_frame(void * state, float delta_time) {
+    Heart_State * s = state;
+
+    if (!s->complete) {
+        float bmp_target = 90.0f;
+        float allowance = 20.0f;
+        float distance_from_target = fabs(s->beats_per_minute - bmp_target);
+        float error = clamp(0.0f, distance_from_target / allowance, 1.0f);
+        clear(rgba(
+            clamp(0, error * 100, 255),
+            clamp(0, error * 30, 255),
+            clamp(0, error * 30, 255),
+            255));
+
+        if (s->pumping) {
+            draw_animated_image_frames_and_wait(s->heart, 3, 6, 0, 0);
+        } else {
+            draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 0);
+        }
+
+        if (distance_from_target < allowance) {
+            s->score += delta_time;
+        } else {
+            s->score = 0;
+        }
+
+        if (s->score > 5) {
+            s->complete = true;
+        }
+
+        if (s->beats_per_minute > 1.0f) s->beats_per_minute *= 0.99f;
+
+        int delta = s->most_recent_beat_time_ms - s->previous_beat_time_ms;
+        int since = SDL_GetTicks() - s->most_recent_beat_time_ms;
+        if (delta && since < 500) {
+            float target = 60000.0f / delta;
+            s->beats_per_minute += (target - s->beats_per_minute) * 0.1f;
+        }
+    } else {
+        SDL_LockAudioDevice(audio_device);
+        play_channel(&mixer, s->yay_channel);
+        SDL_UnlockAudioDevice(audio_device);
+
+        clear(rgba(80, 30, 30, 255));
+        s->heart.frame_duration_ms = 60;
+        draw_animated_image(s->heart, 0, 0);
+    }
+}
+
 void heart_input(void * state, int player, bool pressed) {
     Heart_State * s = state;
 
@@ -209,14 +211,11 @@ void heart_input(void * state, int player, bool pressed) {
 }
 
 Scene heart_scene = {
-    .audio = heart_audio,
     .frame = heart_frame,
     .start = heart_start,
     .input = heart_input,
     .state = &heart_state,
 };
-
-
 
 //
 // Menu scene.
@@ -227,10 +226,6 @@ typedef struct {
 } Menu_State;
 
 Menu_State menu_state;
-
-void menu_audio(void * state, float * samples, int sample_count) {
-
-}
 
 void menu_frame(void * state, float delta_time) {
     Menu_State * s = state;
@@ -256,7 +251,6 @@ void menu_input(void * state, int player, bool pressed) {
 }
 
 Scene menu_scene = {
-    .audio = menu_audio,
     .frame = menu_frame,
     .start = menu_start,
     .input = menu_input,
