@@ -3,16 +3,10 @@
 //
 // This file contains:
 //     - Memory pool allocators.
-//     - Block allocators.
-//
-// TODO:
-//     - Reallocator.
-//     - Block allocator.
-//     - Thread safety?
 //
 
 //
-// General functions.
+// Genera memory related functions.
 //
 
 static inline u64 megabytes(u64 count) {
@@ -22,6 +16,7 @@ static inline u64 megabytes(u64 count) {
 // All memory allocations align to the platform's maximum primitive size.
 #define MAX_ALIGNMENT_BYTES (sizeof(max_align_t))
 
+// Round byte_count off to the next multiple of the desired alignment.
 static inline u64 align_byte_count(u64 byte_count) {
     byte_count += (MAX_ALIGNMENT_BYTES - 1);
     byte_count &= ~(MAX_ALIGNMENT_BYTES - 1);
@@ -58,8 +53,6 @@ bool equal(void * a, void * b, u64 byte_count) {
     while (byte_count && *(u8 *)a++ == *(u8 *)b++) --byte_count;
     return byte_count == 0;
 }
-
-
 
 //
 // Memory Pools.
@@ -125,6 +118,13 @@ bool was_allocated_by_pool(int pool_index, void * pointer) {
     return p >= low && p < high;
 }
 
+// Create an allocated copy of any memory.
+void * clone_memory(int pool_index, void * src, u64 byte_count) {
+    void * memory = pool_alloc(pool_index, byte_count);
+    if (memory) copy_memory(src, memory, byte_count);
+    return memory;
+}
+
 // Allocates the memory pools.
 // Returns false if the allocation did not succeed.
 // persist_byte_count is ignored if POOL_STATIC_ALLOCATE is defined.
@@ -137,9 +137,15 @@ bool init_memory_pools(u64 persist_byte_count, u64 scene_byte_count, u64 frame_b
     if (scene_byte_count + frame_byte_count > persist_byte_count) return false;
 
 #ifdef POOL_STATIC_ALLOCATE
-    static u8 * static_memory[POOL_STATIC_PERSIST_BYTE_COUNT];
+    // If the storage is not too large, it is totally safe to statically allocate
+    // this memory. 2GB is a reasonable maximum to assume.
+    // https://software.intel.com/en-us/articles/memory-limits-applications-windows
+    static u8 static_memory[POOL_STATIC_PERSIST_BYTE_COUNT];
     void * memory = static_memory;
 #else
+    // Allocate the memory.
+    // mmap is preferred to malloc as it will not maintain internal storage,
+    // all memory allocated by mmap will be under our control.
     void * memory = mmap(0,
         persist_byte_count,
         PROT_READ | PROT_WRITE,
@@ -166,65 +172,9 @@ bool init_memory_pools(u64 persist_byte_count, u64 scene_byte_count, u64 frame_b
     return true;
 }
 
-
-
 //
-// Block Allocator.
+// DEBUG:
 //
-// An allocator that hands out memory in blocks of a fixed size.
-// Useful for packing together objects of the same size.
-// Unlike pools, memory allocated by this allocator can be freed.
-//
-
-typedef struct {
-    u8 * memory;
-    // A bit array stating which block are free.
-    u64 * free_blocks;
-    // Size in bytes of one block of memory.
-    u64 block_size;
-    // Number of blocks of memory available to the allocator.
-    u64 block_count;
-} Block_Allocator;
-
-Block_Allocator create_block_allocator(int pool_index, u64 block_size, u64 block_count) {
-    Block_Allocator ba = {
-        .block_size = block_size,
-        .block_count = block_count
-    };
-
-    ba.memory = pool_alloc(pool_index, block_size * block_count);
-    u64 bit_array_bucket_count = block_count / 8;
-    ba.free_blocks = pool_alloc(pool_index, bit_array_bucket_count);
-
-    return ba;
-}
-
-void * block_alloc(Block_Allocator * ba, u64 byte_count) {
-    u64 block_count = byte_count / ba->block_count;
-    for (int block_index = 0; block_index < ba->block_count; ++block_index) {
-        int free_blocks_found = 0;
-        while (get_bit(ba->free_blocks, block_index + free_blocks_found)) {
-            if (free_blocks_found >= block_count) {
-                return ba->memory + (block_index * ba->block_size);
-            }
-            ++free_blocks_found;
-        }
-    }
-    return NULL;
-}
-
-
-
-//
-// Misc.
-//
-
-// Create an allocated copy of any memory.
-void * clone_memory(int pool_index, void * src, u64 byte_count) {
-    void * memory = pool_alloc(pool_index, byte_count);
-    if (memory) copy_memory(src, memory, byte_count);
-    return memory;
-}
 
 void print_memory_stats() {
     printf("Memory Pool Stats:\n");
