@@ -78,9 +78,9 @@ typedef struct {
 #define FRAME_POOL 2
 
 Memory_Pool memory_pools[] = {
-    [PERSIST_POOL] = { NULL, 0, 0 },
-    [SCENE_POOL]   = { NULL, 0, 0 },
-    [FRAME_POOL]   = { NULL, 0, 0 },
+    [PERSIST_POOL] = { NULL, 0, 0, 0 },
+    [SCENE_POOL]   = { NULL, 0, 0, 0 },
+    [FRAME_POOL]   = { NULL, 0, 0, 0 },
 };
 
 // Allocates a number of bytes from the given memory pool.
