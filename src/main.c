@@ -28,13 +28,16 @@ void audio_callback(void * data, u8 * stream, int byte_count) {
 }
 
 int main(int argument_count, char ** arguments) {
-    // TODO: Error handling for init.
-
+    // DEBUG:
     setbuf(stdout, 0);
 
-    init_memory_pools(megabytes(64), megabytes(32), megabytes(8));
+    if (!init_memory_pools(megabytes(64), megabytes(32), megabytes(8))) {
+        panic_exit("Could not initialise memory pools.");
+    }
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        panic_exit("Could not initialise SDL2.\n%s", SDL_GetError());
+    }
 
     //
     // Init graphics.
@@ -43,15 +46,24 @@ int main(int argument_count, char ** arguments) {
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
+    if (!window) {
+        panic_exit("Could not create a window.\n%s", SDL_GetError());
+    }
 
     SDL_SetWindowMinimumSize(window, WIDTH, HEIGHT);
 
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!renderer) {
+        panic_exit("Could not create a rendering context.\n%s", SDL_GetError());
+    }
 
     SDL_Texture * screen_texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
         WIDTH, HEIGHT);
+    if (!screen_texture) {
+        panic_exit("Could not create the screen texture.\n%s", SDL_GetError());
+    }
 
     pixels = pool_alloc(PERSIST_POOL, WIDTH * HEIGHT * sizeof(u32));
 
@@ -74,6 +86,9 @@ int main(int argument_count, char ** arguments) {
 
     audio_device = SDL_OpenAudioDevice(NULL, false,
         &audio_output_spec, NULL, 0);
+    if (!audio_device) {
+        panic_exit("Could not open the audio device.\n%s", SDL_GetError());
+    }
 
     SDL_PauseAudioDevice(audio_device, false);
 
