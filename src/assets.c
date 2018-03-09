@@ -26,14 +26,14 @@
 //
 
 // Reverse the order of the channels of a four channel pixel.
-void bgra_to_rgba(u32 * pixels, int pixel_count) {
+void abgr_to_rgba(u32 * pixels, int pixel_count) {
     for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index) {
         u32 p = pixels[pixel_index];
         pixels[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
     }
 }
 
-// Load an RGBA format .pam file into an image.
+// Load an RGBA format .pam file into an Image.
 // Returns a zero'd Image if unsuccessful.
 Image read_image_file(int pool_index, char * file_name) {
     FILE * file = fopen(file_name, "r");
@@ -46,7 +46,7 @@ Image read_image_file(int pool_index, char * file_name) {
         int pixels_read = fread(pixels, sizeof(u32), pixel_count, file);
         fclose(file);
         if (pixels_read == pixel_count) {
-            bgra_to_rgba(pixels, pixel_count);
+            abgr_to_rgba(pixels, pixel_count);
             return (Image){
                 .pixels = pixels,
                 .width = width,

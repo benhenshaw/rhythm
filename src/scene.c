@@ -2,15 +2,15 @@
 // scene.c
 //
 // This file contains:
-//     - Scene handling
-//     - Scene definitions (e.g. the mini-games)
+//     - Scene handling.
+//     - Scene definitions (e.g. the mini-games).
 //
 
 //
 // Scene.
 //
 // A scene is a set of functions and a struct of state variables that can be
-// swapped out at will. The start function is called when the seen is entered,
+// swapped out at will. The start function is called when the scene is entered,
 // the frame function is called when the frame needs to be redrawn, and the
 // input function is called when a player presses a button.
 //

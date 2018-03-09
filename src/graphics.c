@@ -2,7 +2,7 @@
 // graphics.c
 //
 // This file contains:
-//     - Pixel manipulation utilities
+//     - Pixel manipulation utilities.
 //     - Graphical primitive rendering.
 //     - Bitmap rendering.
 //     - Animated bitmap handling and rendering.
@@ -94,7 +94,7 @@ void draw_image(Image image, int x, int y) {
 // Animated images are an extension of normal images. They are a collection
 // of frames, stored vertically in the same image. Some simple timing is used
 // to determine which frame should be displayed, or individual frames can be
-// displayed manually.
+// displayed manually. By default, animations loop.
 //
 
 typedef struct {
@@ -135,7 +135,7 @@ void draw_animated_image_frame(Animated_Image animated_image, int animation_fram
     draw_image(frame, x, y);
 }
 
-// Draw a range of frames from the animation to the screen.
+// Draw a selected range of frames of animation, instead of all frames.
 void draw_animated_image_frames(Animated_Image animated_image, int start_frame, int end_frame, int x, int y) {
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
     int frames_passed = time_passed / animated_image.frame_duration_ms;

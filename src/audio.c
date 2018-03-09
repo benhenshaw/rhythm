@@ -33,7 +33,7 @@ typedef struct {
     float left_gain;    // How loud to play the sound in the left channel.
     float right_gain;   // Same for the right channel.
     bool loop;          // If the sound should repeat.
-    bool playing;       // If the sound is playing right now or not
+    bool playing;       // If the sound is playing right now or not.
 } Mixer_Channel;
 
 typedef struct {
@@ -57,7 +57,7 @@ Mixer create_mixer(int pool_index, int channel_count, float gain) {
 }
 
 // The main audio mixing function. This will likely be called on a separate thread,
-// so some care should be take when considering input and output.
+// so some care should be taken when considering input and output.
 void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
     float * samples = stream;
 
