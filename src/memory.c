@@ -3,10 +3,11 @@
 //
 // This file contains:
 //     - Memory pool allocators.
+//     - Memory utility functions.
 //
 
 //
-// Genera memory related functions.
+// General memory related functions.
 //
 
 static inline u64 megabytes(u64 count) {
@@ -143,7 +144,7 @@ bool init_memory_pools(u64 persist_byte_count, u64 scene_byte_count, u64 frame_b
     static u8 static_memory[POOL_STATIC_PERSIST_BYTE_COUNT];
     void * memory = static_memory;
 #else
-    // Allocate the memory.
+    // Allocate the memory at run time.
     // mmap is preferred to malloc as it will not maintain internal storage,
     // all memory allocated by mmap will be under our control.
     void * memory = mmap(0,
