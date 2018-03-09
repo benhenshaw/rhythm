@@ -35,13 +35,13 @@ void copy_memory(void * src, void * dest, u64 byte_count) {
         u64 * src64 = src;
         u64 * dest64 = dest;
         u64 count = byte_count / 8;
-        for (int i = 0; i < count; ++i) *dest64++ = *src64++;
+        for (u64 i = 0; i < count; ++i) *dest64++ = *src64++;
     } else if (byte_count & (~(u64)3)) {
         // Copy 4 bytes at a time.
         u32 * src32 = src;
         u32 * dest32 = dest;
         u64 count = byte_count / 4;
-        for (int i = 0; i < count; ++i) *dest32++ = *src32++;
+        for (u64 i = 0; i < count; ++i) *dest32++ = *src32++;
     } else {
         // Fall back to byte-by-byte copy.
         while (byte_count--) *(u8 *)dest++ = *(u8 *)src++;
