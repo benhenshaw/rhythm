@@ -22,7 +22,7 @@
 
 void audio_callback(void * data, u8 * stream, int byte_count) {
     Mixer * mixer = data;
-    f32 * samples = (f32 * )stream;
+    f32 * samples = (f32 *)stream;
     int sample_count = byte_count / sizeof(f32);
     mix_audio(mixer, samples, sample_count);
 }

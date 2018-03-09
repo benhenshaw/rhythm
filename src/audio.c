@@ -18,7 +18,8 @@ typedef struct {
     int sample_index;   // Index of the last sample written.
     float left_gain;    // How loud to play the sound in the left channel.
     float right_gain;   // Same for the right channel.
-    int loop;           // If the sound should repeat.
+    bool loop;          // If the sound should repeat.
+    bool playing;       // If the sound is playing right now or not
 } Mixer_Channel;
 
 typedef struct {
@@ -48,7 +49,7 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
 
     for (int channel_index = 0; channel_index < mixer->channel_count; ++channel_index) {
         Mixer_Channel * channel = &mixer->channels[channel_index];
-        if (channel->samples) {
+        if (channel->samples && channel->playing) {
             for (int sample_index = 0;
                  sample_index < samples_requested && channel->sample_index < channel->sample_count;
                  ++sample_index) {
@@ -87,8 +88,34 @@ int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, in
             mixer->channels[i].left_gain    = left_gain;
             mixer->channels[i].right_gain   = right_gain;
             mixer->channels[i].loop         = loop;
+            mixer->channels[i].playing      = true;
             return i;
         }
     }
     return -1;
+}
+
+int queue_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, int loop) {
+    for (int i = 0; i < mixer->channel_count; ++i) {
+        if (mixer->channels[i].samples == NULL) {
+            mixer->channels[i].samples      = sound.samples;
+            mixer->channels[i].sample_count = sound.sample_count;
+            mixer->channels[i].sample_index = 0;
+            mixer->channels[i].left_gain    = left_gain;
+            mixer->channels[i].right_gain   = right_gain;
+            mixer->channels[i].loop         = loop;
+            mixer->channels[i].playing      = false;
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool play_channel(Mixer * mixer, int channel_index) {
+    if (channel_index >= 0 && channel_index <= mixer->channel_count &&
+        mixer->channels[channel_index].samples) {
+        mixer->channels[channel_index].playing = true;
+        return true;
+    }
+    return false;
 }
