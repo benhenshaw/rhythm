@@ -35,3 +35,5 @@ Above this layer, I will have a simple, relatively (but not militantly) modular 
     - Primitive types
     - Maths
     - Anything else
+
+*Note (2018-02-10): I did not end up going with this idea in the end, but it was a interesting exercise.*
