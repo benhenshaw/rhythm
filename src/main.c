@@ -168,7 +168,7 @@ int main(int argument_count, char ** arguments) {
         current_scene.frame(current_scene.state, delta_time);
 
         // DEBUG:
-        // draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
+        draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);

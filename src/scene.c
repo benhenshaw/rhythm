@@ -128,9 +128,7 @@ void heart_start(void * state) {
         s->yay.sample_count = byte_count / sizeof(f32);
     }
 
-    SDL_LockAudioDevice(audio_device);
     s->yay_channel = queue_sound(&mixer, s->yay, 0.5f, 0.5f, false);
-    SDL_UnlockAudioDevice(audio_device);
 }
 
 void heart_frame(void * state, float delta_time) {
@@ -172,10 +170,7 @@ void heart_frame(void * state, float delta_time) {
             s->beats_per_minute += (target - s->beats_per_minute) * 0.1f;
         }
     } else {
-        SDL_LockAudioDevice(audio_device);
         play_channel(&mixer, s->yay_channel);
-        SDL_UnlockAudioDevice(audio_device);
-
         clear(rgba(80, 30, 30, 255));
         s->heart.frame_duration_ms = 60;
         draw_animated_image(s->heart, 0, 0);
@@ -190,10 +185,8 @@ void heart_input(void * state, int player, bool pressed) {
             if (!s->pumping) {
                 s->pumping = true;
                 s->heart.start_time_ms = SDL_GetTicks();
-                SDL_LockAudioDevice(audio_device);
-                play_sound(&mixer, s->sound, 1.0f, 0.0f, false);
-                SDL_UnlockAudioDevice(audio_device);
             }
+            play_sound(&mixer, s->sound, 1.0f, 0.0f, false);
         } else if (player == 1) {
             if (s->pumping) {
                 s->pumping = false;
@@ -201,11 +194,8 @@ void heart_input(void * state, int player, bool pressed) {
                 s->heart.start_time_ms = t;
                 s->previous_beat_time_ms = s->most_recent_beat_time_ms;
                 s->most_recent_beat_time_ms = t;
-                SDL_LockAudioDevice(audio_device);
-                play_sound(&mixer, s->sound, 0.0f, 1.0f, false);
-                SDL_UnlockAudioDevice(audio_device);
-                SDL_UnlockAudioDevice(audio_device);
             }
+            play_sound(&mixer, s->sound, 0.0f, 1.0f, false);
         }
     }
 }

@@ -120,6 +120,7 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
 int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, int loop) {
     for (int i = 0; i < mixer->channel_count; ++i) {
         if (mixer->channels[i].samples == NULL) {
+            SDL_LockAudioDevice(audio_device);
             mixer->channels[i].samples      = sound.samples;
             mixer->channels[i].sample_count = sound.sample_count;
             mixer->channels[i].sample_index = 0;
@@ -127,6 +128,7 @@ int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, in
             mixer->channels[i].right_gain   = right_gain;
             mixer->channels[i].loop         = loop;
             mixer->channels[i].playing      = true;
+            SDL_UnlockAudioDevice(audio_device);
             return i;
         }
     }
@@ -139,6 +141,7 @@ int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, in
 int queue_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, int loop) {
     for (int i = 0; i < mixer->channel_count; ++i) {
         if (mixer->channels[i].samples == NULL) {
+            SDL_LockAudioDevice(audio_device);
             mixer->channels[i].samples      = sound.samples;
             mixer->channels[i].sample_count = sound.sample_count;
             mixer->channels[i].sample_index = 0;
@@ -146,6 +149,7 @@ int queue_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, i
             mixer->channels[i].right_gain   = right_gain;
             mixer->channels[i].loop         = loop;
             mixer->channels[i].playing      = false;
+            SDL_UnlockAudioDevice(audio_device);
             return i;
         }
     }
@@ -157,7 +161,9 @@ int queue_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, i
 bool play_channel(Mixer * mixer, int channel_index) {
     if (channel_index >= 0 && channel_index <= mixer->channel_count &&
         mixer->channels[channel_index].samples) {
+        SDL_LockAudioDevice(audio_device);
         mixer->channels[channel_index].playing = true;
+        SDL_UnlockAudioDevice(audio_device);
         return true;
     }
     return false;
@@ -168,7 +174,9 @@ bool play_channel(Mixer * mixer, int channel_index) {
 bool pause_channel(Mixer * mixer, int channel_index) {
     if (channel_index >= 0 && channel_index <= mixer->channel_count &&
         mixer->channels[channel_index].samples) {
+        SDL_LockAudioDevice(audio_device);
         mixer->channels[channel_index].playing = false;
+        SDL_UnlockAudioDevice(audio_device);
         return true;
     }
     return false;
