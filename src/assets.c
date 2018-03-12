@@ -26,10 +26,10 @@
 //
 
 // Reverse the order of the channels of a four channel pixel.
-void abgr_to_rgba(u32 * pixels, int pixel_count) {
+void abgr_to_rgba(void * pixels, int pixel_count) {
     for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index) {
-        u32 p = pixels[pixel_index];
-        pixels[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
+        u32 p = ((u32 *)pixels)[pixel_index];
+        ((u32 *)pixels)[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
     }
 }
 
@@ -37,7 +37,7 @@ void abgr_to_rgba(u32 * pixels, int pixel_count) {
 // Returns a zero'd Image if unsuccessful.
 Image read_image_file(int pool_index, char * file_name) {
     FILE * file = fopen(file_name, "r");
-    if (!file_name) return (Image){};
+    if (!file) return (Image){};
     int width = 0, height = 0;
     fscanf(file, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", &width, &height);
     if (width && height) {
@@ -61,7 +61,7 @@ Image read_image_file(int pool_index, char * file_name) {
 // Returns true if the entire Image was successfully written.
 bool write_image_file(Image image, char * file_name) {
     FILE * file = fopen(file_name, "w");
-    if (!file_name) return false;
+    if (!file) return false;
     fprintf(file, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", image.width, image.height);
     int byte_count = image.width * image.height * sizeof(image.pixels[0]);
     int bytes_written = fwrite(image.pixels, 1, byte_count, file);
@@ -85,7 +85,7 @@ bool write_image_file(Image image, char * file_name) {
 // Returns a zero'd Sound if unsuccessful.
 Sound read_sound_file(int pool_index, char * file_name) {
     FILE * file = fopen(file_name, "r");
-    if (!file_name) return (Sound){};
+    if (!file) return (Sound){};
     int sample_count = 0;
     fscanf(file, "SND\nSAMPLE_COUNT %d\nENDHDR\n", &sample_count);
     if (sample_count) {
@@ -106,7 +106,7 @@ Sound read_sound_file(int pool_index, char * file_name) {
 // Returns true if the entire Sound was successfully written.
 bool write_sound_file(Sound sound, char * file_name) {
     FILE * file = fopen(file_name, "w");
-    if (!file_name) return false;
+    if (!file) return false;
     fprintf(file, "SND\nSAMPLE_COUNT %d\nENDHDR\n", sound.sample_count);
     int byte_count = sound.sample_count * sizeof(sound.samples[0]);
     int bytes_written = fwrite(sound.samples, 1, byte_count, file);
