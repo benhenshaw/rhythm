@@ -66,7 +66,7 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested) {
         samples[sample_index] = 0.0f;
     }
 
-    // Mix all of the data from a channel into to buffer,
+    // Mix all of the data from a channel into the buffer,
     // then move on to the next channel.
     for (int channel_index = 0; channel_index < mixer->channel_count; ++channel_index) {
         Mixer_Channel * channel = &mixer->channels[channel_index];
