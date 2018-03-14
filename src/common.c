@@ -44,7 +44,8 @@ typedef _Bool bool;
 
 u64 random_seed[2] = { (u64)__DATE__, (u64)__TIME__ };
 
-u64 random_u64() {
+u64 random_u64()
+{
     // Get the next random number.
     u64 s0 = random_seed[0];
     u64 s1 = random_seed[1];
@@ -62,7 +63,8 @@ u64 random_u64() {
 }
 
 // Set the seed for the pseudo-random number generator.
-void set_seed(u64 a, u64 b) {
+void set_seed(u64 a, u64 b)
+{
     random_seed[0] = a;
     random_seed[1] = b;
     // The first few iterations generate poor results,
@@ -71,24 +73,28 @@ void set_seed(u64 a, u64 b) {
 }
 
 // Get a random f32 between 0.0 and 1.0.
-f32 random_f32() {
+f32 random_f32()
+{
     return (f32)random_u64() / (f32)UINT64_MAX;
 }
 
 // Get a random f32 between low and high.
-f32 random_f32_range(f32 low, f32 high) {
+f32 random_f32_range(f32 low, f32 high)
+{
     f32 d = fabsf(high - low);
     return random_f32() * d + low;
 }
 
 // Get a random int between low and high, inclusive.
-int random_int_range(int low, int high) {
+int random_int_range(int low, int high)
+{
     int d = abs(high - low) + 1;
     return random_f32() * d + low;
 }
 
 // Get a random boolean.
-bool chance(f32 chance_to_be_true) {
+bool chance(f32 chance_to_be_true)
+{
     return random_f32() <= chance_to_be_true;
 }
 
@@ -98,7 +104,8 @@ bool chance(f32 chance_to_be_true) {
 
 // Print a message and exit the program.
 // Also attempts to display a pop-up error message.
-void panic_exit(char * message, ...) {
+void panic_exit(char * message, ...)
+{
     va_list args;
     va_start(args, message);
     char buffer[256];
@@ -110,7 +117,8 @@ void panic_exit(char * message, ...) {
 }
 
 // Same as above but does not exit the program.
-void issue_warning(char * message, ...) {
+void issue_warning(char * message, ...)
+{
     va_list args;
     va_start(args, message);
     char buffer[256];

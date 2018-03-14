@@ -19,12 +19,14 @@ typedef void (* Frame_Func)(void * state, float delta_time);
 typedef void (* Start_Func)(void * state);
 typedef void (* Input_Func)(void * state, int player, bool pressed);
 
-typedef struct {
+typedef struct
+{
     Start_Func start;
     Frame_Func frame;
     Input_Func input;
     void * state;
-} Scene;
+}
+Scene;
 
 // TODO: Where should the scenes live?
 Scene current_scene;
@@ -34,12 +36,14 @@ extern Scene menu_scene;
 // Change the current scene.
 // Will call the start function for that scene.
 // Returns true if successful.
-bool set_scene(Scene scene) {
+bool set_scene(Scene scene)
+{
     // Clear scene and frame memory pools.
     flush_pool(SCENE_POOL);
     flush_pool(FRAME_POOL);
     // Set function pointers.
-    if (scene.start && scene.frame && scene.input && scene.state) {
+    if (scene.start && scene.frame && scene.input && scene.state)
+    {
         current_scene = scene;
         // Call the start function for the new scene.
         current_scene.start(current_scene.state);
@@ -56,7 +60,8 @@ bool set_scene(Scene scene) {
 // controls contraction.
 //
 
-typedef struct {
+typedef struct
+{
     bool complete;
     bool pumping;
     int pump_count;
@@ -71,11 +76,13 @@ typedef struct {
     Sound sound;
     Sound yay;
     int yay_channel;
-} Heart_State;
+}
+Heart_State;
 
 Heart_State heart_state;
 
-void heart_start(void * state) {
+void heart_start(void * state)
+{
     Heart_State * s = state;
 
     s->pumping = false;
@@ -131,10 +138,12 @@ void heart_start(void * state) {
     s->yay_channel = queue_sound(&mixer, s->yay, 0.5f, 0.5f, false);
 }
 
-void heart_frame(void * state, float delta_time) {
+void heart_frame(void * state, float delta_time)
+{
     Heart_State * s = state;
 
-    if (!s->complete) {
+    if (!s->complete)
+    {
         float bmp_target = 90.0f;
         float allowance = 20.0f;
         float distance_from_target = fabs(s->beats_per_minute - bmp_target);
@@ -145,19 +154,26 @@ void heart_frame(void * state, float delta_time) {
             clamp(0, error * 30, 255),
             255));
 
-        if (s->pumping) {
+        if (s->pumping)
+        {
             draw_animated_image_frames_and_wait(s->heart, 3, 6, 0, 0);
-        } else {
+        }
+        else
+        {
             draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 0);
         }
 
-        if (distance_from_target < allowance) {
+        if (distance_from_target < allowance)
+        {
             s->score += delta_time;
-        } else {
+        }
+        else
+        {
             s->score = 0;
         }
 
-        if (s->score > 5) {
+        if (s->score > 5)
+        {
             s->complete = true;
         }
 
@@ -165,11 +181,14 @@ void heart_frame(void * state, float delta_time) {
 
         int delta = s->most_recent_beat_time_ms - s->previous_beat_time_ms;
         int since = SDL_GetTicks() - s->most_recent_beat_time_ms;
-        if (delta && since < 500) {
+        if (delta && since < 500)
+        {
             float target = 60000.0f / delta;
             s->beats_per_minute += (target - s->beats_per_minute) * 0.1f;
         }
-    } else {
+    }
+    else
+    {
         play_channel(&mixer, s->yay_channel);
         clear(rgba(80, 30, 30, 255));
         s->heart.frame_duration_ms = 60;
@@ -177,18 +196,25 @@ void heart_frame(void * state, float delta_time) {
     }
 }
 
-void heart_input(void * state, int player, bool pressed) {
+void heart_input(void * state, int player, bool pressed)
+{
     Heart_State * s = state;
 
-    if (pressed) {
-        if (player == 0) {
-            if (!s->pumping) {
+    if (pressed)
+    {
+        if (player == 0)
+        {
+            if (!s->pumping)
+            {
                 s->pumping = true;
                 s->heart.start_time_ms = SDL_GetTicks();
             }
             play_sound(&mixer, s->sound, 1.0f, 0.0f, false);
-        } else if (player == 1) {
-            if (s->pumping) {
+        }
+        else if (player == 1)
+        {
+            if (s->pumping)
+            {
                 s->pumping = false;
                 int t = SDL_GetTicks();
                 s->heart.start_time_ms = t;
@@ -200,7 +226,8 @@ void heart_input(void * state, int player, bool pressed) {
     }
 }
 
-Scene heart_scene = {
+Scene heart_scene =
+{
     .frame = heart_frame,
     .start = heart_start,
     .input = heart_input,
@@ -211,13 +238,16 @@ Scene heart_scene = {
 // Menu scene.
 //
 
-typedef struct {
+typedef struct
+{
     Font font;
-} Menu_State;
+}
+Menu_State;
 
 Menu_State menu_state;
 
-void menu_frame(void * state, float delta_time) {
+void menu_frame(void * state, float delta_time)
+{
     Menu_State * s = state;
 
     clear(rgba(200, 100, 100, 255));
@@ -226,7 +256,8 @@ void menu_frame(void * state, float delta_time) {
     draw_text(s->font, 20, 106, rgba(200, 200, 200, 255), "QUIT");
 }
 
-void menu_start(void * state) {
+void menu_start(void * state)
+{
     Menu_State * s = state;
 
     Image font_image = read_image_file(SCENE_POOL, "../assets/font.pam");
@@ -237,10 +268,12 @@ void menu_start(void * state) {
     };
 }
 
-void menu_input(void * state, int player, bool pressed) {
+void menu_input(void * state, int player, bool pressed)
+{
 }
 
-Scene menu_scene = {
+Scene menu_scene =
+{
     .frame = menu_frame,
     .start = menu_start,
     .input = menu_input,

@@ -29,7 +29,8 @@
 // Main audio callback.
 //
 
-void audio_callback(void * data, u8 * stream, int byte_count) {
+void audio_callback(void * data, u8 * stream, int byte_count)
+{
     Mixer * mixer = data;
     f32 * samples = (f32 *)stream;
     int sample_count = byte_count / sizeof(f32);
@@ -40,7 +41,8 @@ void audio_callback(void * data, u8 * stream, int byte_count) {
 // Program entry point.
 //
 
-int main(int argument_count, char ** arguments) {
+int main(int argument_count, char ** arguments)
+{
     // DEBUG: Unbuffered logging.
     setbuf(stdout, 0);
 
@@ -48,11 +50,13 @@ int main(int argument_count, char ** arguments) {
     // Initialisation.
     //
 
-    if (!init_memory_pools(megabytes(64), megabytes(32), megabytes(8))) {
+    if (!init_memory_pools(megabytes(64), megabytes(32), megabytes(8)))
+    {
         panic_exit("Could not initialise memory pools.");
     }
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+    {
         panic_exit("Could not initialise SDL2.\n%s", SDL_GetError());
     }
 
@@ -63,7 +67,8 @@ int main(int argument_count, char ** arguments) {
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
-    if (!window) {
+    if (!window)
+    {
         panic_exit("Could not create a window.\n%s", SDL_GetError());
     }
 
@@ -71,14 +76,16 @@ int main(int argument_count, char ** arguments) {
 
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (!renderer) {
+    if (!renderer)
+    {
         panic_exit("Could not create a rendering context.\n%s", SDL_GetError());
     }
 
     SDL_Texture * screen_texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
         WIDTH, HEIGHT);
-    if (!screen_texture) {
+    if (!screen_texture)
+    {
         panic_exit("Could not create the screen texture.\n%s", SDL_GetError());
     }
 
@@ -92,7 +99,8 @@ int main(int argument_count, char ** arguments) {
 
     mixer = create_mixer(PERSIST_POOL, 64, 1.0);
 
-    SDL_AudioSpec audio_output_spec = {
+    SDL_AudioSpec audio_output_spec =
+    {
         .freq = 48000,
         .format = AUDIO_F32,
         .channels = 2,
@@ -103,7 +111,8 @@ int main(int argument_count, char ** arguments) {
 
     audio_device = SDL_OpenAudioDevice(NULL, false,
         &audio_output_spec, NULL, 0);
-    if (!audio_device) {
+    if (!audio_device)
+    {
         panic_exit("Could not open the audio device.\n%s", SDL_GetError());
     }
 
@@ -121,7 +130,8 @@ int main(int argument_count, char ** arguments) {
     //
 
     Image font_image = read_image_file(PERSIST_POOL, "../assets/font.pam");
-    Font debug_font = {
+    Font debug_font =
+    {
         .pixels = font_image.pixels,
         .char_width  = 6,
         .char_height = 12,
@@ -133,7 +143,8 @@ int main(int argument_count, char ** arguments) {
 
     set_scene(heart_scene);
 
-    while (true) {
+    while (true)
+    {
         // Update timers.
         f32 delta_time = (SDL_GetPerformanceCounter() - previous_counter_ticks)
                             / counter_ticks_per_second;
@@ -141,23 +152,34 @@ int main(int argument_count, char ** arguments) {
 
         // Handle events since last frame.
         SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
                 print_memory_stats();
                 exit(0);
-            } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-                if (!event.key.repeat) {
+            }
+            else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+            {
+                if (!event.key.repeat)
+                {
                     SDL_Scancode sc = event.key.keysym.scancode;
-                    if (sc == SDL_SCANCODE_LSHIFT) {
+                    if (sc == SDL_SCANCODE_LSHIFT)
+                    {
                         current_scene.input(current_scene.state, 0, event.key.state);
-                    } else if (sc == SDL_SCANCODE_RSHIFT) {
+                    }
+                    else if (sc == SDL_SCANCODE_RSHIFT)
+                    {
                         current_scene.input(current_scene.state, 1, event.key.state);
                     }
 
                     // DEBUG: scene switching.
-                    else if (sc == SDL_SCANCODE_1) {
+                    else if (sc == SDL_SCANCODE_1)
+                    {
                         set_scene(menu_scene);
-                    } else if (sc == SDL_SCANCODE_2) {
+                    }
+                    else if (sc == SDL_SCANCODE_2)
+                    {
                         set_scene(heart_scene);
                     }
                 }
