@@ -75,7 +75,8 @@ void draw_line(int ax, int ay, int bx, int by, u32 colour)
 // An Image is just a rectangular chunk of pixels with a width and height.
 //
 
-typedef struct {
+typedef struct
+{
     u32 * pixels;
     int width;
     int height;
@@ -145,7 +146,8 @@ void draw_animated_image_frame(Animated_Image animated_image, int animation_fram
 {
     int pixels_per_frame = animated_image.width * animated_image.height;
     int pixel_offset_to_current_frame = pixels_per_frame * animation_frame;
-    Image frame = {
+    Image frame =
+    {
         .pixels = animated_image.pixels + pixel_offset_to_current_frame,
         .width  = animated_image.width,
         .height = animated_image.height,
@@ -162,7 +164,8 @@ void draw_animated_image_frames(Animated_Image animated_image, int start_frame, 
     int current_frame = start_frame + (frames_passed % frame_count);
     int pixels_per_frame = animated_image.width * animated_image.height;
     int pixel_offset_to_current_frame = pixels_per_frame * current_frame;
-    Image frame = {
+    Image frame =
+    {
         .pixels = animated_image.pixels + pixel_offset_to_current_frame,
         .width  = animated_image.width,
         .height = animated_image.height,
