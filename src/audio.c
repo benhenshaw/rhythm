@@ -30,11 +30,11 @@ Sound;
 
 typedef struct
 {
-    float * samples;    // The audio data itself.
+    f32 * samples;    // The audio data itself.
     int sample_count;   // Number of samples in the data.
     int sample_index;   // Index of the last sample written.
-    float left_gain;    // How loud to play the sound in the left channel.
-    float right_gain;   // Same for the right channel.
+    f32 left_gain;    // How loud to play the sound in the left channel.
+    f32 right_gain;   // Same for the right channel.
     bool loop;          // If the sound should repeat.
     bool playing;       // If the sound is playing right now or not.
 }
@@ -44,7 +44,7 @@ typedef struct
 {
     Mixer_Channel * channels;
     int channel_count;
-    float gain;
+    f32 gain;
 }
 Mixer;
 
@@ -52,7 +52,7 @@ Mixer;
 Mixer mixer;
 
 // Initialise the audio mixer.
-Mixer create_mixer(int pool_index, int channel_count, float gain)
+Mixer create_mixer(int pool_index, int channel_count, f32 gain)
 {
     Mixer mixer = {};
     mixer.channels = pool_alloc(pool_index, channel_count * sizeof(Mixer_Channel));
@@ -68,7 +68,7 @@ Mixer create_mixer(int pool_index, int channel_count, float gain)
 // so some care should be taken when considering input and output.
 void mix_audio(Mixer * mixer, void * stream, int samples_requested)
 {
-    float * samples = stream;
+    f32 * samples = stream;
 
     // Zero the entire buffer first.
     for (int sample_index = 0; sample_index < samples_requested; ++sample_index)
@@ -89,8 +89,8 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested)
                  ++sample_index)
             {
                 // Load a mono sample from the channel.
-                float new_left  = channel->samples[channel->sample_index];
-                float new_right = channel->samples[channel->sample_index];
+                f32 new_left  = channel->samples[channel->sample_index];
+                f32 new_right = channel->samples[channel->sample_index];
 
                 // Apply the left and right channel gains.
                 new_left  *= channel->left_gain;
@@ -134,7 +134,7 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested)
 // Immediately start playing a sound.
 // Returns the index of the channel that holds the sound,
 // or -1 if no channel was available.
-int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, int loop)
+int play_sound(Mixer * mixer, Sound sound, f32 left_gain, f32 right_gain, int loop)
 {
     for (int i = 0; i < mixer->channel_count; ++i)
     {
@@ -158,7 +158,7 @@ int play_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, in
 // Load a channel with a sound and set its parameters.
 // Returns the index of the channel that holds the sound,
 // or -1 if no channel was available.
-int queue_sound(Mixer * mixer, Sound sound, float left_gain, float right_gain, int loop)
+int queue_sound(Mixer * mixer, Sound sound, f32 left_gain, f32 right_gain, bool loop)
 {
     for (int i = 0; i < mixer->channel_count; ++i)
     {
