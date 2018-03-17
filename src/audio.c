@@ -55,7 +55,8 @@ Mixer mixer;
 Mixer create_mixer(int pool_index, int channel_count, f32 gain)
 {
     Mixer mixer = {};
-    mixer.channels = pool_alloc(pool_index, channel_count * sizeof(Mixer_Channel));
+    mixer.channels = pool_alloc(pool_index,
+        channel_count * sizeof(Mixer_Channel));
     if (mixer.channels)
     {
         mixer.channel_count = channel_count;
@@ -71,14 +72,18 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested)
     f32 * samples = stream;
 
     // Zero the entire buffer first.
-    for (int sample_index = 0; sample_index < samples_requested; ++sample_index)
+    for (int sample_index = 0;
+        sample_index < samples_requested;
+        ++sample_index)
     {
         samples[sample_index] = 0.0f;
     }
 
     // Mix all of the data from a channel into the buffer,
     // then move on to the next channel.
-    for (int channel_index = 0; channel_index < mixer->channel_count; ++channel_index)
+    for (int channel_index = 0;
+        channel_index < mixer->channel_count;
+        ++channel_index)
     {
         Mixer_Channel * channel = &mixer->channels[channel_index];
         if (channel->samples && channel->playing)
@@ -134,7 +139,8 @@ void mix_audio(Mixer * mixer, void * stream, int samples_requested)
 // Immediately start playing a sound.
 // Returns the index of the channel that holds the sound,
 // or -1 if no channel was available.
-int play_sound(Mixer * mixer, Sound sound, f32 left_gain, f32 right_gain, int loop)
+int play_sound(Mixer * mixer, Sound sound,
+    f32 left_gain, f32 right_gain, int loop)
 {
     for (int i = 0; i < mixer->channel_count; ++i)
     {
@@ -158,7 +164,8 @@ int play_sound(Mixer * mixer, Sound sound, f32 left_gain, f32 right_gain, int lo
 // Load a channel with a sound and set its parameters.
 // Returns the index of the channel that holds the sound,
 // or -1 if no channel was available.
-int queue_sound(Mixer * mixer, Sound sound, f32 left_gain, f32 right_gain, bool loop)
+int queue_sound(Mixer * mixer, Sound sound,
+    f32 left_gain, f32 right_gain, bool loop)
 {
     for (int i = 0; i < mixer->channel_count; ++i)
     {
@@ -198,7 +205,8 @@ bool play_channel(Mixer * mixer, int channel_index)
 // Returns true if the given channel was successfully told to pause.
 bool pause_channel(Mixer * mixer, int channel_index)
 {
-    if (channel_index >= 0 && channel_index <= mixer->channel_count &&
+    if (channel_index >= 0 &&
+        channel_index <= mixer->channel_count &&
         mixer->channels[channel_index].samples)
     {
         SDL_LockAudioDevice(audio_device);
