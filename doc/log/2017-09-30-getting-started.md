@@ -1,4 +1,4 @@
-# Getting Started (2017/09/30)
+# Getting Started (2017-09-30)
 I want to build rhythm game for my final year project.
 
 ## Design
