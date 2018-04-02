@@ -1,4 +1,4 @@
-NAME="prelim"
+NAME="doc"
 
 echo "<style>" > $NAME.html
 cat style.css >> $NAME.html
