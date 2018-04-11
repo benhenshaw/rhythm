@@ -183,9 +183,33 @@ u32 get_green(u32 colour) { return (colour & 0x0000ff00) >>  8; }
 u32 get_alpha(u32 colour) { return (colour & 0x000000ff) >>  0; }
 ```
 
+#### Displaying Graphics
+The software renderer holds an internal pixel buffer of a fixed resolution. This pixel buffer is where the results of the renderer are written. To display a frame on screen, the internal pixel buffer is sent to the GPU via a streaming texture for display. One can also directly access the window's buffer and copy the pixel data into it, but there is no guarantee of the format of these pixels (although one can detect and convert appropriately), no way to render with vertical sync to avoid screen tearing, and visual artefacts can occur when the window interacts with other programs, such as Valve's Steam Overlay. Thus, the GPU is utilised for the final stage of rendering, and performs up-scaling to the monitor resolution.
+
 #### Bitmaps
-*_Discuss the rendering of still bitmaps._*
-Each singular bitmap is rendered by copying an array of pixels into the main pixel buffer.
+As all pixels are stored in the same format, the bulk of the work required to display an image on screen is done by directly copying data from the image's pixel buffer to the software renderer's buffer. As all pixel buffers are stored as a single array of packed RGBA values, a simple formula is used to access two-dimensional data from the one-dimensional array:
+
+```
+int index = x + y * width;
+u32 p = pixels[index];
+```
+
+Some checks can also be done to ensure that the pixel array will not be accessed out of bounds:
+
+```
+// Returns false if the given coordinates are off screen.
+bool set_pixel(int x, int y, u32 colour)
+{
+    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+    {
+        pixels[x + y * WIDTH] = colour;
+        return true;
+    }
+    return false;
+}
+```
+
+But there is good reason to directly access the buffer without this check every time; if some operations need to occur in bulk, such as drawing an image into the buffer, checks should be made outside of the inner loop to improve performance.
 
 #### Animation
 *_Discuss the rendering of animations._*
