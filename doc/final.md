@@ -49,7 +49,7 @@ In order to differentiate my project from games that have come before it, I soug
 ## Design and Implementation
 *_Discuss the overall design of the game describing the mini-games and their characteristics. (Several paragraphs.)_*
 
-### Overview
+### Technical Overview
 *_Discuss the high-level design and structure of the software._*
 The project has five major sub-systems, and a core that ties them together. These sub-systems are Assets, Audio, Graphics, Memory, and Scenes. Each sub-system resides in a single C source file.
 
@@ -65,24 +65,133 @@ Scenes are used to encapsulate different pieces of the game. Each scene contains
 
 ### Assets
 *_Discuss the management of assets and custom file formats._*
-All assets are loaded by custom file readers.
+#### Bitmap Graphics
+Here is an example header for a Portable Arbitrary Map, for a file with a width and height of 256, in RGBA format, one byte per channel:
+
+```
+P7
+WIDTH 256
+HEIGHT 256
+DEPTH 4
+MAXVAL 255
+TUPLTYPE RGB_ALPHA
+ENDHDR
+```
+
+For my project I am able to curate all of the files that will be read by my code, so I chose to only support the exact format that I would be using. With this in mind, I could parse the entire header with this single call to `fscanf`, given that all parameters except width and height are constant:
+
+```
+fscanf(file,
+       "P7\n"
+       "WIDTH %d\n"
+       "HEIGHT %d\n"
+       "DEPTH 4\n"
+       "MAXVAL 255\n"
+       "TUPLTYPE RGB_ALPHA\n"
+       "ENDHDR\n",
+       &width, &height);
+```
+
+Once the header is parsed and the width and height are known, the pixel data can be read into a buffer as so:
+
+```
+int pixels_read = fread(pixels, sizeof(u32), width * height, file);
+```
+
+Unfortunately, the pixel format used by .pam files is big-endian, and I am targeting little-endian machines. The byte order of each pixel must be swapped:
+
+```
+for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index)
+{
+    u32 p = pixels[pixel_index];
+    pixels[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
+}
+```
+
+See the Graphics sub-section of this major section for the definition of `rgba` and `get_red`, etcetera. Finally the image's pixel data and dimensions are returned in an `Image` structure:
+
+```
+typedef struct
+{
+    u32 * pixels;
+    int width;
+    int height;
+}
+Image;
+```
+
+#### PCM Audio
+The format used for audio samples in this project is single-precision IEEE floating-point, making each sample 32 bits long. All audio data has a sample rate of 48KHz. Here is an example file header containing one second (48000 samples) of audio:
+
+```
+SND
+SAMPLE_COUNT 48000
+ENDHDR
+```
+
+Much the same as above, the header is parsed in a single call to `fscanf`, the raw data read with a call to `fread`, and the byte order must be swapped before returning in a `Sound` structure:
+
+```
+typedef struct
+{
+    f32 * samples;
+    int sample_count;
+}
+Sound;
+```
 
 ### Audio
 *_Discuss the playback of audio and the mixer._*
 Audio is output by a high-frequency callback. This callback requests a number of samples, which is produced at will by the custom audio mixer. This audio mixer has a list of all playing sounds and their current state, and uses this to mix together a single stream of audio for playback.
 
+All sound is in 32-bit floating-point format at a 48KHz sample rate. This uniformity of format allows all audio data to be handled in the same way, without conversions during transformation. Not all platforms support this format for output, so this format can be converted to the relevant format as a final stage before playback. Here is a basic example of how to convert to signed 16-bit integer format:
+
+```
+for (int sample_index = 0; sample_index < sample_count; ++sample_index)
+{
+    s16_samples[sample_index] = (f32_samples[sample_index] * 32767)
+}
+```
+
+This works as sound in f32 format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap, thus it may be sensible to clamp the value after multiplying. After instead of before, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
+
 *_Discuss management audio synthesis and effects._*
 
 ### Graphics
 *_Discuss general graphics info._*
-All of the graphics in this project are created using a custom built software renderer. The software renderer produces a single final bitmap which is displayed on screen.
+All graphics in the project use the 32-bit RGBA pixel format. This means that there are four channels, red, green, blue, and alpha (transparency), each of which is one byte large (holding values in the range 0 to 255), and stored such that the red byte is on the high end of the 32-bit value, and the alpha byte is on the low end. To write a pixel in C-style hexadecimal with the red, green, blue, and alpha values of 0x11, 0x22, 0x33, and 0x44 respectively:
 
+```
+u32 pixel = 0x112233FF
+```
+
+These utility functions are also used to manipulate pixel data:
+
+```
+// Pack an RGBA pixel from its components.
+u32 rgba(u8 r, u8 g, u8 b, u8 a)
+{
+    return (r << 24u) | (g << 16u) | (b << 8u) | a;
+}
+```
+
+```
+// Access individual components of an RGBA pixel.
+u32 get_red(u32 colour)   { return (colour & 0xff000000) >> 24; }
+u32 get_blue(u32 colour)  { return (colour & 0x00ff0000) >> 16; }
+u32 get_green(u32 colour) { return (colour & 0x0000ff00) >>  8; }
+u32 get_alpha(u32 colour) { return (colour & 0x000000ff) >>  0; }
+```
+
+#### Bitmaps
 *_Discuss the rendering of still bitmaps._*
 Each singular bitmap is rendered by copying an array of pixels into the main pixel buffer.
 
+#### Animation
 *_Discuss the rendering of animations._*
 Animations have a time in milliseconds that states how long each frame of the animation will be displayed on screen. Using this time, and a time-stamp from when the animation started playing, the current frame can be deduced and displayed much the same way as a still bitmap.
 
+#### Text
 *_Discuss the rendering of text._*
 Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. A bitmap image holds all of the drawable characters defined in the ASCII standard. The location of a character in the image can be calculated using its ASCII code as an offset from the first character.
 
