@@ -149,11 +149,11 @@ All sound is in 32-bit floating-point format at a 48KHz sample rate. This unifor
 ```
 for (int sample_index = 0; sample_index < sample_count; ++sample_index)
 {
-    s16_samples[sample_index] = (f32_samples[sample_index] * 32767)
+    s16_samples[sample_index] = (u16)(f32_samples[sample_index] * 32767)
 }
 ```
 
-This works as sound in f32 format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap, thus it may be sensible to clamp the value after multiplying. After instead of before, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
+This works as sound in f32 format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
 
 *_Discuss management audio synthesis and effects._*
 
@@ -162,7 +162,7 @@ This works as sound in f32 format expresses all waveforms in the range -1.0 to +
 All graphics in the project use the 32-bit RGBA pixel format. This means that there are four channels, red, green, blue, and alpha (transparency), each of which is one byte large (holding values in the range 0 to 255), and stored such that the red byte is on the high end of the 32-bit value, and the alpha byte is on the low end. To write a pixel in C-style hexadecimal with the red, green, blue, and alpha values of 0x11, 0x22, 0x33, and 0x44 respectively:
 
 ```
-u32 pixel = 0x112233FF
+u32 pixel = 0x11223344
 ```
 
 These utility functions are also used to manipulate pixel data:
@@ -210,6 +210,8 @@ bool set_pixel(int x, int y, u32 colour)
 ```
 
 But there is good reason to directly access the buffer without this check every time; if some operations need to occur in bulk, such as drawing an image into the buffer, checks should be made outside of the inner loop to improve performance.
+
+*_Discuss the actual copying of pixel data between buffers._*
 
 #### Animation
 *_Discuss the rendering of animations._*
