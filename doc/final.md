@@ -1,6 +1,4 @@
-***DRAFT***
-
-*Each underlined sentence is a rough description of what the next paragraph will discuss. The majority of those paragraphs are incomplete.*
+<!--DRAFT -->
 
 # Rhythm Game
 > Benedict Henshaw
@@ -20,38 +18,38 @@
 + Appendix C (Definitions and Additional Information)
 
 ## Abstract
-***Rhythm game with supporting systems built from scratch...***
+<!--Rhythm game with supporting systems built from scratch... -->
 
 ## Introduction
-***Discuss the game idea as it relates to the games that inspired it.***
+<!--Discuss the game idea as it relates to the games that inspired it. -->
 This document discusses the process of developing a video game based on the concept of rhythm and the interactions of two players as they work together and compete in a series of mini-games. Each mini-game will attempt to challenge the players in different ways.
 
 The game is inspired by the video games 'Rhythm Heaven (リズム天国)' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. Both of these games feature mini-games and have a humorous theme, represented in their graphics and mechanics.
 
-***State that the project has a focus on DIY for educational purposes, and argue that it also creates better software.***
+<!--State that the project has a focus on DIY for educational purposes, and argue that it also creates better software. -->
 I created this project in the C programming language, implementing many of the technical systems that support the game. This includes graphics, audio, memory management, and input. This was done to further my own understanding of these aspects of game programming, and with the goal of creating a lightweight and efficient program (when compared to using pre-existing libraries and game engines).
 
-***Discuss the structure of the this report.***
+<!--Discuss the structure of the this report. -->
 This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software.
 
 ## Background
-***Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it.***
+<!--Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it. -->
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play that I could innovate on. I decided to explore the concept of multi-player.
 
-***Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.)***
+<!--Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
 
 ## Specification
-***Discuss the range of interactions the mini-games will explore.***
+<!--Discuss the range of interactions the mini-games will explore. -->
 
-***Discuss desires for what the player will experience when playing.***
+<!--Discuss desires for what the player will experience when playing. -->
 
-***Discuss technical performance goals, and how they support design goals.***
+<!--Discuss technical performance goals, and how they support design goals. -->
 
 ## Design and Implementation
-***Discuss the overall design of the game describing the mini-games and their characteristics. (Several paragraphs.)***
+<!--Discuss the overall design of the game describing the mini-games and their characteristics. (Several paragraphs.) -->
 
 ### Technical Overview
-***Discuss the high-level design and structure of the software.***
+<!--Discuss the high-level design and structure of the software. -->
 The project has five major sub-systems, and a core that ties them together. These sub-systems are Assets, Audio, Graphics, Memory, and Scenes. Each sub-system resides in a single C source file.
 
 There are two major kinds of assets in this project: bitmap graphics, and PCM audio. Graphics are stored using a file format called Portable Arbitrary Map, which contains a brief ASCII text header followed by a block of uncompressed pixel data. Audio is stored in a custom file format designed to match the PAM format used for graphics, following the same principal of plain-text header and uncompressed raw data.
@@ -65,7 +63,7 @@ Memory is handled simply and efficiently by a custom memory allocator. The alloc
 Scenes are used to encapsulate different pieces of the game. Each scene contains some state and a set of functions that handle input and output. This is where game-play code is written. Transitions between scenes can be made at will from anywhere in the program.
 
 ### Assets
-***Discuss the management of assets and custom file formats.***
+<!--Discuss the management of assets and custom file formats. -->
 #### Bitmap Graphics
 Here is an example header for a Portable Arbitrary Map, for a file with a width and height of 256, in RGBA format, one byte per channel:
 
@@ -142,7 +140,7 @@ Sound;
 ```
 
 ### Audio
-***Discuss the playback of audio and the mixer.***
+<!--Discuss the playback of audio and the mixer. -->
 All sound is in 32-bit floating-point format at a 48KHz sample rate. This uniformity of format allows all audio data to be handled in the same way, without conversions during transformation. Not all platforms support this format for output, so this format can be converted to the relevant format as a final stage before playback. Here is a basic example of how to convert to signed 16-bit integer format:
 
 ```
@@ -213,10 +211,10 @@ int play_sound(Mixer * mixer, Sound sound,
 
 Sound can also be queued up, so that it is ready to be played by setting a boolean on the relevant channel. This is helpful for critical sounds as it reserves a channel, as it is possible to run out of channels and have an attempt to play a sound fail (although the number of channels is set to be higher than the common case). One can also set the `sample_index` of a channel to a negative number. The mixer will increment this index without producing any sound, and thus allowing a sound to be queued up with sample-accurate timing.
 
-***Discuss audio synthesis and effects.***
+<!--Discuss audio synthesis and effects. -->
 
 ### Graphics
-***Discuss general graphics info.***
+<!--Discuss general graphics info. -->
 All graphics in the project use the 32-bit RGBA pixel format. This means that there are four channels, red, green, blue, and alpha (transparency), each of which is one byte large (holding values in the range 0 to 255), and stored such that the red byte is on the high end of the 32-bit value, and the alpha byte is on the low end. To write a pixel in C-style hexadecimal with the red, green, blue, and alpha values of 0x11, 0x22, 0x33, and 0x44 respectively:
 
 ```
@@ -269,7 +267,7 @@ bool set_pixel(int x, int y, u32 colour)
 
 But there is good reason to directly access the buffer without this check every time; if some operations need to occur in bulk, such as drawing an image into the buffer, checks should be made outside of the inner loop to improve performance.
 
-***Discuss the actual copying of pixel data between buffers.***
+<!--Discuss the actual copying of pixel data between buffers. -->
 To render a bitmap, one must copy pixel-by-pixel from an image buffer to the renderer buffer:
 
 ```
@@ -288,11 +286,11 @@ for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy)
 The key aspect of this method is that one must keep track of both the current pixel on screen to be written to, and the current pixel in the image to be read from. Some checks are done to ensure that neither buffer will be improperly accessed (which is not shown here).
 
 #### Animation
-***Discuss the rendering of animations.***
+<!--Discuss the rendering of animations. -->
 Animations have a time in milliseconds that states how long each frame of the animation will be displayed on screen. Using this time, and a time-stamp from when the animation started playing, the current frame can be deduced and displayed much the same way as a still bitmap.
 
 #### Text
-***Discuss the rendering of text.***
+<!--Discuss the rendering of text. -->
 Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. Fonts in this project are defined to be a bitmap image holding all of the drawable characters defined in the ASCII standard, packed horizontally, and every character is the same width (monospace). The location of a character in the image can be calculated using its ASCII code as an offset from the first character:
 
 ```
@@ -304,7 +302,7 @@ The 'space' character is the first character defined in the font bitmap, and so 
 This system is incredibly simple and straightforward to implement. The downside is that it only supports ASCII characters and therefore only the English language.
 
 ### Memory
-***Discuss the management of memory.***
+<!--Discuss the management of memory. -->
 While custom memory allocators are often considered a must-have for large high-performance video games, many projects settle for standard memory allocation utilities; many don't consider the possibility. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors.
 
 As with any general-purpose or generic approach, there are trade-offs. A general purpose allocator tries to do its best at the problems of wasting as little memory as possible, allocating and deallocating as fast as possible, and avoiding fragmentation. I propose that it can be very easy to beat a general purpose allocator (such as `malloc`) on all of these fronts, simply by constructing a solution that more directly supports the project that is being made.
@@ -324,42 +322,42 @@ Some objects are created for rendering purposes, such as dynamic strings, and wi
 The project employs a pool-based approach. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
 
 ### Scenes
-***Discuss the management of scenes and mini-games.***
+<!--Discuss the management of scenes and mini-games. -->
 Scenes are sets of function pointers that can be swapped out at will. These function pointers are called at specific times, including when the user presses a button, or when a frame of graphics needs to be rendered.
 
 Each mini-game is a single scene, and each menu is also a separate scene.
 
 ## Testing and Evaluation
-***Discuss the knowledge gathered about how games are tested.***
+<!--Discuss the knowledge gathered about how games are tested. -->
 
-***Discuss the methods chosen, and specifics about how testing was carried out.***
+<!--Discuss the methods chosen, and specifics about how testing was carried out. -->
 
-***Show the information collected during testing.***
+<!--Show the information collected during testing. -->
 
-***Show how testing information was used to improve the project.***
+<!--Show how testing information was used to improve the project. -->
 
-***Discuss the cycles of iteration.***
+<!--Discuss the cycles of iteration. -->
 
 ## Conclusion
-***Evaluate the methods used to construct the game.***
+<!--Evaluate the methods used to construct the game. -->
 
-***Evaluate the software performance and responsiveness with timings and user feedback.***
+<!--Evaluate the software performance and responsiveness with timings and user feedback. -->
 
-***Discuss the topics learned, evaluating their importance and difficulty.***
+<!--Discuss the topics learned, evaluating their importance and difficulty. -->
 
-***Evaluate the final game produced, stating my opinions and how the outcome relates to the initial goals.***
+<!--Evaluate the final game produced, stating my opinions and how the outcome relates to the initial goals. -->
 
 ## Bibliography
 + Handmade Hero (https://handmadehero.org/)
 + ...
 
 ## Appendix A
-***Program source code.***
+<!--Program source code. -->
 
 ## Appendix B
-***Custom tools and build management source code.***
+<!--Custom tools and build management source code. -->
 
 ## Appendix C
-***Copy of the original proposal.***
+<!--Copy of the original proposal. -->
 
-***Copy of weekly logs.***
+<!--Copy of weekly logs. -->
