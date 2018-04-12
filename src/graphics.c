@@ -142,7 +142,8 @@ void draw_animated_image(Animated_Image animated_image, int x, int y)
 }
 
 // Draw a single frame of an animation to the internal buffer.
-void draw_animated_image_frame(Animated_Image animated_image, int animation_frame, int x, int y)
+void draw_animated_image_frame(Animated_Image animated_image,
+    int animation_frame, int x, int y)
 {
     int pixels_per_frame = animated_image.width * animated_image.height;
     int pixel_offset_to_current_frame = pixels_per_frame * animation_frame;
@@ -156,7 +157,8 @@ void draw_animated_image_frame(Animated_Image animated_image, int animation_fram
 }
 
 // Draw a selected range of frames of animation, instead of all frames.
-void draw_animated_image_frames(Animated_Image animated_image, int start_frame, int end_frame, int x, int y)
+void draw_animated_image_frames(Animated_Image animated_image,
+    int start_frame, int end_frame, int x, int y)
 {
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
     int frames_passed = time_passed / animated_image.frame_duration_ms;
@@ -174,7 +176,8 @@ void draw_animated_image_frames(Animated_Image animated_image, int start_frame, 
 }
 
 // Same as above but don't loop, stop and display the final frame once it is complete.
-void draw_animated_image_frames_and_wait(Animated_Image animated_image, int start_frame, int end_frame, int x, int y)
+void draw_animated_image_frames_and_wait(Animated_Image animated_image,
+    int start_frame, int end_frame, int x, int y)
 {
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
     int frames_passed = time_passed / animated_image.frame_duration_ms;
