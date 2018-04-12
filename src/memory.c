@@ -15,6 +15,9 @@ static inline u64 megabytes(u64 count)
     return count * 1024 * 1024;
 }
 
+// NOTE: There is evidence to suggest that alignment may be unnecessary on more
+// recent x86 hardware: http://www.agner.org/optimize/blog/read.php?i=142
+
 // All memory allocations align to the platform's maximum primitive size.
 #define MAX_ALIGNMENT_BYTES (sizeof(max_align_t))
 

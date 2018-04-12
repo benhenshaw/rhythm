@@ -304,7 +304,23 @@ This system is incredibly simple and straightforward to implement. The downside 
 
 ### Memory
 *_Discuss the management of memory._*
-The project employs a custom memory allocator. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point.
+While custom memory allocators are often considered a must-have for large high-performance video games, many projects settle for standard memory allocation utilities; many don't consider the possibility. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors.
+
+As with any general-purpose or generic approach, there are trade-offs. A general purpose allocator tries to do its best at the problems of wasting as little memory as possible, allocating and deallocating as fast as possible, and avoiding fragmentation. I propose that it can be very easy to beat a general purpose allocator (such as `malloc`) on all of these fronts, simply by constructing a solution that more directly supports the project that is being made.
+
+Here is my assessment of the memory concerns for my project:
+
+##### Assets Live Forever
+Graphics are loaded from disk and must be stored for the entire lifetime of them program.
+
+##### There Can Only Be One Active Scene
+The active scene is swapped out at will, and if a scene is returned to, it starts from the beginning; no state is preserved.
+
+##### Some Things Only Last One Frame
+Some objects are created for rendering purposes, such as dynamic strings, and will simply be discarded after use. One could use stack memory for some of these things, but it would be more reliable to have some way to ensure their allocation.
+
+#### The solution
+The project employs a pool-based approach. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
 
 ### Scenes
 *_Discuss the management of scenes and mini-games._*
