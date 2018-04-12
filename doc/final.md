@@ -142,8 +142,6 @@ Sound;
 
 ### Audio
 *_Discuss the playback of audio and the mixer._*
-Audio is output by a high-frequency callback. This callback requests a number of samples, which is produced at will by the custom audio mixer. This audio mixer has a list of all playing sounds and their current state, and uses this to mix together a single stream of audio for playback.
-
 All sound is in 32-bit floating-point format at a 48KHz sample rate. This uniformity of format allows all audio data to be handled in the same way, without conversions during transformation. Not all platforms support this format for output, so this format can be converted to the relevant format as a final stage before playback. Here is a basic example of how to convert to signed 16-bit integer format:
 
 ```
@@ -155,7 +153,66 @@ for (int sample_index = 0; sample_index < sample_count; ++sample_index)
 
 This works as sound in f32 format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
 
-*_Discuss management audio synthesis and effects._*
+#### Mixing
+Audio is output by a high-frequency callback. This callback requests a number of samples, which is produced at will by the custom audio mixer. This audio mixer has a list of all playing sounds and their current state, and uses this to mix together a single stream of audio for playback. Each individual sound is simply a chunk of audio samples:
+
+```
+typedef struct
+{
+    f32 * samples;
+    int sample_count;
+}
+Sound;
+```
+
+Mixer channels are used to manage the playback of sounds:
+
+```
+typedef struct
+{
+    f32 * samples;    // The audio data itself.
+    int sample_count; // Number of samples in the data.
+    int sample_index; // Index of the last sample written.
+    f32 left_gain;    // How loud to play the sound in the left channel.
+    f32 right_gain;   // Same for the right channel.
+    bool loop;        // If the sound should repeat.
+    bool playing;     // If the sound is playing right now or not.
+}
+Mixer_Channel;
+```
+
+When one wants to play a sound, they must stop the audio callback and insert their sound into a channel. There is a fixed number of sound channels, so the first free channel is found and used. Some parameters must also be set, such as how loud the sound should be, or whether it should loop.
+
+```
+// Immediately start playing a sound.
+// Returns the index of the channel that holds the sound,
+// or -1 if no channel was available.
+int play_sound(Mixer * mixer, Sound sound,
+    f32 left_gain, f32 right_gain, bool loop)
+{
+    for (int i = 0; i < mixer->channel_count; ++i)
+    {
+        if (mixer->channels[i].samples == NULL)
+        {
+            SDL_LockAudioDevice(audio_device);
+            mixer->channels[i].samples      = sound.samples;
+            mixer->channels[i].sample_count = sound.sample_count;
+            mixer->channels[i].sample_index = 0;
+            mixer->channels[i].left_gain    = left_gain;
+            mixer->channels[i].right_gain   = right_gain;
+            mixer->channels[i].loop         = loop;
+            mixer->channels[i].playing      = true;
+            SDL_UnlockAudioDevice(audio_device);
+            return i;
+        }
+    }
+    return -1;
+}
+```
+
+Sound can also be queued up, so that it is ready to be played by setting a boolean on the relevant channel. This is helpful for critical sounds as it reserves a channel, as it is possible to run out of channels and have an attempt to play a sound fail (although the number of channels is set to be higher than the common case). One can also set the `sample_index` of a channel to a negative number. The mixer will increment this index without producing any sound, and thus allowing a sound to be queued up with sample-accurate timing.
+
+*_Discuss audio synthesis and effects._*
 
 ### Graphics
 *_Discuss general graphics info._*
@@ -212,6 +269,22 @@ bool set_pixel(int x, int y, u32 colour)
 But there is good reason to directly access the buffer without this check every time; if some operations need to occur in bulk, such as drawing an image into the buffer, checks should be made outside of the inner loop to improve performance.
 
 *_Discuss the actual copying of pixel data between buffers._*
+To render a bitmap, one must copy pixel-by-pixel from an image buffer to the renderer buffer:
+
+```
+int max_x = min(x + image.width, WIDTH);
+int max_y = min(y + image.height, HEIGHT);
+for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy)
+{
+    for (int sx = x, ix = 0; sx < max_x; ++sx, ++ix)
+    {
+        u32 p = image.pixels[ix + iy * image.width];
+        screen_buffer[sx + sy * WIDTH] = p;
+    }
+}
+```
+
+The key aspect of this method is that one must keep track of both the current pixel on screen to be written to, and the current pixel in the image to be read from. Some checks are done to ensure that neither buffer will be improperly accessed (which is not shown here).
 
 #### Animation
 *_Discuss the rendering of animations._*
@@ -219,7 +292,15 @@ Animations have a time in milliseconds that states how long each frame of the an
 
 #### Text
 *_Discuss the rendering of text._*
-Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. A bitmap image holds all of the drawable characters defined in the ASCII standard. The location of a character in the image can be calculated using its ASCII code as an offset from the first character.
+Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. Fonts in this project are defined to be a bitmap image holding all of the drawable characters defined in the ASCII standard, packed horizontally, and every character is the same width (monospace). The location of a character in the image can be calculated using its ASCII code as an offset from the first character:
+
+```
+int x = font.char_width * (string[c] - ' ');
+```
+
+The 'space' character is the first character defined in the font bitmap, and so has an offset of zero. Since all characters are represented as numbers, one can simply subtract the number that represents 'space', producing an index that, when multiplied by the width of a character, gives an x pixel coordinate denoting the first pixel of that glyph. Given that all of the glyphs are packed horizontally, every character's bitmap starts at a y position of zero, giving enough information to render the glyph the same way all other bitmaps are rendered. One only needs to keep track of how far left they have moved after drawing each character to place the next letter correctly.
+
+This system is incredibly simple and straightforward to implement. The downside is that it only supports ASCII characters and therefore only the English language.
 
 ### Memory
 *_Discuss the management of memory._*
