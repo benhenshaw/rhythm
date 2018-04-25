@@ -70,7 +70,7 @@ int main(int argument_count, char ** arguments)
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
+        WIDTH * 3, HEIGHT * 3, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         panic_exit("Could not create a window.\n%s", SDL_GetError());
@@ -140,28 +140,10 @@ int main(int argument_count, char ** arguments)
     }
 
     //
-    // DEBUG:
-    //
-
-    Font debug_font = assets.main_font;
-
-    // Image button_image = read_image_file(PERSIST_POOL, "../assets/button.pam");
-    // Animated_Image button_animation =
-    // {
-    //     .pixels = button_image.pixels,
-    //     .width = button_image.width,
-    //     .height = button_image.height / 2,
-    //     .frame_count = 2,
-    //     .frame_duration_ms = 10,
-    // };
-
-    //
     // Start the game.
     //
 
-    cut_to_blank(3, 0, &heart_scene, &assets.wood_block_sound);
-
-    int frame = 0;
+    blank_cut(3, 0, &heart_scene, &assets.wood_block_sound);
 
     while (true)
     {
@@ -184,7 +166,6 @@ int main(int argument_count, char ** arguments)
                 if (!event.key.repeat)
                 {
                     SDL_Scancode sc = event.key.keysym.scancode;
-                    frame = event.key.state;
                     if (sc == SDL_SCANCODE_LSHIFT)
                     {
                         current_scene.input(current_scene.state, 0, event.key.state);

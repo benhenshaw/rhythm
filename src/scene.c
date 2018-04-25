@@ -83,6 +83,7 @@ void blank_frame(void * state, float delta_time)
     clear(s->colour);
 }
 
+// Stub functions, as nothing needs to be done for this scene.
 void blank_start(void * state) {}
 void blank_input(void * state, int player, bool pressed) {}
 
@@ -95,7 +96,7 @@ Scene blank_scene =
     .state = &blank_state,
 };
 
-void cut_to_blank(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
+void blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
 {
     set_scene(blank_scene);
     blank_state.end_time = SDL_GetTicks() + (1000 * time_in_seconds);
@@ -114,20 +115,7 @@ void cut_to_blank(float time_in_seconds, u32 colour, Scene * next_scene, Sound *
 
 typedef struct
 {
-    bool complete;
-    bool pumping;
-    int pump_count;
-    int start_ms;
-    int previous_beat_time_ms;
-    int most_recent_beat_time_ms;
-    int press_index;
-    float beats_per_minute;
-    float score;
     Animated_Image heart;
-    Font font;
-    Sound sound;
-    Sound yay;
-    int yay_channel;
 }
 Heart_State;
 
@@ -136,112 +124,23 @@ Heart_State heart_state;
 void heart_start(void * state)
 {
     Heart_State * s = state;
-
-    s->pumping = false;
-    s->pump_count = 0;
-    s->start_ms = SDL_GetTicks();
-    s->most_recent_beat_time_ms = 1;
-    s->previous_beat_time_ms = 1;
-    s->score = 0.0f;
-
-    s->heart.frame_count = 7;
-    s->heart.frame_duration_ms = 30;
+    *s = (Heart_State){};
+    s->heart = assets.heart_animation;
+    s->heart.frame_duration_ms = 50;
     s->heart.start_time_ms = SDL_GetTicks();
-
-    s->font.pixels = assets.main_font.pixels;
-
-    s->sound = assets.wood_block_sound;
-    s->yay = assets.yay_sound;
-
-    s->yay_channel = queue_sound(&mixer, s->yay, 0.5f, 0.5f, false);
 }
 
 void heart_frame(void * state, float delta_time)
 {
     Heart_State * s = state;
 
-    if (!s->complete)
-    {
-        float bmp_target = 90.0f;
-        float allowance = 20.0f;
-        float distance_from_target = fabs(s->beats_per_minute - bmp_target);
-        float error = clamp(0.0f, distance_from_target / allowance, 1.0f);
-        clear(rgba(
-            clamp(0, error * 100, 255),
-            clamp(0, error * 30, 255),
-            clamp(0, error * 30, 255),
-            255));
-
-        if (s->pumping)
-        {
-            draw_animated_image_frames_and_wait(s->heart, 3, 6, 0, 0);
-        }
-        else
-        {
-            draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 0);
-        }
-
-        if (distance_from_target < allowance)
-        {
-            s->score += delta_time;
-        }
-        else
-        {
-            s->score = 0;
-        }
-
-        if (s->score > 5)
-        {
-            s->complete = true;
-        }
-
-        if (s->beats_per_minute > 1.0f) s->beats_per_minute *= 0.99f;
-
-        int delta = s->most_recent_beat_time_ms - s->previous_beat_time_ms;
-        int since = SDL_GetTicks() - s->most_recent_beat_time_ms;
-        if (delta && since < 500)
-        {
-            float target = 60000.0f / delta;
-            s->beats_per_minute += (target - s->beats_per_minute) * 0.1f;
-        }
-    }
-    else
-    {
-        play_channel(&mixer, s->yay_channel);
-        clear(rgba(80, 30, 30, 255));
-        s->heart.frame_duration_ms = 60;
-        draw_animated_image(s->heart, 0, 0);
-    }
+    clear(0);
+    draw_animated_image(s->heart, 0, 0);
 }
 
 void heart_input(void * state, int player, bool pressed)
 {
     Heart_State * s = state;
-
-    if (pressed)
-    {
-        if (player == 0)
-        {
-            if (!s->pumping)
-            {
-                s->pumping = true;
-                s->heart.start_time_ms = SDL_GetTicks();
-            }
-            play_sound(&mixer, s->sound, 1.0f, 0.0f, false);
-        }
-        else if (player == 1)
-        {
-            if (s->pumping)
-            {
-                s->pumping = false;
-                int t = SDL_GetTicks();
-                s->heart.start_time_ms = t;
-                s->previous_beat_time_ms = s->most_recent_beat_time_ms;
-                s->most_recent_beat_time_ms = t;
-            }
-            play_sound(&mixer, s->sound, 0.0f, 1.0f, false);
-        }
-    }
 }
 
 Scene heart_scene =

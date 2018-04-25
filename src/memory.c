@@ -209,18 +209,21 @@ void print_memory_stats()
     printf("Persist: %9llu / %9llu (%02.0f%%), %9llu\n",
         memory_pools[PERSIST_POOL].bytes_filled,
         memory_pools[PERSIST_POOL].bytes_available,
-        memory_pools[PERSIST_POOL].bytes_filled / (f32)memory_pools[PERSIST_POOL].bytes_available * 100,
+        memory_pools[PERSIST_POOL].bytes_filled /
+            (f32)memory_pools[PERSIST_POOL].bytes_available * 100,
         memory_pools[PERSIST_POOL].byte_count_of_last_alloc);
 
     printf("Scene:   %9llu / %9llu (%02.0f%%), %9llu\n",
         memory_pools[SCENE_POOL].bytes_filled,
         memory_pools[SCENE_POOL].bytes_available,
-        memory_pools[SCENE_POOL].bytes_filled / (f32)memory_pools[SCENE_POOL].bytes_available * 100,
+        memory_pools[SCENE_POOL].bytes_filled /
+            (f32)memory_pools[SCENE_POOL].bytes_available * 100,
         memory_pools[SCENE_POOL].byte_count_of_last_alloc);
 
     printf("Frame:   %9llu / %9llu (%02.0f%%), %9llu\n",
         memory_pools[FRAME_POOL].bytes_filled,
         memory_pools[FRAME_POOL].bytes_available,
-        memory_pools[FRAME_POOL].bytes_filled / (f32)memory_pools[FRAME_POOL].bytes_available * 100,
+        memory_pools[FRAME_POOL].bytes_filled /
+            (f32)memory_pools[FRAME_POOL].bytes_available * 100,
         memory_pools[FRAME_POOL].byte_count_of_last_alloc);
 }

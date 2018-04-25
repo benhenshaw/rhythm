@@ -34,7 +34,7 @@ This report will cover in detail the conceptual development of the project, as w
 
 ## Background
 <!--Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it. -->
-In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play that I could innovate on. I decided to explore the concept of multi-player.
+In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play that I could innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly.
 
 <!--Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
 

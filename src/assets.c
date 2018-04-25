@@ -73,7 +73,10 @@ bool write_image_file(Image image, char * file_name)
 {
     FILE * file = fopen(file_name, "w");
     if (!file) return false;
-    fprintf(file, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", image.width, image.height);
+    fprintf(file,
+        "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\n"
+        "MAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n",
+        image.width, image.height);
     int byte_count = image.width * image.height * sizeof(image.pixels[0]);
     int bytes_written = fwrite(image.pixels, 1, byte_count, file);
     fclose(file);
@@ -132,6 +135,7 @@ struct
     Font main_font;
     Sound yay_sound;
     Sound wood_block_sound;
+    Animated_Image button_animation;
 
     // Heart mini-game.
     Image heart_icon;
@@ -145,7 +149,9 @@ assets;
 bool load_assets(char * dir)
 {
     char * full_dir = pool_alloc(FRAME_POOL, 512);
-    snprintf(full_dir, 512, "%s%s", SDL_GetBasePath(), dir ? dir : "");
+    char * base_path = SDL_GetBasePath();
+    snprintf(full_dir, 512, "%s%s", base_path, dir ? dir : "");
+    SDL_free(base_path);
     chdir(full_dir);
 
     // Load images.
@@ -160,6 +166,18 @@ bool load_assets(char * dir)
         };
     }
 
+    {
+        Image button_image = read_image_file(PERSIST_POOL, "button.pam");
+        assets.button_animation = (Animated_Image)
+        {
+            .pixels = button_image.pixels,
+            .width = button_image.width,
+            .height = button_image.height / 2,
+            .frame_count = 2,
+            .frame_duration_ms = 10,
+        };
+    }
+
     assets.heart_icon = read_image_file(PERSIST_POOL, "heart_icon.pam");
     if (!assets.heart_icon.pixels) return false;
 
@@ -171,6 +189,7 @@ bool load_assets(char * dir)
             .pixels = heart_animation_image.pixels,
             .width = 320,
             .height = 200,
+            .frame_count = 7,
         };
     }
 
@@ -197,6 +216,7 @@ bool load_assets(char * dir)
         assets.yay_sound.samples = (f32 * )samples;
         assets.yay_sound.sample_count = byte_count / sizeof(f32);
     }
+
 
     return true;
 }
