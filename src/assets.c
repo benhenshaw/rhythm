@@ -6,6 +6,7 @@
 //     - Image writer.
 //     - Sound loader.
 //     - Sound writer.
+//     - Asset loading and storing.
 //
 
 //
@@ -123,4 +124,79 @@ bool write_sound_file(Sound sound, char * file_name)
     int bytes_written = fwrite(sound.samples, 1, byte_count, file);
     fclose(file);
     return byte_count == bytes_written;
+}
+
+struct
+{
+    // General assets.
+    Font main_font;
+    Sound yay_sound;
+    Sound wood_block_sound;
+
+    // Heart mini-game.
+    Image heart_icon;
+    Animated_Image heart_animation;
+
+    // Morse mini-game.
+    Image morse_background;
+}
+assets;
+
+bool load_assets(char * dir)
+{
+    char * full_dir = pool_alloc(FRAME_POOL, 512);
+    snprintf(full_dir, 512, "%s%s", SDL_GetBasePath(), dir ? dir : "");
+    chdir(full_dir);
+
+    // Load images.
+    {
+        Image main_font_image = read_image_file(PERSIST_POOL, "font.pam");
+        if (!main_font_image.pixels) return false;
+        assets.main_font = (Font)
+        {
+            .pixels = main_font_image.pixels,
+            .char_width = 6,
+            .char_height = 12,
+        };
+    }
+
+    assets.heart_icon = read_image_file(PERSIST_POOL, "heart_icon.pam");
+    if (!assets.heart_icon.pixels) return false;
+
+    {
+        Image heart_animation_image = read_image_file(PERSIST_POOL, "heart.pam");
+        if (!heart_animation_image.pixels) return false;
+        assets.heart_animation = (Animated_Image)
+        {
+            .pixels = heart_animation_image.pixels,
+            .width = 320,
+            .height = 200,
+        };
+    }
+
+    assets.morse_background = read_image_file(PERSIST_POOL, "morse.pam");
+    if (!assets.morse_background.pixels) return false;
+
+    // TODO: Use custom sound loader.
+    {
+        SDL_AudioSpec spec = {};
+        u8 * samples = 0;
+        u32 byte_count = 0;
+        SDL_LoadWAV("woodblock.wav", &spec, &samples, &byte_count);
+        if (!samples) return false;
+        assets.wood_block_sound.samples = (f32 * )samples;
+        assets.wood_block_sound.sample_count = byte_count / sizeof(f32);
+    }
+
+    {
+        SDL_AudioSpec spec = {};
+        u8 * samples = 0;
+        u32 byte_count = 0;
+        SDL_LoadWAV("yay.wav", &spec, &samples, &byte_count);
+        if (!samples) return false;
+        assets.yay_sound.samples = (f32 * )samples;
+        assets.yay_sound.sample_count = byte_count / sizeof(f32);
+    }
+
+    return true;
 }

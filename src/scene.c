@@ -53,6 +53,58 @@ bool set_scene(Scene scene)
 }
 
 //
+// Blank scene.
+//
+// Display a blank screen of a given colour, for a given amount of time.
+//
+
+typedef struct
+{
+    u32 end_time;
+    u32 colour;
+    Scene * next_scene;
+    Sound end_sound;
+}
+Blank_State;
+
+Blank_State blank_state;
+
+void blank_frame(void * state, float delta_time)
+{
+    Blank_State * s = state;
+    if (s->end_time < SDL_GetTicks())
+    {
+        if (s->end_sound.samples)
+        {
+            play_sound(&mixer, s->end_sound, 1.0, 1.0, false);
+        }
+        set_scene(*s->next_scene);
+    }
+    clear(s->colour);
+}
+
+void blank_start(void * state) {}
+void blank_input(void * state, int player, bool pressed) {}
+
+
+Scene blank_scene =
+{
+    .start = blank_start,
+    .frame = blank_frame,
+    .input = blank_input,
+    .state = &blank_state,
+};
+
+void cut_to_blank(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
+{
+    set_scene(blank_scene);
+    blank_state.end_time = SDL_GetTicks() + (1000 * time_in_seconds);
+    blank_state.next_scene = next_scene;
+    blank_state.colour = colour;
+    blank_state.end_sound = *end_sound;
+}
+
+//
 // Heart scene.
 //
 // In this scene, players will need to work together to get a heart pumping at
@@ -92,48 +144,14 @@ void heart_start(void * state)
     s->previous_beat_time_ms = 1;
     s->score = 0.0f;
 
-    s->heart = (Animated_Image){
-        .width = 320,
-        .height = 200,
-        .frame_count = 7,
-        .frame_duration_ms = 30,
-        .start_time_ms = SDL_GetTicks(),
-    };
+    s->heart.frame_count = 7;
+    s->heart.frame_duration_ms = 30;
+    s->heart.start_time_ms = SDL_GetTicks();
 
-    // TODO: Should all assets be loaded at launch?
-    {
-        Image temp = read_image_file(SCENE_POOL, "../assets/heart.pam");
-        SDL_assert(temp.pixels);
-        s->heart.pixels = temp.pixels;
-    }
+    s->font.pixels = assets.main_font.pixels;
 
-    Image font_image = read_image_file(SCENE_POOL, "../assets/font.pam");
-    s->font = (Font){
-        .pixels = font_image.pixels,
-        .char_width  = 6,
-        .char_height = 12,
-    };
-
-    // TODO: Use custom sound file loader!
-    {
-        SDL_AudioSpec spec = {};
-        u8 * samples = 0;
-        u32 byte_count = 0;
-        SDL_LoadWAV("../assets/woodblock.wav", &spec, &samples, &byte_count);
-        SDL_assert(samples);
-        s->sound.samples = (f32 * )samples;
-        s->sound.sample_count = byte_count / sizeof(f32);
-    }
-
-    {
-        SDL_AudioSpec spec = {};
-        u8 * samples = 0;
-        u32 byte_count = 0;
-        SDL_LoadWAV("../assets/yay.wav", &spec, &samples, &byte_count);
-        SDL_assert(samples);
-        s->yay.samples = (f32 * )samples;
-        s->yay.sample_count = byte_count / sizeof(f32);
-    }
+    s->sound = assets.wood_block_sound;
+    s->yay = assets.yay_sound;
 
     s->yay_channel = queue_sound(&mixer, s->yay, 0.5f, 0.5f, false);
 }
@@ -259,13 +277,7 @@ void menu_frame(void * state, float delta_time)
 void menu_start(void * state)
 {
     Menu_State * s = state;
-
-    Image font_image = read_image_file(SCENE_POOL, "../assets/font.pam");
-    s->font = (Font){
-        .pixels = font_image.pixels,
-        .char_width  = 6,
-        .char_height = 12,
-    };
+    s->font = assets.main_font;
 }
 
 void menu_input(void * state, int player, bool pressed)
@@ -278,4 +290,42 @@ Scene menu_scene =
     .start = menu_start,
     .input = menu_input,
     .state = &menu_state,
+};
+
+//
+// Morse scene.
+//
+
+typedef struct
+{
+    Image background;
+}
+Morse_State;
+
+Morse_State morse_state;
+
+void morse_start(void * state)
+{
+    Morse_State * s = state;
+    s->background = read_image_file(SCENE_POOL, "../assets/morse.pam");
+    SDL_assert(s->background.pixels);
+}
+
+void morse_frame(void * state, float delta_time)
+{
+    Morse_State * s = state;
+    draw_image(s->background, 0, 0);
+}
+
+void morse_input(void * state, int player, bool pressed)
+{
+
+}
+
+Scene morse_scene =
+{
+    .start = morse_start,
+    .frame = morse_frame,
+    .input = morse_input,
+    .state = &morse_state,
 };

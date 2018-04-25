@@ -31,7 +31,7 @@ static inline u64 align_byte_count(u64 byte_count)
 
 void set_memory(void * memory, u64 byte_count, u8 value)
 {
-    while (byte_count)
+    while (byte_count > 0)
     {
         *( u8 *)memory++ = value;
         --byte_count;

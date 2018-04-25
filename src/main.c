@@ -13,8 +13,12 @@
 #define POOL_STATIC_PERSIST_BYTE_COUNT (64 * 1000 * 1000)
 
 // External includes here:
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <errno.h>
+#include <unistd.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_stdinc.h>
 
 // The entire project is a single compilation unit.
 // Everything is included here:
@@ -90,6 +94,7 @@ int main(int argument_count, char ** arguments)
     }
 
     pixels = pool_alloc(PERSIST_POOL, WIDTH * HEIGHT * sizeof(u32));
+    set_memory(pixels, WIDTH * HEIGHT * sizeof(u32), 0);
 
     SDL_ShowCursor(false);
 
@@ -126,22 +131,37 @@ int main(int argument_count, char ** arguments)
     f32 counter_ticks_per_second = SDL_GetPerformanceFrequency();
 
     //
+    // Load assets.
+    //
+
+    if (!load_assets("../assets/"))
+    {
+        panic_exit("Could not load all assets.\n%s", strerror(errno));
+    }
+
+    //
     // DEBUG:
     //
 
-    Image font_image = read_image_file(PERSIST_POOL, "../assets/font.pam");
-    Font debug_font =
-    {
-        .pixels = font_image.pixels,
-        .char_width  = 6,
-        .char_height = 12,
-    };
+    Font debug_font = assets.main_font;
+
+    // Image button_image = read_image_file(PERSIST_POOL, "../assets/button.pam");
+    // Animated_Image button_animation =
+    // {
+    //     .pixels = button_image.pixels,
+    //     .width = button_image.width,
+    //     .height = button_image.height / 2,
+    //     .frame_count = 2,
+    //     .frame_duration_ms = 10,
+    // };
 
     //
     // Start the game.
     //
 
-    set_scene(heart_scene);
+    cut_to_blank(3, 0, &heart_scene, &assets.wood_block_sound);
+
+    int frame = 0;
 
     while (true)
     {
@@ -164,6 +184,7 @@ int main(int argument_count, char ** arguments)
                 if (!event.key.repeat)
                 {
                     SDL_Scancode sc = event.key.keysym.scancode;
+                    frame = event.key.state;
                     if (sc == SDL_SCANCODE_LSHIFT)
                     {
                         current_scene.input(current_scene.state, 0, event.key.state);
@@ -182,6 +203,10 @@ int main(int argument_count, char ** arguments)
                     {
                         set_scene(heart_scene);
                     }
+                    else if (sc == SDL_SCANCODE_3)
+                    {
+                        set_scene(morse_scene);
+                    }
                 }
             }
         }
@@ -190,7 +215,7 @@ int main(int argument_count, char ** arguments)
         current_scene.frame(current_scene.state, delta_time);
 
         // DEBUG:
-        draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
+        // draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);
