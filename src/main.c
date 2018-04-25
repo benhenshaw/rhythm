@@ -143,7 +143,7 @@ int main(int argument_count, char ** arguments)
     // Start the game.
     //
 
-    blank_cut(3, 0, &heart_scene, &assets.wood_block_sound);
+    blank_cut(1.0, 0, &heart_scene, &assets.wood_block_sound);
 
     while (true)
     {

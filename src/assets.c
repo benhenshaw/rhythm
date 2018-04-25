@@ -129,6 +129,13 @@ bool write_sound_file(Sound sound, char * file_name)
     return byte_count == bytes_written;
 }
 
+//
+// Loading assets.
+//
+// All assets are loaded into a single struct, with references to them taken
+// when needed. load_assets should be called at launch with a suitable path.
+//
+
 struct
 {
     // General assets.
@@ -146,11 +153,13 @@ struct
 }
 assets;
 
-bool load_assets(char * dir)
+// Load all assets, given a path relative to the location of the executable
+// (or app bundle).
+bool load_assets(char * assets_dir)
 {
     char * full_dir = pool_alloc(FRAME_POOL, 512);
     char * base_path = SDL_GetBasePath();
-    snprintf(full_dir, 512, "%s%s", base_path, dir ? dir : "");
+    snprintf(full_dir, 512, "%s%s", base_path, assets_dir ? assets_dir : "");
     SDL_free(base_path);
     chdir(full_dir);
 
