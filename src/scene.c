@@ -99,10 +99,13 @@ Scene blank_scene =
 void blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
 {
     set_scene(blank_scene);
-    blank_state.end_time = SDL_GetTicks() + (1000 * time_in_seconds);
-    blank_state.next_scene = next_scene;
-    blank_state.colour = colour;
-    blank_state.end_sound = *end_sound;
+    blank_state = (Blank_State)
+    {
+        .end_time = SDL_GetTicks() + (1000 * time_in_seconds),
+        .next_scene = next_scene,
+        .colour = colour,
+        .end_sound = *end_sound,
+    };
 }
 
 //
@@ -133,15 +136,11 @@ void heart_start(void * state)
 void heart_frame(void * state, float delta_time)
 {
     Heart_State * s = state;
-
     clear(0);
     draw_animated_image(s->heart, 0, 0);
 }
 
-void heart_input(void * state, int player, bool pressed)
-{
-    Heart_State * s = state;
-}
+void heart_input(void * state, int player, bool pressed) {}
 
 Scene heart_scene =
 {
@@ -176,6 +175,7 @@ void menu_frame(void * state, float delta_time)
 void menu_start(void * state)
 {
     Menu_State * s = state;
+    *s = (Menu_State){};
     s->font = assets.main_font;
 }
 

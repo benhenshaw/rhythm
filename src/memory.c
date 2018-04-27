@@ -21,7 +21,7 @@ static inline u64 megabytes(u64 count)
 // All memory allocations align to the platform's maximum primitive size.
 #define MAX_ALIGNMENT_BYTES (sizeof(max_align_t))
 
-// Round byte_count off to the next multiple of the desired alignment.
+// Round byte_count up to the next multiple of the desired alignment.
 static inline u64 align_byte_count(u64 byte_count)
 {
     byte_count += (MAX_ALIGNMENT_BYTES - 1);
@@ -57,14 +57,24 @@ void copy_memory(void * src, void * dest, u64 byte_count)
         u64 count = byte_count / 4;
         for (u64 i = 0; i < count; ++i) *dest32++ = *src32++;
     }
+    else if (byte_count & (~(u64)1))
+    {
+        // Copy 2 bytes at a time.
+        u16 * src16 = src;
+        u16 * dest16 = dest;
+        u64 count = byte_count / 2;
+        for (u64 i = 0; i < count; ++i) *dest16++ = *src16++;
+    }
     else
     {
         // Fall back to byte-by-byte copy.
-        while (byte_count-- > 0) *(u8 *)dest++ = *(u8 *)src++;
+        u8 * src8 = src;
+        u8 * dest8 = dest;
+        while (byte_count-- > 0) *dest8++ = *src8++;
     }
 }
 
-// Returns true the given memory is byte-for-byte equivalent.
+// Returns true if the given memory is byte-for-byte equivalent.
 bool equal(void * a, void * b, u64 byte_count)
 {
     if (a == b) return true;
@@ -79,8 +89,8 @@ bool equal(void * a, void * b, u64 byte_count)
 // memory under their control. When an allocation is made from a pool, it
 // selects some memory from the top of its pool and returns that pointer.
 //
-// All allocations are guaranteed to be aligned correctly for the largest type
-// available on the machine.
+// All allocations are guaranteed to be aligned to the multiple for the largest
+// type available on the machine.
 //
 
 typedef struct
@@ -128,7 +138,7 @@ void pool_unalloc(int pool_index)
 
 void flush_pool(int pool_index)
 {
-    // TODO: Should flushed memory be zeroed?
+    // TODO: Should flushed memory be zeroed / marked?
     memory_pools[pool_index].bytes_filled = 0;
     memory_pools[pool_index].byte_count_of_last_alloc = 0;
 }
@@ -153,7 +163,8 @@ void * clone_memory(int pool_index, void * src, u64 byte_count)
 // Allocates the memory pools.
 // Returns false if the allocation did not succeed.
 // persist_byte_count is ignored if POOL_STATIC_ALLOCATE is defined.
-bool init_memory_pools(u64 persist_byte_count, u64 scene_byte_count, u64 frame_byte_count)
+bool init_memory_pools(u64 persist_byte_count,
+    u64 scene_byte_count, u64 frame_byte_count)
 {
 #ifdef POOL_STATIC_ALLOCATE
     persist_byte_count = POOL_STATIC_PERSIST_BYTE_COUNT;
@@ -206,21 +217,21 @@ void print_memory_stats()
 {
     printf("Memory Pool Stats:\n");
 
-    printf("Persist: %9llu / %9llu (%02.0f%%), %9llu\n",
+    printf("Persist: %8llu / %8llu (%02.0f%%), %8llu\n",
         memory_pools[PERSIST_POOL].bytes_filled,
         memory_pools[PERSIST_POOL].bytes_available,
         memory_pools[PERSIST_POOL].bytes_filled /
             (f32)memory_pools[PERSIST_POOL].bytes_available * 100,
         memory_pools[PERSIST_POOL].byte_count_of_last_alloc);
 
-    printf("Scene:   %9llu / %9llu (%02.0f%%), %9llu\n",
+    printf("Scene:   %8llu / %8llu (%02.0f%%), %8llu\n",
         memory_pools[SCENE_POOL].bytes_filled,
         memory_pools[SCENE_POOL].bytes_available,
         memory_pools[SCENE_POOL].bytes_filled /
             (f32)memory_pools[SCENE_POOL].bytes_available * 100,
         memory_pools[SCENE_POOL].byte_count_of_last_alloc);
 
-    printf("Frame:   %9llu / %9llu (%02.0f%%), %9llu\n",
+    printf("Frame:   %8llu / %8llu (%02.0f%%), %8llu\n",
         memory_pools[FRAME_POOL].bytes_filled,
         memory_pools[FRAME_POOL].bytes_available,
         memory_pools[FRAME_POOL].bytes_filled /
