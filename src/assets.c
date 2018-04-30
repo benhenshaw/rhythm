@@ -2,10 +2,8 @@
 // assets.c
 //
 // This file contains:
-//     - Image loader.
-//     - Image writer.
-//     - Sound loader.
-//     - Sound writer.
+//     - Image loader and writer.
+//     - Sound loader and writer.
 //     - Asset loading and storing.
 //
 
@@ -13,8 +11,8 @@
 // Image files.
 //
 // The Portable Arbitrary Map image file format is used. It is one of the simplest
-// image formats that allows the RGBA pixel format (notably the alpha channel). It
-// stores the pixels uncompressed, with a simple header.
+// image formats that allows the RGBA pixel format. It stores the pixels
+// uncompressed, with a simple header.
 //
 // An example of the .pam header:
 // P7                     <-- Magic number.
@@ -138,19 +136,15 @@ bool write_sound_file(Sound sound, char * file_name)
 
 struct
 {
-    // General assets.
+    Animated_Image button_animation;
+    Animated_Image heart_animation;
     Font main_font;
     Font scream_font;
-    Sound yay_sound;
-    Sound wood_block_sound;
-    Animated_Image button_animation;
-
-    // Heart mini-game.
     Image heart_icon;
-    Animated_Image heart_animation;
-
-    // Morse mini-game.
     Image morse_background;
+    Image relaxed_skeleton;
+    Sound wood_block_sound;
+    Sound yay_sound;
 }
 assets;
 
@@ -165,6 +159,15 @@ bool load_assets(char * assets_dir)
     chdir(full_dir);
 
     // Load images.
+    assets.relaxed_skeleton = read_image_file(PERSIST_POOL, "relaxed_skeleton.pam");
+    if (!assets.relaxed_skeleton.pixels) return false;
+
+    assets.heart_icon = read_image_file(PERSIST_POOL, "heart_icon.pam");
+    if (!assets.heart_icon.pixels) return false;
+
+    assets.morse_background = read_image_file(PERSIST_POOL, "morse.pam");
+    if (!assets.morse_background.pixels) return false;
+
     {
         Image main_font_image = read_image_file(PERSIST_POOL, "font.pam");
         if (!main_font_image.pixels) return false;
@@ -199,9 +202,6 @@ bool load_assets(char * assets_dir)
         };
     }
 
-    assets.heart_icon = read_image_file(PERSIST_POOL, "heart_icon.pam");
-    if (!assets.heart_icon.pixels) return false;
-
     {
         Image heart_animation_image = read_image_file(PERSIST_POOL, "heart.pam");
         if (!heart_animation_image.pixels) return false;
@@ -213,9 +213,6 @@ bool load_assets(char * assets_dir)
             .frame_count = 7,
         };
     }
-
-    assets.morse_background = read_image_file(PERSIST_POOL, "morse.pam");
-    if (!assets.morse_background.pixels) return false;
 
     // TODO: Use custom sound loader.
     {
@@ -237,7 +234,6 @@ bool load_assets(char * assets_dir)
         assets.yay_sound.samples = (f32 * )samples;
         assets.yay_sound.sample_count = byte_count / sizeof(f32);
     }
-
 
     return true;
 }
