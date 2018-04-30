@@ -143,7 +143,8 @@ int main(int argument_count, char ** arguments)
     // Start the game.
     //
 
-    blank_cut(1.0, 0, &heart_scene, &assets.wood_block_sound);
+    prepare_text_cut(2.0, 0, ~0, &assets.main_font, "DEAD BEAT", &heart_scene, &assets.wood_block_sound);
+    blank_cut(1.0, 0, &text_scene, &assets.wood_block_sound);
 
     while (true)
     {
@@ -196,7 +197,7 @@ int main(int argument_count, char ** arguments)
         current_scene.frame(current_scene.state, delta_time);
 
         // DEBUG:
-        // draw_text(debug_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
+        // draw_text(assets.main_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);

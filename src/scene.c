@@ -62,6 +62,7 @@ typedef struct
 {
     u32 end_time;
     u32 colour;
+    float time_in_seconds;
     Scene * next_scene;
     Sound end_sound;
 }
@@ -84,9 +85,13 @@ void blank_frame(void * state, float delta_time)
 }
 
 // Stub functions, as nothing needs to be done for this scene.
-void blank_start(void * state) {}
-void blank_input(void * state, int player, bool pressed) {}
+void blank_start(void * state)
+{
+    Blank_State * s = state;
+    s->end_time = SDL_GetTicks() + (1000 * s->time_in_seconds);
+}
 
+void blank_input(void * state, int player, bool pressed) {}
 
 Scene blank_scene =
 {
@@ -96,16 +101,108 @@ Scene blank_scene =
     .state = &blank_state,
 };
 
-void blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
+void prepare_blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
 {
-    set_scene(blank_scene);
     blank_state = (Blank_State)
     {
-        .end_time = SDL_GetTicks() + (1000 * time_in_seconds),
+        .time_in_seconds = time_in_seconds,
         .next_scene = next_scene,
         .colour = colour,
         .end_sound = *end_sound,
     };
+
+    set_scene(blank_scene);
+}
+
+void blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
+{
+    prepare_blank_cut(time_in_seconds, colour, next_scene, end_sound);
+    set_scene(blank_scene);
+}
+
+//
+// Text scene.
+//
+// Display some text on the screen for a given amount of time.
+//
+
+typedef struct
+{
+    u32 end_time;
+    u32 background_colour;
+    u32 text_colour;
+    int x;
+    int y;
+    float time_in_seconds;
+    Scene * next_scene;
+    Sound end_sound;
+    char * text;
+    Font font;
+}
+Text_State;
+
+Text_State text_state;
+
+void text_frame(void * state, float delta_time)
+{
+    Text_State * s = state;
+    if (s->end_time < SDL_GetTicks())
+    {
+        if (s->end_sound.samples)
+        {
+            play_sound(&mixer, s->end_sound, 1.0, 1.0, false);
+        }
+        set_scene(*s->next_scene);
+    }
+    clear(s->background_colour);
+    draw_text(s->font, s->x, s->y, s->text_colour, s->text);
+}
+
+void text_start(void * state)
+{
+    Text_State * s = state;
+    s->end_time = SDL_GetTicks() + (1000 * s->time_in_seconds);
+}
+
+void text_input(void * state, int player, bool pressed) {}
+
+
+Scene text_scene =
+{
+    .start = text_start,
+    .frame = text_frame,
+    .input = text_input,
+    .state = &text_state,
+};
+
+void prepare_text_cut(float time_in_seconds, u32 background_colour, u32 text_colour,
+    Font * font, char * text, Scene * next_scene, Sound * end_sound)
+{
+    int string_length = strlen(text);
+    int x = (WIDTH / 2) - (font->char_width * string_length) / 2;
+    int y = (HEIGHT / 2) - (font->char_height / 2);
+
+    text_state = (Text_State)
+    {
+        .time_in_seconds = time_in_seconds,
+        .next_scene = next_scene,
+        .background_colour = background_colour,
+        .end_sound = *end_sound,
+        .text = text,
+        .text_colour = text_colour,
+        .font = *font,
+        .x = x,
+        .y = y,
+    };
+}
+
+void text_cut(float time_in_seconds, u32 background_colour, u32 text_colour,
+    Font * font, char * text, Scene * next_scene, Sound * end_sound)
+{
+    prepare_text_cut(time_in_seconds,
+        background_colour, text_colour, font, text,
+        next_scene, end_sound);
+    set_scene(text_scene);
 }
 
 //
@@ -151,6 +248,44 @@ Scene heart_scene =
 };
 
 //
+// Morse scene.
+//
+
+typedef struct
+{
+    Image background;
+}
+Morse_State;
+
+Morse_State morse_state;
+
+void morse_start(void * state)
+{
+    Morse_State * s = state;
+    s->background = read_image_file(SCENE_POOL, "../assets/morse.pam");
+    SDL_assert(s->background.pixels);
+}
+
+void morse_frame(void * state, float delta_time)
+{
+    Morse_State * s = state;
+    draw_image(s->background, 0, 0);
+}
+
+void morse_input(void * state, int player, bool pressed)
+{
+
+}
+
+Scene morse_scene =
+{
+    .start = morse_start,
+    .frame = morse_frame,
+    .input = morse_input,
+    .state = &morse_state,
+};
+
+//
 // Menu scene.
 //
 
@@ -189,42 +324,4 @@ Scene menu_scene =
     .start = menu_start,
     .input = menu_input,
     .state = &menu_state,
-};
-
-//
-// Morse scene.
-//
-
-typedef struct
-{
-    Image background;
-}
-Morse_State;
-
-Morse_State morse_state;
-
-void morse_start(void * state)
-{
-    Morse_State * s = state;
-    s->background = read_image_file(SCENE_POOL, "../assets/morse.pam");
-    SDL_assert(s->background.pixels);
-}
-
-void morse_frame(void * state, float delta_time)
-{
-    Morse_State * s = state;
-    draw_image(s->background, 0, 0);
-}
-
-void morse_input(void * state, int player, bool pressed)
-{
-
-}
-
-Scene morse_scene =
-{
-    .start = morse_start,
-    .frame = morse_frame,
-    .input = morse_input,
-    .state = &morse_state,
 };

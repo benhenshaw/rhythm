@@ -140,6 +140,7 @@ struct
 {
     // General assets.
     Font main_font;
+    Font scream_font;
     Sound yay_sound;
     Sound wood_block_sound;
     Animated_Image button_animation;
@@ -172,6 +173,17 @@ bool load_assets(char * assets_dir)
             .pixels = main_font_image.pixels,
             .char_width = 6,
             .char_height = 12,
+        };
+    }
+
+    {
+        Image scream_font_image = read_image_file(PERSIST_POOL, "scream.pam");
+        if (!scream_font_image.pixels) return false;
+        assets.scream_font = (Font)
+        {
+            .pixels = scream_font_image.pixels,
+            .char_width = 9,
+            .char_height = 8,
         };
     }
 
