@@ -43,14 +43,18 @@ Software written today generally sits atop a large stack of software written by 
 At each level, the people involved have their own ideas and concerns, and build their piece of software around this. If they are designing libraries, they are likely to make decisions that support the most general case at all times. I argue that any software one writes has specific problems, and that generic solutions to specific problems are bad solutions.
 
 <!-- Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
+
 #### Graphics
 
 ## Specification
 <!-- Discuss the range of interactions that the mini-games explore. -->
+In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, broadening the range of experiences that a player can have.
+
+I wanted to explore competitive and cooperative game-play.
 
 <!-- Discuss desires for what the player will experience when playing. -->
 
-<!-- Discuss technical performance goals, and how they support design goals. -->
+<!-- Discuss technical goals, and how they support design goals. -->
 
 ## Design and Implementation
 <!-- Discuss the overall design of the game describing the mini-games and their characteristics. (Several paragraphs.) -->
