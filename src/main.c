@@ -143,6 +143,14 @@ int main(int argument_count, char ** arguments)
     }
 
     //
+    // Initialise any connected input devices.
+    //
+
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        SDL_JoystickOpen(i);
+    }
+
+    //
     // Start the game.
     //
 
@@ -195,6 +203,14 @@ int main(int argument_count, char ** arguments)
                         set_scene(morse_scene);
                     }
                 }
+            }
+            else if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP)
+            {
+                current_scene.input(current_scene.state, event.jbutton.which & 1, event.jbutton.state);
+            }
+            else if (event.type == SDL_JOYDEVICEADDED)
+            {
+                SDL_JoystickOpen(event.jdevice.which);
             }
         }
 
