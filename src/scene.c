@@ -220,6 +220,7 @@ void text_cut(float time_in_seconds, u32 background_colour, u32 text_colour,
 typedef struct
 {
     Animated_Image heart;
+    bool player_states[2];
     int time_stamps[2];
     int delta_ms;
     float target_beats_per_minute;
@@ -245,7 +246,15 @@ void heart_frame(void * state, float delta_time)
 {
     Heart_State * s = state;
 
-    clear(0);
+    for (int y = 0; y < HEIGHT; ++y)
+    {
+        for (int x = 0; x < WIDTH; ++x)
+        {
+            int r = random_int_range(0, 40);
+            pixels[x + y * WIDTH] = rgba(r,r,r,255);
+        }
+    }
+
     if (s->expanding)
     {
         draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 20);
@@ -294,11 +303,15 @@ void heart_frame(void * state, float delta_time)
     draw_line(WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y - 1),
         WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y + 1),
         ~0);
+
+    draw_animated_image_frame(assets.button_animation, s->player_states[0], 20, 110);
+    draw_animated_image_frame(assets.button_animation, s->player_states[1], 240, 110);
 }
 
 void heart_input(void * state, int player, bool pressed)
 {
     Heart_State * s = state;
+    s->player_states[player] = pressed;
     if (pressed)
     {
         if (s->expanding != player)
