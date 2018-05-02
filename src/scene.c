@@ -101,7 +101,8 @@ Scene blank_scene =
     .state = &blank_state,
 };
 
-void prepare_blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
+void prepare_blank_cut(float time_in_seconds, u32 colour,
+    Scene * next_scene, Sound * end_sound)
 {
     blank_state = (Blank_State)
     {
@@ -114,7 +115,8 @@ void prepare_blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, So
     set_scene(blank_scene);
 }
 
-void blank_cut(float time_in_seconds, u32 colour, Scene * next_scene, Sound * end_sound)
+void blank_cut(float time_in_seconds, u32 colour,
+    Scene * next_scene, Sound * end_sound)
 {
     prepare_blank_cut(time_in_seconds, colour, next_scene, end_sound);
     set_scene(blank_scene);
@@ -175,8 +177,10 @@ Scene text_scene =
     .state = &text_state,
 };
 
-void prepare_text_cut(float time_in_seconds, u32 background_colour, u32 text_colour,
-    Font * font, char * text, Scene * next_scene, Sound * end_sound)
+void prepare_text_cut(float time_in_seconds,
+    u32 background_colour, u32 text_colour,
+    Font * font, char * text,
+    Scene * next_scene, Sound * end_sound)
 {
     int string_length = strlen(text);
     int x = (WIDTH / 2) - (font->char_width * string_length) / 2;
@@ -216,6 +220,11 @@ void text_cut(float time_in_seconds, u32 background_colour, u32 text_colour,
 typedef struct
 {
     Animated_Image heart;
+    int time_stamps[2];
+    int delta_ms;
+    float target_beats_per_minute;
+    float accuracy;
+    bool expanding;
 }
 Heart_State;
 
@@ -226,18 +235,87 @@ void heart_start(void * state)
     Heart_State * s = state;
     *s = (Heart_State){};
     s->heart = assets.heart_animation;
-    s->heart.frame_duration_ms = 50;
+    s->heart.frame_duration_ms = 30;
     s->heart.start_time_ms = SDL_GetTicks();
+    s->target_beats_per_minute = 60.0;
+    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
 }
 
 void heart_frame(void * state, float delta_time)
 {
     Heart_State * s = state;
+
     clear(0);
-    draw_animated_image(s->heart, 0, 0);
+    if (s->expanding)
+    {
+        draw_animated_image_frames_and_wait(s->heart, 0, 3, 0, 20);
+    }
+    else
+    {
+        draw_animated_image_frames_and_wait(s->heart, 4, 6, 0, 20);
+    }
+
+    float green_range = 5.0;
+    float yellow_range = green_range * 5.0;
+    float red_range = green_range * 10.0f;
+    float scale = 100.0 / red_range;
+
+    if (s->time_stamps[0] && s->time_stamps[1])
+    {
+        float beats_per_minute = 60.0f / (s->delta_ms * 0.001f);
+        float d = s->target_beats_per_minute - beats_per_minute;
+        d = clamp(-red_range, -d, red_range);
+        s->accuracy += (d - s->accuracy) * 0.05;
+    }
+
+    int y = 10;
+    draw_line(WIDTH / 2 - red_range * scale, HEIGHT - y,
+        WIDTH / 2 + red_range * scale, HEIGHT - y,
+        0xff0000ff);
+    draw_line(WIDTH / 2 - yellow_range * scale, HEIGHT - y,
+        WIDTH / 2 + yellow_range * scale, HEIGHT - y,
+        0xffff00ff);
+    draw_line(WIDTH / 2 - green_range * scale, HEIGHT - y,
+        WIDTH / 2 + green_range * scale, HEIGHT - y,
+        0x00ff00ff);
+    draw_line(WIDTH / 2 - green_range * scale, HEIGHT - (y - 1),
+        WIDTH / 2 - green_range * scale, HEIGHT - (y + 1),
+        0x00ff00ff);
+    draw_line(WIDTH / 2 + green_range * scale, HEIGHT - (y - 1),
+        WIDTH / 2 + green_range * scale, HEIGHT - (y + 1),
+        0x00ff00ff);
+
+    draw_line(WIDTH / 2 + s->accuracy * scale, HEIGHT - (y - 1),
+        WIDTH / 2 + s->accuracy * scale, HEIGHT - (y + 1),
+        ~0);
+    draw_line(WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y - 1),
+        WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y + 1),
+        ~0);
+    draw_line(WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y - 1),
+        WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y + 1),
+        ~0);
 }
 
-void heart_input(void * state, int player, bool pressed) {}
+void heart_input(void * state, int player, bool pressed)
+{
+    Heart_State * s = state;
+    if (pressed)
+    {
+        if (s->expanding != player)
+        {
+            int t = SDL_GetTicks();
+            s->time_stamps[player] = t;
+            s->heart.start_time_ms = t;
+            int a = s->time_stamps[0];
+            int b = s->time_stamps[1];
+            if (a && b)
+            {
+                s->delta_ms = abs(a - b);
+            }
+            s->expanding = player;
+        }
+    }
+}
 
 Scene heart_scene =
 {
@@ -246,6 +324,8 @@ Scene heart_scene =
     .input = heart_input,
     .state = &heart_state,
 };
+
+#undef STAMP_COUNT
 
 //
 // Morse scene.

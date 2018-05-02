@@ -70,7 +70,7 @@ int main(int argument_count, char ** arguments)
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIDTH * 3, HEIGHT * 3, SDL_WINDOW_RESIZABLE);
+        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         panic_exit("Could not create a window.\n%s", SDL_GetError());
@@ -145,6 +145,8 @@ int main(int argument_count, char ** arguments)
 
     prepare_text_cut(2.0, 0, ~0, &assets.main_font, "DEAD BEAT", &heart_scene, &assets.wood_block_sound);
     blank_cut(1.0, 0, &text_scene, &assets.wood_block_sound);
+
+    set_scene(heart_scene);
 
     while (true)
     {

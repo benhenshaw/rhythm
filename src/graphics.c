@@ -11,7 +11,7 @@
 
 // The fixed resolution of the internal pixel buffer.
 #define WIDTH 320
-#define HEIGHT 200
+#define HEIGHT 240
 
 // Points to the internal pixel buffer.
 u32 * pixels;
