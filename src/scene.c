@@ -226,6 +226,7 @@ typedef struct
     float target_beats_per_minute;
     float accuracy;
     bool expanding;
+    bool draw_interface;
 }
 Heart_State;
 
@@ -237,8 +238,8 @@ void heart_start(void * state)
     *s = (Heart_State){};
     s->heart = assets.heart_animation;
     s->heart.frame_duration_ms = 30;
-    s->heart.start_time_ms = SDL_GetTicks();
     s->target_beats_per_minute = 60.0;
+    s->draw_interface = true;
     play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
 }
 
@@ -264,6 +265,7 @@ void heart_frame(void * state, float delta_time)
         draw_animated_image_frames_and_wait(s->heart, 4, 6, 0, 20);
     }
 
+
     float green_range = 5.0;
     float yellow_range = green_range * 5.0;
     float red_range = green_range * 10.0f;
@@ -277,35 +279,56 @@ void heart_frame(void * state, float delta_time)
         s->accuracy += (d - s->accuracy) * 0.05;
     }
 
-    int y = 10;
-    draw_line(WIDTH / 2 - red_range * scale, HEIGHT - y,
-        WIDTH / 2 + red_range * scale, HEIGHT - y,
-        0xff0000ff);
-    draw_line(WIDTH / 2 - yellow_range * scale, HEIGHT - y,
-        WIDTH / 2 + yellow_range * scale, HEIGHT - y,
-        0xffff00ff);
-    draw_line(WIDTH / 2 - green_range * scale, HEIGHT - y,
-        WIDTH / 2 + green_range * scale, HEIGHT - y,
-        0x00ff00ff);
-    draw_line(WIDTH / 2 - green_range * scale, HEIGHT - (y - 1),
-        WIDTH / 2 - green_range * scale, HEIGHT - (y + 1),
-        0x00ff00ff);
-    draw_line(WIDTH / 2 + green_range * scale, HEIGHT - (y - 1),
-        WIDTH / 2 + green_range * scale, HEIGHT - (y + 1),
-        0x00ff00ff);
+    if (s->draw_interface)
+    {
+        int y = 10;
+        draw_line(WIDTH / 2 - red_range * scale, HEIGHT - y,
+            WIDTH / 2 + red_range * scale, HEIGHT - y,
+            0xff0000ff);
+        draw_line(WIDTH / 2 - yellow_range * scale, HEIGHT - y,
+            WIDTH / 2 + yellow_range * scale, HEIGHT - y,
+            0xffff00ff);
+        draw_line(WIDTH / 2 - green_range * scale, HEIGHT - y,
+            WIDTH / 2 + green_range * scale, HEIGHT - y,
+            0x00ff00ff);
+        draw_line(WIDTH / 2 - green_range * scale, HEIGHT - (y - 1),
+            WIDTH / 2 - green_range * scale, HEIGHT - (y + 1),
+            0x00ff00ff);
+        draw_line(WIDTH / 2 + green_range * scale, HEIGHT - (y - 1),
+            WIDTH / 2 + green_range * scale, HEIGHT - (y + 1),
+            0x00ff00ff);
 
-    draw_line(WIDTH / 2 + s->accuracy * scale, HEIGHT - (y - 1),
-        WIDTH / 2 + s->accuracy * scale, HEIGHT - (y + 1),
-        ~0);
-    draw_line(WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y - 1),
-        WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y + 1),
-        ~0);
-    draw_line(WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y - 1),
-        WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y + 1),
-        ~0);
+        draw_line(WIDTH / 2 + s->accuracy * scale, HEIGHT - (y - 1),
+            WIDTH / 2 + s->accuracy * scale, HEIGHT - (y + 1),
+            ~0);
+        draw_line(WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y - 1),
+            WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y + 1),
+            ~0);
+        draw_line(WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y - 1),
+            WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y + 1),
+            ~0);
 
-    draw_animated_image_frame(assets.button_animation, s->player_states[0], 20, 110);
-    draw_animated_image_frame(assets.button_animation, s->player_states[1], 240, 110);
+        draw_text(assets.main_font, WIDTH / 2 - red_range * scale - 30, HEIGHT - (y + 6), ~0, "slow");
+        draw_text(assets.main_font, WIDTH / 2 + red_range * scale + 5, HEIGHT - (y + 6), ~0, "fast");
+
+        y = 80 + sinf((M_PI*2.0) * SDL_GetTicks() * 0.001 * (s->target_beats_per_minute / 60.0)) * 5;
+        if (s->expanding)
+        {
+            draw_line(49, y, 49, y + 10, ~0);
+            draw_line(49, y + 10, 49 - 5, y + 5, ~0);
+            draw_line(49, y + 10, 49 + 5, y + 5, ~0);
+        }
+        else
+        {
+            draw_line(269, y, 269, y + 10, ~0);
+            draw_line(269, y + 10, 269 - 5, y + 5, ~0);
+            draw_line(269, y + 10, 269 + 5, y + 5, ~0);
+        }
+
+        draw_animated_image_frame(assets.button_animation, s->player_states[0], 20, 110);
+        draw_animated_image_frame(assets.button_animation, s->player_states[1], 240, 110);
+
+    }
 }
 
 void heart_input(void * state, int player, bool pressed)
