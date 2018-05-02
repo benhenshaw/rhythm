@@ -85,6 +85,9 @@ int main(int argument_count, char ** arguments)
         panic_exit("Could not create a rendering context.\n%s", SDL_GetError());
     }
 
+    SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT);
+    SDL_RenderSetIntegerScale(renderer, true);
+
     SDL_Texture * screen_texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
         WIDTH, HEIGHT);
