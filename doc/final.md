@@ -19,7 +19,7 @@
 
 ## Abstract
 <!-- Rhythm game with supporting systems built from scratch... -->
-This document describes the design and development of a two-player mini-game based video game. The project focusses on the technical implementation, and attempts to demonstrate the idea that building a game from scratch is entirely achievable, especially when focussing efforts on the technical systems that best support the game.
+This document describes the design and development of a two-player mini-game based video game. The project focusses on the technical implementation, and attempts to demonstrate methods that can be used to implement critical systems (such as rendering and memory allocation) in a way that is tailored to support the game.
 
 ## Introduction
 <!-- Discuss the game idea as it relates to the games that inspired it. -->
@@ -35,12 +35,10 @@ This report will cover in detail the conceptual development of the project, as w
 
 ## Background
 <!-- Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it. -->
-In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play that I could innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly.
+In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Heaven, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions, beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
 ### Planning the Implementation
-Software written today generally sits atop a large stack of software written by others. Taking any 'modern' website as an example; many web-based libraries are used (each of which must be downloaded to the user's machine, or ready in the browser's cache). All of these libraries are written in JavaScript or perhaps some higher abstraction level, compiled to JavaScript. This JavaScript code is run by an interpreter, utilising a virtual machine and possibly a JIT compiler. This code is sand-boxed, to improve security (although exploits seem to be discovered often). All of this sits inside the browser, which also has a rendering engine for the HTML and CSS code, and likely relies (as most modern browser such as FireFox and Chrome do) on a rendering library that provides routines to render objects using the system's graphics API, implemented by the graphics driver, in a window that is created using the Operating System's API, in a process that is launched by the language's run-time, which calls OS code, which calls into the kernel.
-
-At each level, the people involved have their own ideas and concerns, and build their piece of software around this. If they are designing libraries, they are likely to make decisions that support the most general case at all times. I argue that any software one writes has specific problems, and that generic solutions to specific problems are bad solutions.
+Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software.
 
 <!-- Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
 
