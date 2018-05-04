@@ -202,6 +202,13 @@ int main(int argument_count, char ** arguments)
                     {
                         set_scene(morse_scene);
                     }
+                    else if (sc == SDL_SCANCODE_I)
+                    {
+                        if (event.key.state)
+                        {
+                            heart_state.draw_interface = !heart_state.draw_interface;
+                        }
+                    }
                 }
             }
             else if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP)
