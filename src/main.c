@@ -10,7 +10,7 @@
 
 // Compile time options for the memory allocator.
 #define POOL_STATIC_ALLOCATE
-#define POOL_STATIC_PERSIST_BYTE_COUNT (64 * 1000 * 1000)
+#define POOL_STATIC_PERSIST_BYTE_COUNT (32 * 1000 * 1000)
 
 // External includes here:
 #include <stdlib.h>
@@ -54,7 +54,7 @@ int main(int argument_count, char ** arguments)
     // Initialisation.
     //
 
-    if (!init_memory_pools(megabytes(64), megabytes(32), megabytes(8)))
+    if (!init_memory_pools(megabytes(32), megabytes(8), megabytes(4)))
     {
         panic_exit("Could not initialise memory pools.");
     }

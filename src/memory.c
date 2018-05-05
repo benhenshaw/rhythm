@@ -192,6 +192,14 @@ bool init_memory_pools(u64 persist_byte_count,
 
     if (!memory) return false;
 
+    // Access each page of the allocated memory to ensure the pages are
+    // accessible. 4096 is a common memory page size.
+    u8 * bytes = memory;
+    for (int byte_index = 0; byte_index < persist_byte_count; byte_index += 4096)
+    {
+        bytes[byte_index] = 0;
+    }
+
     // The persistent pool handles this allocated memory.
     memory_pools[PERSIST_POOL].memory = memory;
     memory_pools[PERSIST_POOL].bytes_available = persist_byte_count;
