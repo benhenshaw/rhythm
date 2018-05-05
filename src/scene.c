@@ -15,7 +15,7 @@
 // input function is called when a player presses a button.
 //
 
-typedef void (* Frame_Func)(void * state, float delta_time);
+typedef void (* Frame_Func)(void * state, f32 delta_time);
 typedef void (* Start_Func)(void * state);
 typedef void (* Input_Func)(void * state, int player, bool pressed);
 
@@ -62,7 +62,7 @@ typedef struct
 {
     u32 end_time;
     u32 colour;
-    float time_in_seconds;
+    f32 time_in_seconds;
     Scene * next_scene;
     Sound end_sound;
 }
@@ -70,7 +70,7 @@ Blank_State;
 
 Blank_State blank_state;
 
-void blank_frame(void * state, float delta_time)
+void blank_frame(void * state, f32 delta_time)
 {
     Blank_State * s = state;
     if (s->end_time < SDL_GetTicks())
@@ -101,7 +101,7 @@ Scene blank_scene =
     .state = &blank_state,
 };
 
-void prepare_blank_cut(float time_in_seconds, u32 colour,
+void prepare_blank_cut(f32 time_in_seconds, u32 colour,
     Scene * next_scene, Sound * end_sound)
 {
     blank_state = (Blank_State)
@@ -115,7 +115,7 @@ void prepare_blank_cut(float time_in_seconds, u32 colour,
     set_scene(blank_scene);
 }
 
-void blank_cut(float time_in_seconds, u32 colour,
+void blank_cut(f32 time_in_seconds, u32 colour,
     Scene * next_scene, Sound * end_sound)
 {
     prepare_blank_cut(time_in_seconds, colour, next_scene, end_sound);
@@ -135,7 +135,7 @@ typedef struct
     u32 text_colour;
     int x;
     int y;
-    float time_in_seconds;
+    f32 time_in_seconds;
     Scene * next_scene;
     Sound end_sound;
     char * text;
@@ -145,7 +145,7 @@ Text_State;
 
 Text_State text_state;
 
-void text_frame(void * state, float delta_time)
+void text_frame(void * state, f32 delta_time)
 {
     Text_State * s = state;
     if (s->end_time < SDL_GetTicks())
@@ -177,7 +177,7 @@ Scene text_scene =
     .state = &text_state,
 };
 
-void prepare_text_cut(float time_in_seconds,
+void prepare_text_cut(f32 time_in_seconds,
     u32 background_colour, u32 text_colour,
     Font * font, char * text,
     Scene * next_scene, Sound * end_sound)
@@ -200,7 +200,7 @@ void prepare_text_cut(float time_in_seconds,
     };
 }
 
-void text_cut(float time_in_seconds, u32 background_colour, u32 text_colour,
+void text_cut(f32 time_in_seconds, u32 background_colour, u32 text_colour,
     Font * font, char * text, Scene * next_scene, Sound * end_sound)
 {
     prepare_text_cut(time_in_seconds,
@@ -223,8 +223,8 @@ typedef struct
     bool player_states[2];
     int time_stamps[2];
     int delta_ms;
-    float target_beats_per_minute;
-    float accuracy;
+    f32 target_beats_per_minute;
+    f32 accuracy;
     bool expanding;
     bool draw_interface;
 }
@@ -243,7 +243,7 @@ void heart_start(void * state)
     play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
 }
 
-void heart_frame(void * state, float delta_time)
+void heart_frame(void * state, f32 delta_time)
 {
     Heart_State * s = state;
 
@@ -266,15 +266,15 @@ void heart_frame(void * state, float delta_time)
     }
 
 
-    float green_range = 5.0;
-    float yellow_range = green_range * 5.0;
-    float red_range = green_range * 10.0f;
-    float scale = 100.0 / red_range;
+    f32 green_range = 5.0;
+    f32 yellow_range = green_range * 5.0;
+    f32 red_range = green_range * 10.0f;
+    f32 scale = 100.0 / red_range;
 
     if (s->time_stamps[0] && s->time_stamps[1])
     {
-        float beats_per_minute = 60.0f / (s->delta_ms * 0.001f);
-        float d = s->target_beats_per_minute - beats_per_minute;
+        f32 beats_per_minute = 60.0f / (s->delta_ms * 0.001f);
+        f32 d = s->target_beats_per_minute - beats_per_minute;
         d = clamp(-red_range, -d, red_range);
         s->accuracy += (d - s->accuracy) * 0.05;
     }
@@ -390,7 +390,7 @@ void morse_start(void * state)
     SDL_assert(s->background.pixels);
 }
 
-void morse_frame(void * state, float delta_time)
+void morse_frame(void * state, f32 delta_time)
 {
     Morse_State * s = state;
     draw_image(s->background, 0, 0);
@@ -421,7 +421,7 @@ Menu_State;
 
 Menu_State menu_state;
 
-void menu_frame(void * state, float delta_time)
+void menu_frame(void * state, f32 delta_time)
 {
     Menu_State * s = state;
 
