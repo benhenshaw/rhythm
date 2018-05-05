@@ -252,7 +252,7 @@ void heart_frame(void * state, float delta_time)
         for (int x = 0; x < WIDTH; ++x)
         {
             int r = random_int_range(0, 40);
-            pixels[x + y * WIDTH] = rgba(r,r,r,255);
+            pixels[x + y * WIDTH] = rgba(r, r, r, 255);
         }
     }
 
@@ -308,8 +308,16 @@ void heart_frame(void * state, float delta_time)
             WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y + 1),
             ~0);
 
-        draw_text(assets.main_font, WIDTH / 2 - red_range * scale - 30, HEIGHT - (y + 6), ~0, "slow");
-        draw_text(assets.main_font, WIDTH / 2 + red_range * scale + 5, HEIGHT - (y + 6), ~0, "fast");
+        draw_text(assets.main_font,
+            WIDTH / 2 - red_range * scale - 30,
+            HEIGHT - (y + 6),
+            ~0,
+            "slow");
+        draw_text(assets.main_font,
+            WIDTH / 2 + red_range * scale + 5,
+            HEIGHT - (y + 6),
+            ~0,
+            "fast");
 
         y = 80 + sinf((M_PI*2.0) * SDL_GetTicks() * 0.001 * (s->target_beats_per_minute / 60.0)) * 5;
         if (s->expanding)

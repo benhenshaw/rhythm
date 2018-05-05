@@ -209,6 +209,13 @@ int main(int argument_count, char ** arguments)
                             heart_state.draw_interface = !heart_state.draw_interface;
                         }
                     }
+                    else if (sc == SDL_SCANCODE_O)
+                    {
+                        if (event.key.state)
+                        {
+                            heart_state.target_beats_per_minute += 10;
+                        }
+                    }
                 }
             }
             else if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP)
