@@ -159,7 +159,7 @@ for (int sample_index = 0; sample_index < sample_count; ++sample_index)
 }
 ```
 
-This works as sound in f32 format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
+This works as sound in `f32` format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
 
 #### Mixing
 Audio is output by a high-frequency callback. This callback requests a number of samples, which is produced at will by the custom audio mixer. This audio mixer has a list of all playing sounds and their current state, and uses this to mix together a single stream of audio for playback. Each individual sound is simply a chunk of audio samples:
@@ -300,7 +300,7 @@ Animations have a time in milliseconds that states how long each frame of the an
 
 #### Text
 <!-- Discuss the rendering of text. -->
-Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. Fonts in this project are defined to be a bitmap image holding all of the drawable characters defined in the ASCII standard, packed horizontally, and every character is the same width (monospace). The location of a character in the image can be calculated using its ASCII code as an offset from the first character:
+Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. Fonts in this project are defined to be a bitmap image holding all of the drawable characters defined in the ASCII standard, packed horizontally, and every character is the same width (mono-space). The location of a character in the image can be calculated using its ASCII code as an offset from the first character:
 
 ```
 int x = font.char_width * (string[c] - ' ');
@@ -330,6 +330,20 @@ Some objects are created for rendering purposes, such as dynamic strings, and wi
 #### The solution
 The project employs a pool-based approach. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
 
+This is both easier to use (as `free` never needs to be called) and faster than `malloc` as the implementation is vastly simpler. The trade off is more memory is allocated than absolutely necessary, but in the final iteration of the memory allocator only 64 megabytes are allocated up front, and that limit has never been reached in my testing. This number is also somewhat inflated as, on most modern operating systems, memory pages are not actually allocated when requested, but when modified. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`). Anecdotally, the highest I have seen the process using is about 32 megabytes, despite allocating double that number.
+
+##### The actual allocation
+There are many options once can choose when allocating memory. There are language-level features, such as the `malloc` family of functions, or `new` in other languages. There are OS API calls, such as `VirtualAlloc` on Windows, or `mmap` on Unix and other POSIX-compliant systems. Allocations can also be made using stack memory, or static memory. There are trade-offs for each, so I first had to discover what my requirements were to make an educated decision.
+
+As stated earlier in this section, I calculated that an upper limit of 64 megabytes would satisfy the needs of my project. This ruled out stack memory as the default stack limit in clang and gcc is 8MB (which I found by calling `getrlimit`) in MSVC is 1MB. While the limits of stack memory can be specified at link time, this would require different actions to build the program on each platform and tool-chain.
+
+I wanted to avoid the overhead of calling `malloc`, as I did not need its internal management of memory. I also wanted to avoid platform-specific functions if possible, but since this case would likely be a single function call I was happy to make an exception. I initially allocated the memory using `mmap`, and only using a subset of its features so that it would be compatible on Linux and macOS. I then put in a compile-time condition to use `VirtualAlloc` if building on Windows. Since I happened to be using the MinGW tool-kit on windows, `mmap` was also supported there.
+
+After some time I returned to this question, as I had noticed that I had not considered another option; static memory. Considering that I had modest requirements, I looked into what the characteristics of static allocation are. On Windows, static data is limited to 2GB on both 32-bit and 64-bit versions of the OS (Lionel, 2011). On macOS and Linux, I could not so easily find an answer, but in my own testing the programme would crash at values higher than 2GB on macOS, but did not crash on Linux at any value (although my patience did not allow me to test values greater that 8GB, as touching every page at that size begins to take some time). These limits are far beyond what I require, and the implementation is simpler that the previous, both in that it does not require even a function call, and that it is identical on all platforms. This is the implementation that remains in the final iteration of the project.
+
+##### Thread Safety
+One aspect not implemented in the final code-base, but researched, was making the allocator thread-safe. Initially, my implementation used a `mutex` to guarantee that allocations could be made from any thread without interference, but after more of the project was implemented, I found that I never allocated memory from a thread other than the main one, and so this feature was removed as it added cost with no benefit.
+
 ### Scenes
 <!-- Discuss the management of scenes and mini-games. -->
 Scenes are sets of function pointers that can be swapped out at will. These function pointers are called at specific times, including when the user presses a button, or when a frame of graphics needs to be rendered.
@@ -343,6 +357,13 @@ In order to effectively iterate on the project, testing with users was a must. I
 <!-- Discuss the methods chosen, and specifics about how testing was carried out. -->
 
 <!-- Show the information collected during testing. -->
+### Testing the Heart Mini-Game
+The heart mini-game is the first interaction with the game that players will have. Therefore, I started to test it early on in development. I wanted to avoid upfront explanation and tutorial, so needed to ensure that players could figure out what was happening, and what was expected of them. Here are some of the points that I received, which helped to inform the final mini-game:
+
+#### The Timing Bar Looks Like A Charge Up Bar Used In Other Games
+This mini-game contains a bar that indicates how accurate the players are tapping on the beat, on a meter of slow to fast with the correct timing in the centre. One piece of feedback that I received was that this bar looks like a 'charge-up' bar used in other video games, causing an interpretation that they should press their button when the dial on the bar is in the green area. They interpreted the bar to be giving instruction, instead of simply displaying state.
+
+Mid-session, I turned off the entire interface, and the player quickly realised that they needed to be focussed on the sound and not the bar. I learned that while I constructed the interface to help players learn how to play, it could increase confusion about what the focus was, and what they were expected to do. The final version of this mini-game displays only the heart beating with the metronome sound to highlight that the sound is the focus, and then introduces the interface when the player begins to struggle.
 
 <!-- Show how testing information was used to improve the project. -->
 
@@ -358,8 +379,19 @@ In order to effectively iterate on the project, testing with users was a must. I
 <!-- Evaluate the final game produced, stating my opinions and how the outcome relates to the initial goals. -->
 
 ## Bibliography
-+ Handmade Hero (https://handmadehero.org/)
-+ ...
+Handmade Hero
+https://handmadehero.org/
+
+Memory Limits for Applications on Windows
+Lionel, Steve (Intel), 2011
+https://software.intel.com/en-us/articles/memory-limits-applications-windows
+
+setrlimit(2)
+https://linux.die.net/man/2/setrlimit
+`getrlimit(RLIMIT_STACK, &limit);`
+
+getpagesize(2)
+https://linux.die.net/man/2/getpagesize
 
 ## Appendix A
 <!-- Program source code. -->
