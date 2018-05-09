@@ -44,12 +44,15 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes steps taken to understand the task before implementation of the project began. Section 3 (Specification) concretely defines the task that will be attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on related topics is presented in Appendix A.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes and compares the kinds of technologies that commonly exist in games and game engines, and *TODO*. Section 3 (Specification) concretely defines the task that will be attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on related topics is presented in Appendix A.
 
 
 
 # Background
-<!-- Compare technologies -->
+<!-- Compare technologies. -->
+Features most commonly found in video games are input, visuals, and sound. Behind these features there are many commonly occurring technical systems, such as graphical rendering systems, audio mixing and effects systems, memory allocation and management systems, timing systems, and more. Here is an overview of some of the technical systems available in some popular game development utilities:
+
+
 
 <!-- Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it. -->
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Heaven, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
@@ -416,6 +419,7 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 <!-- Discuss the topics learned, evaluating their importance and difficulty. -->
 
 <!-- Evaluate the final game produced, stating my opinions and how the outcome relates to the initial goals. -->
+*good example of tailored solutions, not a good example of technology allowing design innovation*
 
 
 
