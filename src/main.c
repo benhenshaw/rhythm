@@ -154,10 +154,7 @@ int main(int argument_count, char ** arguments)
     // Start the game.
     //
 
-    prepare_text_cut(2.0, 0, ~0, &assets.main_font, "DEAD BEAT", &heart_scene, &assets.wood_block_sound);
-    blank_cut(1.0, 0, &text_scene, &assets.wood_block_sound);
-
-    set_scene(heart_scene);
+    blank_cut(1.0, 0, &heart_scene, &assets.wood_block_sound);
 
     while (true)
     {
@@ -182,26 +179,14 @@ int main(int argument_count, char ** arguments)
                     SDL_Scancode sc = event.key.keysym.scancode;
                     if (sc == SDL_SCANCODE_LSHIFT)
                     {
-                        current_scene.input(current_scene.state, 0, event.key.state);
+                        current_scene.input(current_scene.state, 0, event.key.state, event.key.timestamp);
                     }
                     else if (sc == SDL_SCANCODE_RSHIFT)
                     {
-                        current_scene.input(current_scene.state, 1, event.key.state);
+                        current_scene.input(current_scene.state, 1, event.key.state, event.key.timestamp);
                     }
 
-                    // DEBUG: scene switching.
-                    else if (sc == SDL_SCANCODE_1)
-                    {
-                        set_scene(menu_scene);
-                    }
-                    else if (sc == SDL_SCANCODE_2)
-                    {
-                        set_scene(heart_scene);
-                    }
-                    else if (sc == SDL_SCANCODE_3)
-                    {
-                        set_scene(morse_scene);
-                    }
+                    // DEBUG:
                     else if (sc == SDL_SCANCODE_I)
                     {
                         if (event.key.state)
@@ -220,7 +205,8 @@ int main(int argument_count, char ** arguments)
             }
             else if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP)
             {
-                current_scene.input(current_scene.state, event.jbutton.which & 1, event.jbutton.state);
+                current_scene.input(current_scene.state, event.jbutton.which & 1,
+                    event.jbutton.state, event.jbutton.timestamp);
             }
             else if (event.type == SDL_JOYDEVICEADDED)
             {

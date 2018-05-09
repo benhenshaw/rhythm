@@ -17,7 +17,7 @@
 
 typedef void (* Frame_Func)(void * state, f32 delta_time);
 typedef void (* Start_Func)(void * state);
-typedef void (* Input_Func)(void * state, int player, bool pressed);
+typedef void (* Input_Func)(void * state, int player, bool pressed, u32 timestamp_ms);
 
 typedef struct
 {
@@ -31,7 +31,6 @@ Scene;
 // TODO: Where should the scenes live?
 Scene current_scene;
 extern Scene heart_scene;
-extern Scene menu_scene;
 
 // Change the current scene.
 // Will call the start function for that scene.
@@ -91,7 +90,7 @@ void blank_start(void * state)
     s->end_time = SDL_GetTicks() + (1000 * s->time_in_seconds);
 }
 
-void blank_input(void * state, int player, bool pressed) {}
+void blank_input(void * state, int player, bool pressed, u32 timestamp_ms) {}
 
 Scene blank_scene =
 {
@@ -166,7 +165,7 @@ void text_start(void * state)
     s->end_time = SDL_GetTicks() + (1000 * s->time_in_seconds);
 }
 
-void text_input(void * state, int player, bool pressed) {}
+void text_input(void * state, int player, bool pressed, u32 timestamp_ms) {}
 
 
 Scene text_scene =
@@ -339,7 +338,7 @@ void heart_frame(void * state, f32 delta_time)
     }
 }
 
-void heart_input(void * state, int player, bool pressed)
+void heart_input(void * state, int player, bool pressed, u32 timestamp_ms)
 {
     Heart_State * s = state;
     s->player_states[player] = pressed;
@@ -347,9 +346,8 @@ void heart_input(void * state, int player, bool pressed)
     {
         if (s->expanding != player)
         {
-            int t = SDL_GetTicks();
-            s->time_stamps[player] = t;
-            s->heart.start_time_ms = t;
+            s->time_stamps[player] = timestamp_ms;
+            s->heart.start_time_ms = timestamp_ms;
             int a = s->time_stamps[0];
             int b = s->time_stamps[1];
             if (a && b)
@@ -367,85 +365,4 @@ Scene heart_scene =
     .start = heart_start,
     .input = heart_input,
     .state = &heart_state,
-};
-
-#undef STAMP_COUNT
-
-//
-// Morse scene.
-//
-
-typedef struct
-{
-    Image background;
-}
-Morse_State;
-
-Morse_State morse_state;
-
-void morse_start(void * state)
-{
-    Morse_State * s = state;
-    s->background = read_image_file(SCENE_POOL, "../assets/morse.pam");
-    SDL_assert(s->background.pixels);
-}
-
-void morse_frame(void * state, f32 delta_time)
-{
-    Morse_State * s = state;
-    draw_image(s->background, 0, 0);
-}
-
-void morse_input(void * state, int player, bool pressed)
-{
-
-}
-
-Scene morse_scene =
-{
-    .start = morse_start,
-    .frame = morse_frame,
-    .input = morse_input,
-    .state = &morse_state,
-};
-
-//
-// Menu scene.
-//
-
-typedef struct
-{
-    Font font;
-}
-Menu_State;
-
-Menu_State menu_state;
-
-void menu_frame(void * state, f32 delta_time)
-{
-    Menu_State * s = state;
-
-    clear(rgba(200, 100, 100, 255));
-    draw_text(s->font, 20, 75,  rgba(200, 200, 200, 255), "Rhythm Game");
-    draw_text(s->font, 20, 94,  rgba(200, 200, 200, 255), "PLAY");
-    draw_text(s->font, 20, 106, rgba(200, 200, 200, 255), "QUIT");
-}
-
-void menu_start(void * state)
-{
-    Menu_State * s = state;
-    *s = (Menu_State){};
-    s->font = assets.main_font;
-}
-
-void menu_input(void * state, int player, bool pressed)
-{
-}
-
-Scene menu_scene =
-{
-    .frame = menu_frame,
-    .start = menu_start,
-    .input = menu_input,
-    .state = &menu_state,
 };
