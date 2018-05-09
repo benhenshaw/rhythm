@@ -1,10 +1,10 @@
 # Implementation of an Engine for a One-Button Game
-Benedict Henshaw<br>
-Goldsmiths, University of London<br>
-15th of May, 2018<br>
+Benedict Henshaw
+Goldsmiths, University of London
+15th of May, 2018
 
 # Abstract
-This document describes the design and development of an engine -- a set of supporting technical components -- for a two-player, one button, mini-game-based video game, and an example game. The project focusses on the technical implementation, and attempts to demonstrate ways in which common components of video games can be developed (such as renderers and memory allocators), and how they can be tailored to fit the requirements of a specific project.
+This document describes the design and development of a game engine -- a set of supporting technical components -- for a two-player, one button, mini-game-based video game, and an example game. The project focusses on the technical implementation, and attempts to demonstrate ways in which common components of video games can be developed (such as renderers and memory allocators) without using libraries, and how they can be tailored to fit the requirements of a specific project.
 
 # Contents
 + Introduction
@@ -19,12 +19,24 @@ This document describes the design and development of an engine -- a set of supp
 + Appendix C (Development Logs)
 
 # Introduction
-<!-- This document discusses the process of developing a video game based on the concept of rhythm and the interactions of two players as they work together and compete in a series of mini-games. Each mini-game attempts to challenge the players in different ways. The game is inspired by the video games 'Rhythm Heaven' ('リズム天国') (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. Both of these games feature mini-games and have a humorous theme, represented in their graphics and mechanics. -->
+When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity or Unreal[TODO], or any number of libraries[TODO]. Because these tools are available and accessible, many developers rely on them and do not build their games from scratch[TODO]. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves; as each library or engine will have its own strengths and weaknesses, and imparts some friction on the development process. This is especially pronounced when a designer is trying to do something new that the engine developer did not account for -- which is fundamental to pushing the boundaries of game design.
 
-<!-- State that the project has a focus on DIY for educational purposes, and argue that it also creates better software. -->
-I created this project in the C programming language, implementing many of the technical systems that support the game. This includes graphics, audio, memory management, and input. This was done to further my own understanding of these aspects of game programming, and with the goal of creating a lightweight and efficient program (when compared to using pre-existing libraries and game engines).
+In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are not intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Heaven' ('リズム天国') (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
 
-<!-- Discuss the structure of the this report. -->
+One might question the decision to build engine-level technology that is not designed to support many kinds of games. I have several reasons for this. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use for reasons stated earlier. Secondly, I feel that generic solutions are not good solutions; I believe one always has a specific problem at hand and should design a solution that best solves that problem. I feel that there is a lot of poor software out there, and much of it is built by combining a set of generic solutions to perform their specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
+
+To formally describe my aims for the project before I began:
+
+**Use as few libraries as possible -- preferably none.** I wanted to learn a breadth of techniques from this project. I did not want to leave major aspects of the software, such as memory allocation or rendering, up to a library to carry out.
+
+**Tailor every aspect of the code to the design of the game.**
+
+**Produce a 'reliable' piece of software.**
+
+**Learn about many areas of game development, and document them.**
+
+
+
 This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software.
 
 # Background
