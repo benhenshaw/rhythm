@@ -5,19 +5,19 @@ Goldsmiths, University of London<br>
 
 # Abstract
 <!-- Rhythm game with supporting systems built from scratch... -->
-This document describes the design and development of an engine &ndash; a set of supporting technical components &ndash; for a two-player, one button, mini-game-based video game, and an example game. The project focusses on the technical implementation, and attempts to demonstrate ways in which common components of video games can be developed (such as renderers and memory allocators), and how they can be tailored to fit the requirements of a specific project.
+This document describes the design and development of an engine -- a set of supporting technical components -- for a two-player, one button, mini-game-based video game, and an example game. The project focusses on the technical implementation, and attempts to demonstrate ways in which common components of video games can be developed (such as renderers and memory allocators), and how they can be tailored to fit the requirements of a specific project.
 
 # Contents
-+ Abstract
-+ 1. Introduction
-+ 2. Background
-+ 3. Specification
-+ 4. Design and Implementation
-+ 5. Testing and Evaluation
-+ 6. Conclusion
-+ Appendix A (Source Code)
-+ Appendix B (Initial Proposal)
-+ Appendix C (Development Logs)
++ [Introduction](#introduction)
++ [Background](#background)
++ [Specification](#specification)
++ [Design and Implementation](#design-and-implementation)
++ [Testing and Evaluation](#testing-and-evaluation)
++ [Conclusion](#conclusion)
++ [Bibliography](#bibliography)
++ [Appendix A (Source Code)](#appendix-a)
++ [Appendix B (Initial Proposal)](#appendix-b)
++ [Appendix C (Development Logs)](#appendix-c)
 
 # 1. Introduction
 <!-- Discuss the game idea as it relates to the games that inspired it. -->
@@ -79,7 +79,7 @@ Scenes are used to encapsulate different pieces of the game. Each scene contains
 #### Bitmap Graphics
 Here is an example header for a Portable Arbitrary Map, for a file with a width and height of 256, in RGBA format, one byte per channel:
 
-```C
+~~~C
 P7
 WIDTH 256
 HEIGHT 256
@@ -87,11 +87,11 @@ DEPTH 4
 MAXVAL 255
 TUPLTYPE RGB_ALPHA
 ENDHDR
-```
+~~~
 
 For my project I am able to curate all of the files that will be read by my code, so I chose to only support the exact format that I would be using. With this in mind, I could parse the entire header with this single call to `fscanf`, given that all parameters except width and height are constant:
 
-```C
+~~~C
 fscanf(file,
        "P7\n"
        "WIDTH %d\n"
@@ -101,27 +101,27 @@ fscanf(file,
        "TUPLTYPE RGB_ALPHA\n"
        "ENDHDR\n",
        &width, &height);
-```
+~~~
 
 Once the header is parsed and the width and height are known, the pixel data can be read into a buffer as so:
 
-```C
+~~~C
 int pixels_read = fread(pixels, sizeof(u32), width * height, file);
-```
+~~~
 
 Unfortunately, the pixel format used by .pam files is big-endian, and I am targeting little-endian machines. The byte order of each pixel must be swapped:
 
-```C
+~~~C
 for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index)
 {
     u32 p = pixels[pixel_index];
     pixels[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
 }
-```
+~~~
 
 See the Graphics sub-section of this major section for the definition of `rgba` and `get_red`, etcetera. Finally the image's pixel data and dimensions are returned in an `Image` structure:
 
-```C
+~~~C
 typedef struct
 {
     u32 * pixels;
@@ -129,56 +129,56 @@ typedef struct
     int height;
 }
 Image;
-```
+~~~
 
 #### PCM Audio
 The format used for audio samples in this project is single-precision IEEE floating-point, making each sample 32 bits long. All audio data has a sample rate of 48KHz. Here is an example file header containing one second (48000 samples) of audio:
 
-```C
+~~~C
 SND
 SAMPLE_COUNT 48000
 ENDHDR
-```
+~~~
 
 Much the same as above, the header is parsed in a single call to `fscanf`, the raw data read with a call to `fread`, and the byte order must be swapped before returning in a `Sound` structure:
 
-```C
+~~~C
 typedef struct
 {
     f32 * samples;
     int sample_count;
 }
 Sound;
-```
+~~~
 
 ### Audio
 <!-- Discuss the playback of audio and the mixer. -->
 All sound is in 32-bit floating-point format at a 48KHz sample rate. This uniformity of format allows all audio data to be handled in the same way, without conversions during transformation. Not all platforms support this format for output, so this format can be converted to the relevant format as a final stage before playback. Here is a basic example of how to convert to signed 16-bit integer format:
 
-```C
+~~~C
 for (int sample_index = 0; sample_index < sample_count; ++sample_index)
 {
     s16_samples[sample_index] = (u16)(f32_samples[sample_index] * 32767)
 }
-```
+~~~
 
 This works as sound in `f32` format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
 
 #### Mixing
 Audio is output by a high-frequency callback. This callback requests a number of samples, which is produced at will by the custom audio mixer. This audio mixer has a list of all playing sounds and their current state, and uses this to mix together a single stream of audio for playback. Each individual sound is simply a chunk of audio samples:
 
-```C
+~~~C
 typedef struct
 {
     f32 * samples;
     int sample_count;
 }
 Sound;
-```
+~~~
 
 Mixer channels are used to manage the playback of sounds:
 
-```C
+~~~C
 typedef struct
 {
     f32 * samples;    // The audio data itself.
@@ -190,11 +190,11 @@ typedef struct
     bool playing;     // If the sound is playing right now or not.
 }
 Mixer_Channel;
-```
+~~~
 
 When one wants to play a sound, they must stop the audio callback and insert their sound into a channel. There is a fixed number of sound channels, so the first free channel is found and used. Some parameters must also be set, such as how loud the sound should be, or whether it should loop.
 
-```C
+~~~C
 // Immediately start playing a sound.
 // Returns the index of the channel that holds the sound,
 // or -1 if no channel was available.
@@ -219,7 +219,7 @@ int play_sound(Mixer * mixer, Sound sound,
     }
     return -1;
 }
-```
+~~~
 
 Sound can also be queued up, so that it is ready to be played by setting a boolean on the relevant channel. This is helpful for critical sounds as it reserves a channel, as it is possible to run out of channels and have an attempt to play a sound fail (although the number of channels is set to be higher than the common case). One can also set the `sample_index` of a channel to a negative number. The mixer will increment this index without producing any sound, and thus allowing a sound to be queued up with sample-accurate timing.
 
@@ -229,27 +229,27 @@ Sound can also be queued up, so that it is ready to be played by setting a boole
 <!-- Discuss general graphics info. -->
 All graphics in the project use the 32-bit RGBA pixel format. This means that there are four channels, red, green, blue, and alpha (transparency), each of which is one byte large (holding values in the range 0 to 255), and stored such that the red byte is on the high end of the 32-bit value, and the alpha byte is on the low end. To write a pixel in C-style hexadecimal with the red, green, blue, and alpha values of 0x11, 0x22, 0x33, and 0x44 respectively:
 
-```C
-u32 pixel = 0x11223344
-```
+~~~C
+u32 pixel = 0x11223344;
+~~~
 
 These utility functions are also used to manipulate pixel data:
 
-```C
+~~~C
 // Pack an RGBA pixel from its components.
 u32 rgba(u8 r, u8 g, u8 b, u8 a)
 {
     return (r << 24u) | (g << 16u) | (b << 8u) | a;
 }
-```
+~~~
 
-```C
+~~~C
 // Access individual components of an RGBA pixel.
 u32 get_red(u32 colour)   { return (colour & 0xff000000) >> 24; }
 u32 get_blue(u32 colour)  { return (colour & 0x00ff0000) >> 16; }
 u32 get_green(u32 colour) { return (colour & 0x0000ff00) >>  8; }
 u32 get_alpha(u32 colour) { return (colour & 0x000000ff) >>  0; }
-```
+~~~
 
 #### Displaying Graphics
 The software renderer holds an internal pixel buffer of a fixed resolution. This pixel buffer is where the results of the renderer are written. To display a frame on screen, the internal pixel buffer is sent to the GPU via a streaming texture for display. One can also directly access the window's buffer and copy the pixel data into it, but there is no guarantee of the format of these pixels (although one can detect and convert appropriately), no way to render with vertical sync to avoid screen tearing, and visual artefacts can occur when the window interacts with other programs, such as Valve's Steam Overlay. Thus, the GPU is utilised for the final stage of rendering, and performs up-scaling to the monitor resolution.
@@ -257,14 +257,14 @@ The software renderer holds an internal pixel buffer of a fixed resolution. This
 #### Bitmaps
 As all pixels are stored in the same format, the bulk of the work required to display an image on screen is done by directly copying data from the image's pixel buffer to the software renderer's buffer. As all pixel buffers are stored as a single array of packed RGBA values, a simple formula is used to access two-dimensional data from the one-dimensional array:
 
-```C
+~~~C
 int index = x + y * width;
 u32 p = pixels[index];
-```
+~~~
 
 Some checks can also be done to ensure that the pixel array will not be accessed out of bounds:
 
-```C
+~~~C
 // Returns false if the given coordinates are off screen.
 bool set_pixel(int x, int y, u32 colour)
 {
@@ -275,14 +275,14 @@ bool set_pixel(int x, int y, u32 colour)
     }
     return false;
 }
-```
+~~~
 
 But there is good reason to directly access the buffer without this check every time; if some operations need to occur in bulk, such as drawing an image into the buffer, checks should be made outside of the inner loop to improve performance.
 
 <!-- Discuss the actual copying of pixel data between buffers. -->
 To render a bitmap, one must copy pixel-by-pixel from an image buffer to the renderer buffer:
 
-```C
+~~~C
 int max_x = min(x + image.width, WIDTH);
 int max_y = min(y + image.height, HEIGHT);
 for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy)
@@ -293,7 +293,7 @@ for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy)
         screen_buffer[sx + sy * WIDTH] = p;
     }
 }
-```
+~~~
 
 The key aspect of this method is that one must keep track of both the current pixel on screen to be written to, and the current pixel in the image to be read from. Some checks are done to ensure that neither buffer will be improperly accessed (which is not shown here).
 
@@ -305,9 +305,9 @@ Animations have a time in milliseconds that states how long each frame of the an
 <!-- Discuss the rendering of text. -->
 Text is rendered using a bitmap font; as opposed to generating font geometry on-the-fly. Fonts in this project are defined to be a bitmap image holding all of the drawable characters defined in the ASCII standard, packed horizontally, and every character is the same width (mono-space). The location of a character in the image can be calculated using its ASCII code as an offset from the first character:
 
-```C
+~~~C
 int x = font.char_width * (string[c] - ' ');
-```
+~~~
 
 The 'space' character is the first character defined in the font bitmap, and so has an offset of zero. Since all characters are represented as numbers, one can simply subtract the number that represents 'space', producing an index that, when multiplied by the width of a character, gives an x pixel coordinate denoting the first pixel of that glyph. Given that all of the glyphs are packed horizontally, every character's bitmap starts at a y position of zero, giving enough information to render the glyph the same way all other bitmaps are rendered. One only needs to keep track of how far left they have moved after drawing each character to place the next letter correctly.
 
@@ -471,7 +471,7 @@ Audio sample data will be in '.wav' format unless there is so much of it that a 
 
 A basic (probably plain-text) file format will be used if any player settings or save data needs to be stored.
 
-# Appendix B
+# Appendix C
 <!-- Copy of weekly logs. -->
 ## Weekly Logs
 This section contains several blog posts made during the development of the project. They are listed in chronological order.
@@ -556,13 +556,13 @@ Bitmap rendering in this project is often concerned with raw pixels. The formula
 
 I noticed that I could lean on my previous image rendering code if I made my `pitch` and `width` equal. This can be done by packing in images vertically; each consecutive frame is underneath the previous. I would simply have to pass in a pointer to the top-left-most pixel of the frame that I want. It is a simple equation to calculate this:
 
-```C
+~~~C
 // To render frame 2 of an animation:
 int animation_frame = 2;
 int pixels_per_frame = width * height;
 int pixel_offset_to_current_frame = pixels_per_frame * animation_frame;
 u32 * final_pointer = pointer_to_start_of_image + pixel_offset_to_current_frame;
-```
+~~~
 
 ### Rendering Text (2018-01-13)
 While text in most modern programs is rendered on the fly to allow scaling and differing pixel densities, my program has a fixed internal resolution, so the result of this text rendering is known ahead of time. This reason, and the fact that the implementation is far simpler, lead to my decision to render text the same way I handle animations: an atlas of sub-images.
@@ -577,17 +577,17 @@ In order to keep the rendering process simple, I opted for mono-space fonts, whe
 
 I index the string to get the character I want, then subtract ' ' (32) from it to map it to my index which starts from zero.
 
-```C
+~~~C
 int top_left_x = character_width * (text[c] - ' ')
-```
+~~~
 
 This value, and the fact that each glyph is packed horizontally, means that I know where in my texture atlas my glyph is (`top_left_x, 0`), and can render it.
 
 As I mentioned in my previous post, I will also need the `pitch` of my texture atlas to index into it. I could save this separately, but it is derivable from the width of a character. 96 is the difference between '~' (126) and ' ' (32) (the total number of characters in the font bitmap), but it starts from zero so -1.
 
-```C
+~~~C
 int pitch_of_font_bitmap = 95 * character_width;
-```
+~~~
 
 This combined with keeping a sum of how far towards the left I move after rendering each character gives me a simple and fast way to render text. I can easily use this render text into a buffer if it is being used frequently.
 
@@ -596,13 +596,13 @@ In the same way that I send a single pixel buffer to the screen, I can only send
 
 At its most basic, a mixer will add each sample in each stream together:
 
-```C
+~~~C
 ...,  0.3, -0.5,  0.1,  0.2, ...
 ...,   +     +     +     +   ...
 ...,  0.1,  0.2, -0.1,  0.3, ...
 ...,   =     =     =     =   ...
 ...,  0.4, -0.3,  0.0,  0.5  ...
-```
+~~~
 
 The resulting stream of numbers will be the mixed sound, and will appear to contain both sounds.
 
