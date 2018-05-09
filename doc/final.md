@@ -4,24 +4,22 @@ Goldsmiths, University of London<br>
 15th of May, 2018<br>
 
 # Abstract
-<!-- Rhythm game with supporting systems built from scratch... -->
 This document describes the design and development of an engine -- a set of supporting technical components -- for a two-player, one button, mini-game-based video game, and an example game. The project focusses on the technical implementation, and attempts to demonstrate ways in which common components of video games can be developed (such as renderers and memory allocators), and how they can be tailored to fit the requirements of a specific project.
 
 # Contents
-+ [Introduction](#introduction)
-+ [Background](#background)
-+ [Specification](#specification)
-+ [Design and Implementation](#design-and-implementation)
-+ [Testing and Evaluation](#testing-and-evaluation)
-+ [Conclusion](#conclusion)
-+ [Bibliography](#bibliography)
-+ [Appendix A (Source Code)](#appendix-a)
-+ [Appendix B (Initial Proposal)](#appendix-b)
-+ [Appendix C (Development Logs)](#appendix-c)
++ Introduction
++ Background
++ Specification
++ Design and Implementation
++ Testing and Evaluation
++ Conclusion
++ Bibliography
++ Appendix A (Source Code)
++ Appendix B (Initial Proposal)
++ Appendix C (Development Logs)
 
-# 1. Introduction
-<!-- Discuss the game idea as it relates to the games that inspired it. -->
-This document discusses the process of developing a video game based on the concept of rhythm and the interactions of two players as they work together and compete in a series of mini-games. Each mini-game attempts to challenge the players in different ways. The game is inspired by the video games 'Rhythm Heaven (リズム天国)' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. Both of these games feature mini-games and have a humorous theme, represented in their graphics and mechanics.
+# Introduction
+<!-- This document discusses the process of developing a video game based on the concept of rhythm and the interactions of two players as they work together and compete in a series of mini-games. Each mini-game attempts to challenge the players in different ways. The game is inspired by the video games 'Rhythm Heaven' ('リズム天国') (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. Both of these games feature mini-games and have a humorous theme, represented in their graphics and mechanics. -->
 
 <!-- State that the project has a focus on DIY for educational purposes, and argue that it also creates better software. -->
 I created this project in the C programming language, implementing many of the technical systems that support the game. This includes graphics, audio, memory management, and input. This was done to further my own understanding of these aspects of game programming, and with the goal of creating a lightweight and efficient program (when compared to using pre-existing libraries and game engines).
@@ -29,19 +27,18 @@ I created this project in the C programming language, implementing many of the t
 <!-- Discuss the structure of the this report. -->
 This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software.
 
-# 2. Background
+# Background
 <!-- Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it. -->
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Heaven, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
-# 3. Planning the Implementation
+# Planning the Implementation
 Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software.
 
 <!-- Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
 
 ## Graphics
 
-
-# 4. Specification
+# Specification
 <!-- Discuss the range of interactions that the mini-games explore. -->
 In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, broadening the range of experiences that a player can have.
 
@@ -51,7 +48,7 @@ I wanted to explore competitive and cooperative game-play.
 
 <!-- Discuss technical goals, and how they support design goals. -->
 
-# 5. Design and Implementation
+# Design and Implementation
 ## Design
 <!-- Discuss the overall design of the game describing the mini-games and their characteristics. (Several paragraphs.) -->
 The design of the game has several key features.
@@ -361,7 +358,7 @@ Each mini-game is a single scene, and each menu is also a separate scene.
 ### Building the Binary
 For this project, I compile the entire source as a single translation unit. This is sometimes called a 'Unity Build'; achieved by using the `#include` preprocessor directive to combine all source files into a single file, and compiling it. It builds faster than more traditional methods which wherein each file becomes a separate translation unit, and can allow the compiler to produce a better optimised binary. This method also makes header files unnecessary, as nothing needs to be forward declared when the entire code based coexists in a translation unit.
 
-# 6. Testing and Evaluation
+# Testing and Evaluation
 <!-- Discuss the knowledge gathered about how games are tested. -->
 In order to effectively iterate on the project, testing with users was a must. I gathered some information regarding the current knowledge around game testing including techniques and best practices here.
 
@@ -380,7 +377,7 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 
 <!-- Discuss the cycles of iteration. -->
 
-# 7. Conclusion
+# Conclusion
 <!-- Evaluate the methods used to construct the game. -->
 
 <!-- Evaluate the software performance and responsiveness with timings and user feedback. -->
@@ -389,7 +386,7 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 
 <!-- Evaluate the final game produced, stating my opinions and how the outcome relates to the initial goals. -->
 
-# 8. Bibliography
+# Bibliography
 Handmade Hero
 https://handmadehero.org/
 
@@ -583,7 +580,7 @@ int top_left_x = character_width * (text[c] - ' ')
 
 This value, and the fact that each glyph is packed horizontally, means that I know where in my texture atlas my glyph is (`top_left_x, 0`), and can render it.
 
-As I mentioned in my previous post, I will also need the `pitch` of my texture atlas to index into it. I could save this separately, but it is derivable from the width of a character. 96 is the difference between '~' (126) and ' ' (32) (the total number of characters in the font bitmap), but it starts from zero so -1.
+As I mentioned in my previous post, I will also need the `pitch` of my texture atlas to index into it. I could save this separately, but it is derivable from the width of a character. 96 is the difference between `'~'` (126) and `' '` (32) (the total number of characters in the font bitmap), but it starts from zero so -1.
 
 ~~~C
 int pitch_of_font_bitmap = 95 * character_width;
