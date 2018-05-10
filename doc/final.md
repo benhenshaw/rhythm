@@ -23,7 +23,7 @@ In this document, I describe the process of developing the technical components 
 One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use; see Appendix A for more on this topic. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
 
 ## Goals
-Before I began the project, I had a set of goals. See the conclusion in section 6 for an evaluation of how well the goals were met.
+Before I began the project, I had a set of goals. See the conclusion in section 7 for an evaluation of how well the goals were met.
 
 **To, wherever possible, only use code that I have written.** I wanted to learn a breadth of techniques from this project. I did not want to leave major aspects of the software, such as memory allocation or rendering up to a library to carry out.
 
@@ -34,7 +34,7 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes some components found in video games and some concerns for their implementation. Section 3 (Specification) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 (Evaluation) describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes some components found in video games and some concerns for their implementation. Section 3 (Specification) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Sections 5 (Testing) and 6 (Evaluation) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
 
 \newpage
 
@@ -434,14 +434,12 @@ For this project, I compile the entire source as a single translation unit. This
 
 \newpage
 
-# Testing and Evaluation
+# Testing
 <!-- Discuss the knowledge gathered about how games are tested. -->
-In order to effectively iterate on the project, testing with users was a must. I gathered some information regarding the current knowledge around game testing including techniques and best practices here.
+In order to effectively iterate on the project, testing with users was a must. I gathered some information from testing with users here, and describes how the project (mostly the example game) was influenced by the feedback.
 
+The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people who stated that they play lots of games, and people who don't. Many participants were studying in fields surrounding computing, including game design and development.
 
-<!-- Discuss the methods chosen, and specifics about how testing was carried out. -->
-
-<!-- Show the information collected during testing. -->
 ### Confusion When Understanding the Goals
 While one of my desires when designing the example game was to force players to figure out what they need to do, I found that many players with whom I tested the game got confused. In order to improve the experience of these players I added an overlay which appears if the players have spent a long time on a mini-game, but have not made any progress. This overlay attempts to give hints to the players by showing buttons on screen with arrows demonstrating when to press, and a scale which shows their accuracy.
 
@@ -454,11 +452,27 @@ This mini-game contains a bar that indicates how accurate the players are tappin
 Mid-session, I turned off the entire interface, and the player quickly realised that they needed to be focussed on the sound and not the bar. I learned that while I constructed the interface to help players learn how to play, it could increase confusion about what the focus was, and what they were expected to do. The final version of this mini-game displays only the heart beating with the metronome sound to highlight that the sound is the focus, and then introduces the interface when the player begins to struggle.
 
 ### Testing the Lungs Mini-Game
-This mini-game is meant to contradict the previous (Heart) mini-game by having the players do the opposite action; press together instead of alternating. This is confusing to players, but as with the previous, an overlay appears after some time to help guide them.
+This mini-game is meant to contradict the previous (Heart) mini-game by having the players do the opposite action; press together instead of alternating. This is confusing to players, but as with the previous, an overlay appears after some time to help guide them. I felt that players were not deterred by the lack of understanding of this mini-game, and enjoyed persevering and learning how it worked.
 
-<!-- Show how testing information was used to improve the project. -->
+### Testing the Digestion Mini-Game
+This mini-game was developed later on in project, and so did not have as much opportunity to be tested. It focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, and adding that it was in a less complete state, found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap, but did not have the opportunity to test this.
 
-<!-- Discuss the cycles of iteration. -->
+\newpage
+
+# Evaluation
+This section contains an evaluation of a several features and aspects of the project.
+
+## Rendering Graphics
+
+## Mixing and Playing Audio
+
+## Managing Memory
+
+## Loading Assets
+
+## Game-Play Code
+
+## The Example Game
 
 \newpage
 
