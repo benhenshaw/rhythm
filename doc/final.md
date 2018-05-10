@@ -1,3 +1,5 @@
+\pagenumbering{gobble}
+
 \maketitle
 
 **Abstract:**
@@ -5,12 +7,16 @@ This document describes the design and development of a game engine -- a set of 
 
 \newpage
 
+\pagenumbering{roman}
+
 \tableofcontents
 
 \newpage
 
+\pagenumbering{arabic}
+
 # Introduction
-When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity or Unreal, or any number of libraries. As these tools are available and accessible, many developers rely on them and do not build their games from scratch. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves. Each library or engine will have its own strengths and weaknesses, and this imparts some friction on the development process. An engine developer can only account for so much, so a designer using an engine may find it difficult to design something new that pushes the boundaries of the medium.
+When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity\[7] or Unreal\[8], or any number of libraries\[9]\[10]. As these tools are available and accessible, many developers rely on them and do not build their games from scratch. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves. Each library or engine will have its own strengths and weaknesses, and this imparts some friction on the development process. An engine developer can only account for so much, so a designer using an engine may find it difficult to design something new that pushes the boundaries of the medium.
 
 In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
 
@@ -28,7 +34,7 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes and compares the kinds of technologies that commonly exist in games and game engines, and *TODO*. Section 3 (Specification) concretely defines the task that was attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes and compares the kinds of technologies that commonly exist in games and game engines, and _**TODO**_. Section 3 (Specification) concretely defines the task that was attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
 
 \newpage
 
@@ -38,13 +44,24 @@ Features most commonly found in video games are input, visuals, and sound. Behin
 
 ![Screen shots of various mini-games from Rhythm Tengoku.](data/rhythm_tengoku_shots.png)
 
+The game that I have taken most inspiration from, Rhythm Tengoku, appears to utilise detailed bitmap graphics, with frame-based and motion based animation. That is to say, it animates things on screen both by displaying a series of discrete images in succession, and by drawing the same image in changing locations on the screen. It also performs rotation and scaling of bitmaps to further animate them.
+
+As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, it has sections with vocals and recorded instruments. While the quality is does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
+
+The Game Boy Advance has twelve inputs that can be used by games that run on it. Rhythm Tengoku rarely uses more than four of them (and often less than that). When it does, multiple buttons are often mapped to the same function. I was very interested in the limited number of inputs, as it turns the focus of the game partially away from player dexterity. Games like Guitar Hero (2005) and Dance Dance Revolution (1998) do have a focus on player dexterity, but that was not my area of interest for this project.
+
+Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these games don't utilise many buttons for input, the timing of button presses is given more focus. This is easier to achieve on dedicated hardware such as the Game Boy Advance, but may be more difficult on platforms that aren't design with this concern in mind, as many modern consumer computers are.
+
 ## Design in One-Button Games
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Tengoku, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
+Further research in the area of limited input games brought up the burgeoning field of one button games\[11]. These kinds of games are often taught when introducing students to game design as force designers to consider player interaction closely.
 
+## Management of Assets
+Video games built for platforms which are purpose built to run them have a very different approach to the management of assets (such as image and sound data). On the Game Boy Advance, all assets must be stored on the 'GamePak'; a small cartridge that slots into the console itself. Once the game has booted up, any assets stored on the cart are accessible via mapped memory. This means that assets are not loaded in at will as games on other platforms need to do. Video games developed for a Windows computer, for example, may need to load data from any number of files into the virtual memory of the process in order to access them. This process requires significantly more effort, although there are many approaches with their own costs and benefits.
 
 ## Planning the Implementation
-Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software.
+Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management.
 
 <!-- Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
 
@@ -53,6 +70,11 @@ Since the initial idea was conceived, I wanted to implement as much of the proje
 \newpage
 
 # Specification
+In order to approach the task of building a software stack for a video game, I sought to figure out what kinds of data I would be dealing with. I took this approach, as I find working with data and understanding the structure and patterns of data to be the most affective mindset, as opposed to constructing software in a more conceptual way.
+
+There were several kinds of data that I needed to manage. Data for graphics in the form of bitmaps, data for audio in the form of sample streams, data for user input, and the specifics of any on-disk asset formats.
+
+## Use of Mini-Games
 <!-- Discuss the range of interactions that the mini-games explore. -->
 In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, broadening the range of experiences that a player can have.
 
@@ -347,16 +369,16 @@ This is both easier to use (as `free` never needs to be called) and faster than 
 ##### The Only Allocation
 There are many options once can choose when allocating memory. There are language-level features, such as the `malloc` family of functions, or `new` in other languages. There are OS API calls, such as `VirtualAlloc` on Windows, or `mmap` on UNIX and other POSIX-compliant systems. Allocations can also be made using stack memory, or static memory. There are trade-offs for each, so I first had to discover what my requirements were to make an educated decision.
 
-As stated earlier in this section, I calculated that a fixed upper limit of 32 megabytes would satisfy the needs of my project. This ruled out stack memory, as the default stack limit in clang and GCC is 8MB (which I found by calling `getrlimit`), and in MSVC it is 1MB. While the limits of stack memory can be specified at link time, this would require different actions to build the program on each platform and tool-chain.
+As stated earlier in this section, I calculated that a fixed upper limit of 32 megabytes would satisfy the needs of my project. This ruled out stack memory, as the default stack limit in clang and GCC is 8MB (which I found by calling `getrlimit`)\[2], and in MSVC it is 1MB\[5]. While the limits of stack memory can be specified at link time, this would require different actions to build the program on each platform and tool-chain.
 
 I wanted to avoid the overhead of calling `malloc`, as I did not need its internal management of memory. I also wanted to avoid platform-specific functions if possible, but since this case would likely be a single function call I was happy to make an exception. I initially allocated the memory using `mmap`, and only using a subset of its features so that it would be compatible on Linux and macOS. I then put in a compile-time condition to use `VirtualAlloc` if building on Windows. Since I happened to be using the MinGW tool-kit on Windows, `mmap` was also supported, so both options are available.
 
-After some time, I returned to this question. I had noticed that I had not considered another option: static memory. Considering that I had modest requirements, I looked into what the characteristics of static allocation are. On Windows, static data is limited to 2GB on both 32-bit and 64-bit versions of the OS (Lionel, 2011). On macOS and Linux, I could not so easily find an answer, but in my own testing the programme would crash at values higher than 2GB on macOS, but did not crash on Linux at any value. These limits are far beyond what I require, and the implementation is simpler that the previous; both in that it does not require even a function call, and that it is identical on all platforms. This is the implementation that remains in the final iteration of the project.
+After some time, I returned to this question. I had noticed that I had not considered another option: static memory. Considering that I had modest requirements, I looked into what the characteristics of static allocation are. On Windows, static data is limited to 2GB on both 32-bit and 64-bit versions of the OS\[1]. On macOS and Linux, I could not so easily find an answer, but in my own testing the programme would crash at values higher than 2GB on macOS, but did not crash on Linux at any value. These limits are far beyond what I require, and the implementation is simpler that the previous; both in that it does not require even a function call, and that it is identical on all platforms. This is the implementation that remains in the final iteration of the project.
 
 A compile-time flag allows the use of the previous `mmap` implementation, as it produced better memory debugging information on my macOS machine.
 
 ##### Pre-faulting Pages
-On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this access is called a page fault. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`) and calling an allocator without modifying the memory. This is counter-acted by the `mmap` argument `MAP_POPULATE`, which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
+On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this access is called a page fault. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`) and calling an allocator without modifying the memory. This is counter-acted by the `mmap` argument `MAP_POPULATE`[6], which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
 
 ##### Thread Safety
 One aspect not implemented in the final code-base, but researched, was making the allocator thread-safe. Initially, my implementation used a `mutex` to guarantee that allocations could be made from any thread without interference, but after more of the project was implemented, I found that I never allocated memory from a thread other than the main one, and so this feature was removed as it added cost with no benefit.
@@ -406,19 +428,57 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 
 
 # Bibliography
-Handmade Hero
-https://handmadehero.org/
-
-Lionel, Steve (Intel), 2011
+[1]:
+Lionel, Steve (Intel); 2011
 Memory Limits for Applications on Windows
 https://software.intel.com/en-us/articles/memory-limits-applications-windows
 
+[2]:
+Linux Manual
 setrlimit(2)
 https://linux.die.net/man/2/setrlimit
 `getrlimit(RLIMIT_STACK, &limit);`
 
+[3]:
+Linux Manual
 getpagesize(2)
 https://linux.die.net/man/2/getpagesize
+
+[4]:
+GBATEK
+Gameboy Advance / Nintendo DS / DSi - Technical Info
+http://problemkaputt.de/gbatek.htm#gbatechnicaldata
+
+[5]:
+MSDN Documentation
+Compiler Options
+/F (Set Stack Size)
+https://msdn.microsoft.com/en-us/library/tdkhxaks.aspx
+
+[6]:
+Linux Manual
+mmap(2)
+https://linux.die.net/man/2/mmap
+
+[7]:
+Made with Unity
+https://unity.com/madewith
+
+[8]:
+Unreal Showcase
+https://www.unrealengine.com/en-US/blog/category/showcase
+
+[9]:
+Games made with Love2D
+https://love2d.org/wiki/Category:Games
+
+[10]:
+Games made with SFML
+http://www.indiedb.com/engines/sfml/games
+
+[11]:
+Green, Berbank; 2005
+https://www.gamasutra.com/view/feature/130728/one_button_games.php
 
 \newpage
 
