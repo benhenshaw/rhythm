@@ -1,12 +1,3 @@
-<!--
-    Build with:
-    pandoc final.md -o final.pdf --pdf-engine=xelatex
--->
-
-\author{Benedict Henshaw}
-\date{\today}
-\title{Implementation of an Engine for a One-Button Game}
-
 \maketitle
 
 **Abstract:**
@@ -21,7 +12,7 @@ This document describes the design and development of a game engine -- a set of 
 # Introduction
 When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity or Unreal, or any number of libraries. As these tools are available and accessible, many developers rely on them and do not build their games from scratch. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves. Each library or engine will have its own strengths and weaknesses, and this imparts some friction on the development process. An engine developer can only account for so much, so a designer using an engine may find it difficult to design something new that pushes the boundaries of the medium.
 
-In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Heaven' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
+In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
 
 One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use; see Appendix A for more on this topic. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
 
@@ -45,9 +36,10 @@ This report will cover in detail the conceptual development of the project, as w
 <!-- Compare technologies. -->
 Features most commonly found in video games are input, visuals, and sound. Behind these features there are many commonly occurring technical systems, such as graphical rendering systems, audio mixing and effects systems, memory allocation and management systems, timing systems, and more.
 
+![Screen shots of various mini-games from Rhythm Tengoku.](data/rhythm_tengoku_shots.png)
 
 ## Design in One-Button Games
-In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Heaven, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
+In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Tengoku, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
 
 
@@ -325,6 +317,8 @@ int x = font.char_width * (string[c] - ' ');
 ~~~
 
 The 'space' character is the first character defined in the font bitmap, and so has an offset of zero. Since all characters are represented as numbers, one can simply subtract the number that represents 'space', producing an index that, when multiplied by the width of a character, gives an x pixel coordinate denoting the first pixel of that glyph. Given that all of the glyphs are packed horizontally, every character's bitmap starts at a y position of zero, giving enough information to render the glyph the same way all other bitmaps are rendered. One only needs to keep track of how far left they have moved after drawing each character to place the next letter correctly.
+
+![A font bitmap containing all drawable characters of the ASCII standard.](data/terminus_12.png)
 
 This system is incredibly simple and straightforward to implement. The downside is that it only supports ASCII characters and therefore only the English language.
 
