@@ -40,6 +40,19 @@ void clear(u32 colour)
     }
 }
 
+// Draws noise over the entire screen.
+void draw_noise(float intensity)
+{
+    for (int y = 0; y < HEIGHT; ++y)
+    {
+        for (int x = 0; x < WIDTH; ++x)
+        {
+            int r = random_int_range(0, intensity * 255);
+            pixels[x + y * WIDTH] = rgba(r, r, r, 255);
+        }
+    }
+}
+
 // Returns false if the given coordinates are off screen.
 static inline bool set_pixel(int x, int y, u32 colour)
 {
@@ -176,9 +189,10 @@ void draw_animated_image_frames(Animated_Image animated_image,
 }
 
 // Same as above but don't loop, stop and display the final frame once it is complete.
-void draw_animated_image_frames_and_wait(Animated_Image animated_image,
+bool draw_animated_image_frames_and_wait(Animated_Image animated_image,
     int start_frame, int end_frame, int x, int y)
 {
+    bool waiting = false;
     int time_passed = SDL_GetTicks() - animated_image.start_time_ms;
     int frames_passed = time_passed / animated_image.frame_duration_ms;
     int frame_count = (end_frame - start_frame) + 1;
@@ -186,6 +200,7 @@ void draw_animated_image_frames_and_wait(Animated_Image animated_image,
     if (start_frame + frames_passed > end_frame)
     {
         current_frame = end_frame;
+        waiting = true;
     }
     int pixels_per_frame = animated_image.width * animated_image.height;
     int pixel_offset_to_current_frame = pixels_per_frame * current_frame;
@@ -196,6 +211,7 @@ void draw_animated_image_frames_and_wait(Animated_Image animated_image,
         .height = animated_image.height,
     };
     draw_image(frame, x, y);
+    return waiting;
 }
 
 //

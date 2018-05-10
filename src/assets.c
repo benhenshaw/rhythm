@@ -24,14 +24,15 @@
 // ENDHDR                 <-- Marker for the end of the header.
 //
 
-// Reverse the order of the channels of a four channel pixel.
-void abgr_to_rgba(void * pixels, int pixel_count)
+// Reorder the channels of a four channel pixel.
+void agbr_to_rgba(void * pixels, int pixel_count)
 {
     for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index)
     {
         u32 p = ((u32 *)pixels)[pixel_index];
         ((u32 *)pixels)[pixel_index] = rgba(
-            get_alpha(p), get_blue(p), get_green(p), get_red(p));
+            // get_alpha(p), get_blue(p), get_green(p), get_red(p));
+            get_alpha(p), get_green(p), get_blue(p), get_red(p));
     }
 }
 
@@ -58,7 +59,7 @@ Image read_image_file(int pool_index, char * file_name)
         fclose(file);
         if (pixels_read == pixel_count)
         {
-            abgr_to_rgba(pixels, pixel_count);
+            agbr_to_rgba(pixels, pixel_count);
             return (Image){ pixels, width, height };
         }
     }
@@ -138,6 +139,9 @@ struct
 {
     Animated_Image button_animation;
     Animated_Image heart_animation;
+    Animated_Image left_lung_animation;
+    Animated_Image right_lung_animation;
+    Animated_Image digestion_animation;
     Font main_font;
     Font scream_font;
     Image heart_icon;
@@ -164,9 +168,6 @@ bool load_assets(char * assets_dir)
 
     assets.heart_icon = read_image_file(PERSIST_POOL, "heart_icon.pam");
     if (!assets.heart_icon.pixels) return false;
-
-    assets.morse_background = read_image_file(PERSIST_POOL, "morse.pam");
-    if (!assets.morse_background.pixels) return false;
 
     {
         Image main_font_image = read_image_file(PERSIST_POOL, "font.pam");
@@ -209,6 +210,42 @@ bool load_assets(char * assets_dir)
         {
             .pixels = heart_animation_image.pixels,
             .width = 320,
+            .height = 200,
+            .frame_count = 7,
+        };
+    }
+
+    {
+        Image left_lung_animation_image = read_image_file(PERSIST_POOL, "left_lung.pam");
+        if (!left_lung_animation_image.pixels) return false;
+        assets.left_lung_animation = (Animated_Image)
+        {
+            .pixels = left_lung_animation_image.pixels,
+            .width = 85,
+            .height = 167,
+            .frame_count = 8,
+        };
+    }
+
+    {
+        Image right_lung_animation_image = read_image_file(PERSIST_POOL, "right_lung.pam");
+        if (!right_lung_animation_image.pixels) return false;
+        assets.right_lung_animation = (Animated_Image)
+        {
+            .pixels = right_lung_animation_image.pixels,
+            .width = 90,
+            .height = 167,
+            .frame_count = 8,
+        };
+    }
+
+    {
+        Image digestion_animation_image = read_image_file(PERSIST_POOL, "digestion.pam");
+        if (!digestion_animation_image.pixels) return false;
+        assets.digestion_animation = (Animated_Image)
+        {
+            .pixels = digestion_animation_image.pixels,
+            .width = 85,
             .height = 200,
             .frame_count = 7,
         };

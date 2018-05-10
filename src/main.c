@@ -156,6 +156,11 @@ int main(int argument_count, char ** arguments)
 
     blank_cut(1.0, 0, &heart_scene, &assets.wood_block_sound);
 
+    // DEBUG:
+    // set_scene(heart_scene);
+    // set_scene(lungs_scene);
+    // set_scene(digestion_scene);
+
     while (true)
     {
         // Update timers.
@@ -187,11 +192,24 @@ int main(int argument_count, char ** arguments)
                     }
 
                     // DEBUG:
+                    else if (sc == SDL_SCANCODE_1)
+                    {
+                        set_scene(heart_scene);
+                    }
+                    else if (sc == SDL_SCANCODE_2)
+                    {
+                        set_scene(lungs_scene);
+                    }
+                    else if (sc == SDL_SCANCODE_3)
+                    {
+                        set_scene(digestion_scene);
+                    }
                     else if (sc == SDL_SCANCODE_I)
                     {
                         if (event.key.state)
                         {
                             heart_state.draw_interface = !heart_state.draw_interface;
+                            lungs_state.draw_interface = !lungs_state.draw_interface;
                         }
                     }
                     else if (sc == SDL_SCANCODE_O)
@@ -217,7 +235,10 @@ int main(int argument_count, char ** arguments)
         // Render the scene.
         current_scene.frame(current_scene.state, delta_time);
 
+
         // DEBUG:
+        // clear(0);
+        // draw_image(l, 0, 0);
         // draw_text(assets.main_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         // Render the internal pixel buffer to the screen.

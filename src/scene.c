@@ -17,7 +17,7 @@
 
 typedef void (* Frame_Func)(void * state, f32 delta_time);
 typedef void (* Start_Func)(void * state);
-typedef void (* Input_Func)(void * state, int player, bool pressed, u32 timestamp_ms);
+typedef void (* Input_Func)(void * state, int player, bool pressed, u32 time_stamp_ms);
 
 typedef struct
 {
@@ -55,6 +55,7 @@ bool set_scene(Scene scene)
 // Blank scene.
 //
 // Display a blank screen of a given colour, for a given amount of time.
+// Can be used for transitions between scenes.
 //
 
 typedef struct
@@ -90,7 +91,7 @@ void blank_start(void * state)
     s->end_time = SDL_GetTicks() + (1000 * s->time_in_seconds);
 }
 
-void blank_input(void * state, int player, bool pressed, u32 timestamp_ms) {}
+void blank_input(void * state, int player, bool pressed, u32 time_stamp_ms) {}
 
 Scene blank_scene =
 {
@@ -108,7 +109,7 @@ void prepare_blank_cut(f32 time_in_seconds, u32 colour,
         .time_in_seconds = time_in_seconds,
         .next_scene = next_scene,
         .colour = colour,
-        .end_sound = *end_sound,
+        .end_sound = end_sound ? *end_sound : (Sound){},
     };
 
     set_scene(blank_scene);
@@ -122,90 +123,74 @@ void blank_cut(f32 time_in_seconds, u32 colour,
 }
 
 //
-// Text scene.
+// Accuracy interface.
 //
-// Display some text on the screen for a given amount of time.
+// A tutorial interface which helps players improve their accuracy.
 //
-
-typedef struct
+void draw_accuracy_interface(f32 accuracy,
+    f32 range, f32 bpm,
+    bool draw_left_arrow, bool draw_right_arrow,
+    bool left_state, bool right_state)
 {
-    u32 end_time;
-    u32 background_colour;
-    u32 text_colour;
-    int x;
-    int y;
-    f32 time_in_seconds;
-    Scene * next_scene;
-    Sound end_sound;
-    char * text;
-    Font font;
-}
-Text_State;
+    f32 yellow_range = range * 5.0;
+    f32 red_range = range * 10.0f;
+    f32 scale = 100.0 / red_range;
 
-Text_State text_state;
+    int y = 10;
+    draw_line(WIDTH / 2 - red_range * scale, HEIGHT - y,
+        WIDTH / 2 + red_range * scale, HEIGHT - y,
+        0xff0000ff);
+    draw_line(WIDTH / 2 - yellow_range * scale, HEIGHT - y,
+        WIDTH / 2 + yellow_range * scale, HEIGHT - y,
+        0xffff00ff);
+    draw_line(WIDTH / 2 - range * scale, HEIGHT - y,
+        WIDTH / 2 + range * scale, HEIGHT - y,
+        0x00ff00ff);
+    draw_line(WIDTH / 2 - range * scale, HEIGHT - (y - 1),
+        WIDTH / 2 - range * scale, HEIGHT - (y + 1),
+        0x00ff00ff);
+    draw_line(WIDTH / 2 + range * scale, HEIGHT - (y - 1),
+        WIDTH / 2 + range * scale, HEIGHT - (y + 1),
+        0x00ff00ff);
 
-void text_frame(void * state, f32 delta_time)
-{
-    Text_State * s = state;
-    if (s->end_time < SDL_GetTicks())
+    draw_line(WIDTH / 2 + accuracy * scale, HEIGHT - (y - 1),
+        WIDTH / 2 + accuracy * scale, HEIGHT - (y + 1),
+        ~0);
+    draw_line(WIDTH / 2 + accuracy * scale - 1, HEIGHT - (y - 1),
+        WIDTH / 2 + accuracy * scale - 1, HEIGHT - (y + 1),
+        ~0);
+    draw_line(WIDTH / 2 + accuracy * scale + 1, HEIGHT - (y - 1),
+        WIDTH / 2 + accuracy * scale + 1, HEIGHT - (y + 1),
+        ~0);
+
+    draw_text(assets.main_font,
+        WIDTH / 2 - red_range * scale - 30,
+        HEIGHT - (y + 6),
+        ~0,
+        "slow");
+    draw_text(assets.main_font,
+        WIDTH / 2 + red_range * scale + 5,
+        HEIGHT - (y + 6),
+        ~0,
+        "fast");
+
+    y = 80 + sinf((M_PI*2.0) * SDL_GetTicks() * 0.001 * (bpm / 60.0)) * 5;
+    if (draw_left_arrow)
     {
-        if (s->end_sound.samples)
-        {
-            play_sound(&mixer, s->end_sound, 1.0, 1.0, false);
-        }
-        set_scene(*s->next_scene);
+        draw_line(44, y,      44,     y + 10, ~0);
+        draw_line(44, y + 10, 44 - 5, y +  5, ~0);
+        draw_line(44, y + 10, 44 + 5, y +  5, ~0);
     }
-    clear(s->background_colour);
-    draw_text(s->font, s->x, s->y, s->text_colour, s->text);
-}
 
-void text_start(void * state)
-{
-    Text_State * s = state;
-    s->end_time = SDL_GetTicks() + (1000 * s->time_in_seconds);
-}
-
-void text_input(void * state, int player, bool pressed, u32 timestamp_ms) {}
-
-
-Scene text_scene =
-{
-    .start = text_start,
-    .frame = text_frame,
-    .input = text_input,
-    .state = &text_state,
-};
-
-void prepare_text_cut(f32 time_in_seconds,
-    u32 background_colour, u32 text_colour,
-    Font * font, char * text,
-    Scene * next_scene, Sound * end_sound)
-{
-    int string_length = strlen(text);
-    int x = (WIDTH / 2) - (font->char_width * string_length) / 2;
-    int y = (HEIGHT / 2) - (font->char_height / 2);
-
-    text_state = (Text_State)
+    if (draw_right_arrow)
     {
-        .time_in_seconds = time_in_seconds,
-        .next_scene = next_scene,
-        .background_colour = background_colour,
-        .end_sound = *end_sound,
-        .text = text,
-        .text_colour = text_colour,
-        .font = *font,
-        .x = x,
-        .y = y,
-    };
-}
+        draw_line(274, y,      274,     y + 10, ~0);
+        draw_line(274, y + 10, 274 - 5, y +  5, ~0);
+        draw_line(274, y + 10, 274 + 5, y +  5, ~0);
+    }
 
-void text_cut(f32 time_in_seconds, u32 background_colour, u32 text_colour,
-    Font * font, char * text, Scene * next_scene, Sound * end_sound)
-{
-    prepare_text_cut(time_in_seconds,
-        background_colour, text_colour, font, text,
-        next_scene, end_sound);
-    set_scene(text_scene);
+    draw_animated_image_frame(assets.button_animation, left_state,   15, 110);
+    draw_animated_image_frame(assets.button_animation, right_state, 245, 110);
 }
 
 //
@@ -238,7 +223,6 @@ void heart_start(void * state)
     s->heart = assets.heart_animation;
     s->heart.frame_duration_ms = 30;
     s->target_beats_per_minute = 60.0;
-    s->draw_interface = true;
     play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
 }
 
@@ -246,14 +230,7 @@ void heart_frame(void * state, f32 delta_time)
 {
     Heart_State * s = state;
 
-    for (int y = 0; y < HEIGHT; ++y)
-    {
-        for (int x = 0; x < WIDTH; ++x)
-        {
-            int r = random_int_range(0, 40);
-            pixels[x + y * WIDTH] = rgba(r, r, r, 255);
-        }
-    }
+    draw_noise(0.15);
 
     if (s->expanding)
     {
@@ -264,81 +241,25 @@ void heart_frame(void * state, f32 delta_time)
         draw_animated_image_frames_and_wait(s->heart, 4, 6, 0, 20);
     }
 
-
-    f32 green_range = 5.0;
-    f32 yellow_range = green_range * 5.0;
-    f32 red_range = green_range * 10.0f;
-    f32 scale = 100.0 / red_range;
-
+    f32 range = 5.0;
     if (s->time_stamps[0] && s->time_stamps[1])
     {
         f32 beats_per_minute = 60.0f / (s->delta_ms * 0.001f);
         f32 d = s->target_beats_per_minute - beats_per_minute;
-        d = clamp(-red_range, -d, red_range);
+        d = clamp(-range * 10.0, -d, range * 10.0);
         s->accuracy += (d - s->accuracy) * 0.05;
     }
 
     if (s->draw_interface)
     {
-        int y = 10;
-        draw_line(WIDTH / 2 - red_range * scale, HEIGHT - y,
-            WIDTH / 2 + red_range * scale, HEIGHT - y,
-            0xff0000ff);
-        draw_line(WIDTH / 2 - yellow_range * scale, HEIGHT - y,
-            WIDTH / 2 + yellow_range * scale, HEIGHT - y,
-            0xffff00ff);
-        draw_line(WIDTH / 2 - green_range * scale, HEIGHT - y,
-            WIDTH / 2 + green_range * scale, HEIGHT - y,
-            0x00ff00ff);
-        draw_line(WIDTH / 2 - green_range * scale, HEIGHT - (y - 1),
-            WIDTH / 2 - green_range * scale, HEIGHT - (y + 1),
-            0x00ff00ff);
-        draw_line(WIDTH / 2 + green_range * scale, HEIGHT - (y - 1),
-            WIDTH / 2 + green_range * scale, HEIGHT - (y + 1),
-            0x00ff00ff);
-
-        draw_line(WIDTH / 2 + s->accuracy * scale, HEIGHT - (y - 1),
-            WIDTH / 2 + s->accuracy * scale, HEIGHT - (y + 1),
-            ~0);
-        draw_line(WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y - 1),
-            WIDTH / 2 + s->accuracy * scale - 1, HEIGHT - (y + 1),
-            ~0);
-        draw_line(WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y - 1),
-            WIDTH / 2 + s->accuracy * scale + 1, HEIGHT - (y + 1),
-            ~0);
-
-        draw_text(assets.main_font,
-            WIDTH / 2 - red_range * scale - 30,
-            HEIGHT - (y + 6),
-            ~0,
-            "slow");
-        draw_text(assets.main_font,
-            WIDTH / 2 + red_range * scale + 5,
-            HEIGHT - (y + 6),
-            ~0,
-            "fast");
-
-        y = 80 + sinf((M_PI*2.0) * SDL_GetTicks() * 0.001 * (s->target_beats_per_minute / 60.0)) * 5;
-        if (s->expanding)
-        {
-            draw_line(49, y, 49, y + 10, ~0);
-            draw_line(49, y + 10, 49 - 5, y + 5, ~0);
-            draw_line(49, y + 10, 49 + 5, y + 5, ~0);
-        }
-        else
-        {
-            draw_line(269, y, 269, y + 10, ~0);
-            draw_line(269, y + 10, 269 - 5, y + 5, ~0);
-            draw_line(269, y + 10, 269 + 5, y + 5, ~0);
-        }
-
-        draw_animated_image_frame(assets.button_animation, s->player_states[0], 20, 110);
-        draw_animated_image_frame(assets.button_animation, s->player_states[1], 240, 110);
-
+        draw_accuracy_interface(s->accuracy, range,
+            s->target_beats_per_minute,
+            s->expanding, !s->expanding,
+            s->player_states[0], s->player_states[1]);
     }
 }
 
-void heart_input(void * state, int player, bool pressed, u32 timestamp_ms)
+void heart_input(void * state, int player, bool pressed, u32 time_stamp_ms)
 {
     Heart_State * s = state;
     s->player_states[player] = pressed;
@@ -346,14 +267,11 @@ void heart_input(void * state, int player, bool pressed, u32 timestamp_ms)
     {
         if (s->expanding != player)
         {
-            s->time_stamps[player] = timestamp_ms;
-            s->heart.start_time_ms = timestamp_ms;
+            s->time_stamps[player] = time_stamp_ms;
+            s->heart.start_time_ms = time_stamp_ms;
             int a = s->time_stamps[0];
             int b = s->time_stamps[1];
-            if (a && b)
-            {
-                s->delta_ms = abs(a - b);
-            }
+            if (a && b) s->delta_ms = abs(a - b);
             s->expanding = player;
         }
     }
@@ -365,4 +283,175 @@ Scene heart_scene =
     .start = heart_start,
     .input = heart_input,
     .state = &heart_state,
+};
+
+//
+// Lungs scene.
+//
+// In this scene, players hold and release their buttons in time with
+// eachother and the beat.
+//
+
+typedef struct
+{
+    Animated_Image left_lung;
+    Animated_Image right_lung;
+    f32 target_beats_per_minute;
+    f32 accuracy;
+    int delta_ms[2];
+    int time_stamps[2][2];
+    int current_stamp[2];
+    bool player_states[2];
+    bool draw_interface;
+}
+Lungs_State;
+
+Lungs_State lungs_state;
+
+void lungs_start(void * state)
+{
+    Lungs_State * s = state;
+    *s = (Lungs_State){};
+    s->target_beats_per_minute = 60.0;
+    s->left_lung = assets.left_lung_animation;
+    s->right_lung = assets.right_lung_animation;
+    s->left_lung.frame_duration_ms = 60.0;
+    s->right_lung.frame_duration_ms = 60.0;
+    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
+}
+
+void lungs_frame(void * state, f32 delta_time)
+{
+    Lungs_State * s = state;
+
+    draw_noise(0.15);
+
+    if (s->player_states[0])
+    {
+        draw_animated_image_frames_and_wait(s->left_lung, 0, 3, 76, 40);
+    }
+    else
+    {
+        draw_animated_image_frames_and_wait(s->left_lung, 5, 7, 76, 40);
+    }
+
+    if (s->player_states[1])
+    {
+        draw_animated_image_frames_and_wait(s->right_lung, 0, 3, 76 + 75, 40);
+    }
+    else
+    {
+        draw_animated_image_frames_and_wait(s->right_lung, 5, 7, 76 + 75, 40);
+    }
+
+    f32 range = 5.0;
+    if (s->time_stamps[0] && s->time_stamps[1])
+    {
+        f32 beats_per_minute[2];
+        beats_per_minute[0] = 60.0f / (s->delta_ms[0] * 0.001f);
+        beats_per_minute[1] = 60.0f / (s->delta_ms[1] * 0.001f);
+        f32 target_delta = s->target_beats_per_minute - beats_per_minute[0];
+        target_delta += s->target_beats_per_minute - beats_per_minute[1];
+        target_delta /= 2.0;
+        target_delta = clamp(-range * 10.0, -target_delta, range * 10.0);
+        s->accuracy += (target_delta - s->accuracy) * 0.05;
+    }
+
+    if (s->draw_interface)
+    {
+        draw_accuracy_interface(s->accuracy, range,
+            s->target_beats_per_minute,
+            true, true,
+            s->player_states[0], s->player_states[1]);
+    }
+}
+
+void lungs_input(void * state, int player, bool pressed, u32 time_stamp_ms)
+{
+    Lungs_State * s = state;
+    s->player_states[player] = pressed;
+    s->time_stamps[player][s->current_stamp[player]] = time_stamp_ms;
+    int a = s->time_stamps[player][0];
+    int b = s->time_stamps[player][1];
+    if (a && b) s->delta_ms[player] = abs(a - b);
+
+    s->current_stamp[player] = !s->current_stamp[player];
+
+    if (player == 0)
+    {
+        s->left_lung.start_time_ms = SDL_GetTicks();
+    }
+    else
+    {
+        s->right_lung.start_time_ms = SDL_GetTicks();
+    }
+}
+
+Scene lungs_scene =
+{
+    .frame = lungs_frame,
+    .start = lungs_start,
+    .input = lungs_input,
+    .state = &lungs_state,
+};
+
+//
+// Digestion scene.
+//
+// In this scene players need to tap out a rhythm in 5/4 with one player
+// tapping on the final beat of the bar, and one tapping the rest.
+//
+
+typedef struct
+{
+    Animated_Image digestion;
+    int current_beat;
+}
+Digestion_State;
+
+Digestion_State digestion_state;
+
+void digestion_start(void * state)
+{
+    Digestion_State * s = state;
+    *s = (Digestion_State){};
+    s->digestion = assets.digestion_animation;
+    s->digestion.frame_duration_ms = 50;
+    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
+}
+
+void digestion_frame(void * state, f32 delta_time)
+{
+    Digestion_State * s = state;
+    draw_noise(0.15);
+    if (s->current_beat == 5)
+    {
+        bool waiting = draw_animated_image_frames_and_wait(s->digestion, 4, 6, 117, 40);
+        if (waiting) s->current_beat = 0;
+    }
+    else
+    {
+        draw_animated_image_frame(s->digestion, s->current_beat, 117, 40);
+    }
+}
+
+void digestion_input(void * state, int player, bool pressed, u32 time_stamp_ms)
+{
+    Digestion_State * s = state;
+    if (pressed)
+    {
+        if ((s->current_beat < 4 && player == 0) || (s->current_beat == 4 && player == 1))
+        {
+            s->current_beat = (s->current_beat + 1) % 6;
+            s->digestion.start_time_ms = time_stamp_ms;
+        }
+    }
+}
+
+Scene digestion_scene =
+{
+    .frame = digestion_frame,
+    .start = digestion_start,
+    .input = digestion_input,
+    .state = &digestion_state,
 };
