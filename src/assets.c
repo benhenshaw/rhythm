@@ -105,7 +105,7 @@ Sound read_sound_file(int pool_index, char * file_name)
     if (sample_count)
     {
         f32 * samples = pool_alloc(pool_index, sample_count * sizeof(f32));
-        int samples_read = fread(pixels, sizeof(f32), sample_count, file);
+        int samples_read = fread(samples, sizeof(f32), sample_count, file);
         fclose(file);
         if (samples_read == sample_count)
         {
@@ -126,6 +126,26 @@ bool write_sound_file(Sound sound, char * file_name)
     int bytes_written = fwrite(sound.samples, 1, byte_count, file);
     fclose(file);
     return byte_count == bytes_written;
+}
+
+// Read raw (headerless) mono f32 pcm data from a file.
+Sound read_raw_sound(int pool, char * file_name)
+{
+    Sound s = {};
+    FILE * file = fopen(file_name, "r");
+    if (file)
+    {
+        fseek(file, 0, SEEK_END);
+        int byte_count = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        s.samples = pool_alloc(pool, byte_count);
+        int bytes_read = 0;
+        bytes_read = fread(s.samples, 1, byte_count, file);
+        fclose(file);
+        SDL_assert(byte_count == bytes_read);
+        s.sample_count = bytes_read / sizeof(f32);
+    }
+    return s;
 }
 
 //
@@ -149,6 +169,7 @@ struct
     Image relaxed_skeleton;
     Sound wood_block_sound;
     Sound yay_sound;
+    Sound shaker_sound;
 }
 assets;
 
@@ -162,7 +183,6 @@ bool load_assets(char * assets_dir)
     SDL_free(base_path);
     chdir(full_dir);
 
-    // Load images.
     assets.relaxed_skeleton = read_image_file(PERSIST_POOL, "relaxed_skeleton.pam");
     if (!assets.relaxed_skeleton.pixels) return false;
 
@@ -251,26 +271,14 @@ bool load_assets(char * assets_dir)
         };
     }
 
-    // TODO: Use custom sound loader.
-    {
-        SDL_AudioSpec spec = {};
-        u8 * samples = 0;
-        u32 byte_count = 0;
-        SDL_LoadWAV("woodblock.wav", &spec, &samples, &byte_count);
-        if (!samples) return false;
-        assets.wood_block_sound.samples = (f32 * )samples;
-        assets.wood_block_sound.sample_count = byte_count / sizeof(f32);
-    }
+    assets.shaker_sound = read_raw_sound(PERSIST_POOL, "shaker.f32");
+    if (!assets.shaker_sound.samples) return false;
 
-    {
-        SDL_AudioSpec spec = {};
-        u8 * samples = 0;
-        u32 byte_count = 0;
-        SDL_LoadWAV("yay.wav", &spec, &samples, &byte_count);
-        if (!samples) return false;
-        assets.yay_sound.samples = (f32 * )samples;
-        assets.yay_sound.sample_count = byte_count / sizeof(f32);
-    }
+    assets.wood_block_sound = read_raw_sound(PERSIST_POOL, "woodblock.f32");
+    if (!assets.wood_block_sound.samples) return false;
+
+    assets.yay_sound = read_raw_sound(PERSIST_POOL, "yay.f32");
+    if (!assets.yay_sound.samples) return false;
 
     return true;
 }

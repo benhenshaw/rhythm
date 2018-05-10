@@ -154,7 +154,7 @@ int main(int argument_count, char ** arguments)
     // Start the game.
     //
 
-    blank_cut(1.0, 0, &heart_scene, &assets.wood_block_sound);
+    blank_cut(1.0, 0, &heart_scene, NULL);
 
     // DEBUG:
     // set_scene(heart_scene);
@@ -184,11 +184,13 @@ int main(int argument_count, char ** arguments)
                     SDL_Scancode sc = event.key.keysym.scancode;
                     if (sc == SDL_SCANCODE_LSHIFT)
                     {
-                        current_scene.input(current_scene.state, 0, event.key.state, event.key.timestamp);
+                        current_scene.input(current_scene.state, 0,
+                            event.key.state, event.key.timestamp);
                     }
                     else if (sc == SDL_SCANCODE_RSHIFT)
                     {
-                        current_scene.input(current_scene.state, 1, event.key.state, event.key.timestamp);
+                        current_scene.input(current_scene.state, 1,
+                            event.key.state, event.key.timestamp);
                     }
 
                     // DEBUG:
