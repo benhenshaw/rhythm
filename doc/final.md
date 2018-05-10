@@ -34,7 +34,7 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes and compares the kinds of technologies that commonly exist in games and game engines, and _**TODO**_. Section 3 (Specification) concretely defines the task that was attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes some components found in video games and some concerns for their implementation. Section 3 (Specification) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 (Evaluation) describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
 
 \newpage
 
@@ -61,11 +61,7 @@ Further research in the area of limited input games brought up the burgeoning fi
 Video games built for platforms which are purpose built to run them have a very different approach to the management of assets (such as image and sound data). On the Game Boy Advance, all assets must be stored on the 'GamePak'; a small cartridge that slots into the console itself. Once the game has booted up, any assets stored on the cart are accessible via mapped memory. This means that assets are not loaded in at will as games on other platforms need to do. Video games developed for a Windows computer, for example, may need to load data from any number of files into the virtual memory of the process in order to access them. This process requires significantly more effort, although there are many approaches with their own costs and benefits.
 
 ## Planning the Implementation
-Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management.
-
-<!-- Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
-
-## Graphics
+Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
 
 \newpage
 
@@ -74,11 +70,19 @@ In order to approach the task of building a software stack for a video game, I s
 
 There were several kinds of data that I needed to manage. Data for graphics in the form of bitmaps, data for audio in the form of sample streams, data for user input, and the specifics of any on-disk asset formats.
 
+## Graphical Data
+Graphical data for reproduction on a video screen is often handled in pixels. These pixels can have a number of separate components, each of which representing some *primary* colour. These primaries are mixed to produce a final colour. One can also use an index based method, in which a table of colours is kept, and bitmap images have an index at each location, referring to a colour from the table. As I did not know what direction the art style would take, and what concerns the graphical system would have, I decided that I would use a very flexible format: RGBA. This format is very common; it has four channels for the primaries, red, green, and blue, and a channel for alpha which is used for blending colours for transparency. While this storage format is larger than others, it is simple to use manipulate, and supports a large number of possible colours.
+
+In order to display the data on screen, pixels need to be sent to the graphical hardware to be output. This process can be done in many ways, but I intended to use a buffer which would be regularly updated and sent off. This buffer has its own format, and if this format differs from other bitmap data conversions will need to be done. Using the RGBA format helps avoid this, as this is a format natively supported by lots of graphics hardware and software.
+
+## Audio Data
+To play sounds digitally from a speaker, one needs to produce vibrations by setting the speaker's position rapidly. This can be done on-the-fly, meaning the speaker positions are generated by the software itself (synthesis). This can also be done by using a set of pre-recorded positions. While I did want to perform some audio synthesis, I also knew that I would need to handle pre-recorded sounds. Audio formats (when not compressed) are relatively simple, in that they are usually just a buffer of numbers. But, this still leaves room for incompatibility as there are many ways to store a number on a computer (not to mention endianness). As with pixel data, I decided that I would support one of the more flexible and high quality formats: 32-bit floating point. Within the audio mixer, I intended to use a floating point format to simplify the mixing process. As I was less constrained by storage and memory space than developers on other platforms, I decided that it would be reasonable to store my audio recordings in this format on disk, and load them into the process without conversion, where they can be used directly by the mixer.
+
+Along with the format of each audio sample, there is the concern of the frequency of samples. Frequency has a major affect on the range of pitch that can be expressed by the data. 48KHz is the frequency used by DVD audio, and is widely supported, thus I went with this format. 44.1KHz is also very common, being the format of CD audio, having lower fidelity but smaller storage space per second of audio. As I did not expect to have large amounts of audio data, and that I am not hard-bound by storage space, I considered the trade off acceptable.
+
 ## Use of Mini-Games
 <!-- Discuss the range of interactions that the mini-games explore. -->
 In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, broadening the range of experiences that a player can have.
-
-
 
 <!-- Discuss desires for what the player will experience when playing. -->
 
@@ -428,57 +432,57 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 
 
 # Bibliography
-[1]:
-Lionel, Steve (Intel); 2011
-Memory Limits for Applications on Windows
-https://software.intel.com/en-us/articles/memory-limits-applications-windows
+[1]\
+Lionel, Steve (Intel); 2011\
+*Memory Limits for Applications on Windows*\
+https://software.intel.com/en-us/articles/memory-limits-applications-windows\
 
-[2]:
-Linux Manual
-setrlimit(2)
-https://linux.die.net/man/2/setrlimit
-`getrlimit(RLIMIT_STACK, &limit);`
+[2]\
+Linux Manual\
+*setrlimit(2)*\
+https://linux.die.net/man/2/setrlimit\
 
-[3]:
-Linux Manual
-getpagesize(2)
-https://linux.die.net/man/2/getpagesize
+[3]\
+Linux Manual\
+*getpagesize(2)*\
+https://linux.die.net/man/2/getpagesize\
 
-[4]:
-GBATEK
-Gameboy Advance / Nintendo DS / DSi - Technical Info
-http://problemkaputt.de/gbatek.htm#gbatechnicaldata
+[4]\
+GBATEK\
+*Gameboy Advance / Nintendo DS / DSi - Technical Info*\
+http://problemkaputt.de/gbatek.htm#gbatechnicaldata\
 
-[5]:
-MSDN Documentation
-Compiler Options
-/F (Set Stack Size)
-https://msdn.microsoft.com/en-us/library/tdkhxaks.aspx
+[5]\
+MSDN Documentation\
+Compiler Options\
+*/F (Set Stack Size)*\
+https://msdn.microsoft.com/en-us/library/tdkhxaks.aspx\
 
-[6]:
-Linux Manual
-mmap(2)
-https://linux.die.net/man/2/mmap
+[6]\
+Linux Manual\
+*mmap(2)*\
+https://linux.die.net/man/2/mmap\
 
-[7]:
-Made with Unity
-https://unity.com/madewith
+[7]\
+*Made with Unity*\
+https://unity.com/madewith\
 
-[8]:
-Unreal Showcase
-https://www.unrealengine.com/en-US/blog/category/showcase
+[8]\
+*Unreal Showcase*\
+https://www.unrealengine.com/en-US/blog/category/showcase\
 
-[9]:
-Games made with Love2D
-https://love2d.org/wiki/Category:Games
+[9]\
+*Games Made with Love2D*\
+https://love2d.org/wiki/Category:Games\
 
-[10]:
-Games made with SFML
-http://www.indiedb.com/engines/sfml/games
+[10]\
+*Games Made with SFML*\
+http://www.indiedb.com/engines/sfml/games\
 
-[11]:
-Green, Berbank; 2005
-https://www.gamasutra.com/view/feature/130728/one_button_games.php
+[11]\
+Green, Berbank; 2005\
+*One Button Games*\
+https://www.gamasutra.com/view/feature/130728/one_button_games.php\
 
 \newpage
 
