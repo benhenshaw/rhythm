@@ -6,7 +6,7 @@ pandoc \
 -Vmargin-right=4cm \
 -Vauthor="Benedict Henshaw" \
 -Vdate="\today" \
--Vtitle="Implementation of an Engine for a One-Button Game" \
+-Vtitle="Implementation of an Engine for a Two-Player One-Button Game" \
 --from markdown+smart \
 final.md -o final.pdf \
 && \

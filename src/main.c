@@ -70,7 +70,7 @@ int main(int argument_count, char ** arguments)
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
+        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN_DESKTOP);
     if (!window)
     {
         panic_exit("Could not create a window.\n%s", SDL_GetError());
@@ -154,12 +154,7 @@ int main(int argument_count, char ** arguments)
     // Start the game.
     //
 
-    blank_cut(1.0, 0, &heart_scene, NULL);
-
-    // DEBUG:
-    // set_scene(heart_scene);
-    // set_scene(lungs_scene);
-    // set_scene(digestion_scene);
+    blank_cut(2.0, 0, &heart_scene, NULL);
 
     while (true)
     {
