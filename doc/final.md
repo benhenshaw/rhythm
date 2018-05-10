@@ -1,39 +1,32 @@
-# Implementation of an Engine for a One-Button Game
-Benedict Henshaw
-Goldsmiths, University of London
-15th of May, 2018
+<!--
+    Build with:
+    pandoc final.md -o final.pdf --pdf-engine=xelatex
+-->
 
+\author{Benedict Henshaw}
+\date{\today}
+\title{Implementation of an Engine for a One-Button Game}
 
+\maketitle
 
-# Abstract
+**Abstract:**
 This document describes the design and development of a game engine -- a set of supporting technical components -- for a two-player, one button, mini-game-based video game, and an example game. The project focusses on the technical implementation, and attempts to demonstrate ways in which common components of video games can be developed (such as renderers and memory allocators) without using libraries, and how they can be tailored to fit the requirements of a specific project.
 
+\newpage
 
+\tableofcontents
 
-# Contents
-+ 1 Introduction
-+ 2 Background Research
-+ 3 Specification
-+ 4 Design and Implementation
-+ 5 Testing and Evaluation
-+ 6 Conclusion
-+ Bibliography
-+ Appendix A
-+ Appendix B
-+ Appendix C
-+ Appendix D
-
-
+\newpage
 
 # Introduction
-When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity or Unreal, or any number of libraries. As these tools are available and accessible, many developers rely on them and do not build their games from scratch. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves. Each library or engine will have its own strengths and weaknesses, and this imparts some friction on the development process. An engine developer can only account for so much, so a designer may find it difficult to design something new that pushes the boundaries of the medium.
+When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity or Unreal, or any number of libraries. As these tools are available and accessible, many developers rely on them and do not build their games from scratch. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves. Each library or engine will have its own strengths and weaknesses, and this imparts some friction on the development process. An engine developer can only account for so much, so a designer using an engine may find it difficult to design something new that pushes the boundaries of the medium.
 
-In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Heaven' ('リズム天国') (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
+In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Heaven' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
 
 One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use; see Appendix A for more on this topic. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
 
-## Goals
-Before I began the project, I had a set of goals. See the conclusion in section [section number] for an evaluation of how well the goals were met.
+## Goals
+Before I began the project, I had a set of goals. See the conclusion in section 6 for an evaluation of how well the goals were met.
 
 **To, wherever possible, only use code that I have written.** I wanted to learn a breadth of techniques from this project. I did not want to leave major aspects of the software, such as memory allocation or rendering up to a library to carry out.
 
@@ -44,48 +37,42 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes and compares the kinds of technologies that commonly exist in games and game engines, and *TODO*. Section 3 (Specification) concretely defines the task that will be attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on related topics is presented in Appendix A.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes and compares the kinds of technologies that commonly exist in games and game engines, and *TODO*. Section 3 (Specification) concretely defines the task that was attempted. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Section 5 describes how this software was evaluated, and the results of those evaluations. Section 6 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
 
-
+\newpage
 
 # Background
 <!-- Compare technologies. -->
-Features most commonly found in video games are input, visuals, and sound. Behind these features there are many commonly occurring technical systems, such as graphical rendering systems, audio mixing and effects systems, memory allocation and management systems, timing systems, and more. Here is an overview of some of the technical systems available in some popular game development utilities:
+Features most commonly found in video games are input, visuals, and sound. Behind these features there are many commonly occurring technical systems, such as graphical rendering systems, audio mixing and effects systems, memory allocation and management systems, timing systems, and more.
 
 
-
-<!-- Discuss the high-level design of the game as it relates to other games, emphasising what is novel about it. -->
+## Design in One-Button Games
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Heaven, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
-# Planning the Implementation
+
+
+## Planning the Implementation
 Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software.
 
 <!-- Discuss the technical sub-systems of the project, with examples and critiques of how they are implemented in other games. (Several paragraphs.) -->
 
 ## Graphics
 
-
+\newpage
 
 # Specification
 <!-- Discuss the range of interactions that the mini-games explore. -->
 In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, broadening the range of experiences that a player can have.
 
-I wanted to explore competitive and cooperative game-play.
+
 
 <!-- Discuss desires for what the player will experience when playing. -->
 
 <!-- Discuss technical goals, and how they support design goals. -->
 
-
+\newpage
 
 # Design and Implementation
-## Design
-<!-- Discuss the overall design of the game describing the mini-games and their characteristics. (Several paragraphs.) -->
-The design of the game has several key features.
-
-As the game features several mini-games, each will be discusses separately below.
-
-### Heart Beat
 
 ## Technical Overview
 <!-- Discuss the high-level design and structure of the software. -->
@@ -142,7 +129,8 @@ Unfortunately, the pixel format used by .pam files is big-endian, and I am targe
 for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index)
 {
     u32 p = pixels[pixel_index];
-    pixels[pixel_index] = rgba(get_alpha(p), get_blue(p), get_green(p), get_red(p));
+    pixels[pixel_index] = rgba(get_alpha(p), get_blue(p),
+        get_green(p), get_red(p));
 }
 ~~~
 
@@ -388,7 +376,7 @@ Each mini-game is a single scene, and each menu is also a separate scene.
 ### Building the Binary
 For this project, I compile the entire source as a single translation unit. This is sometimes called a 'Unity Build'; achieved by using the `#include` preprocessor directive to combine all source files into a single file, and compiling it. It builds faster than more traditional methods which wherein each file becomes a separate translation unit, and can allow the compiler to produce a better optimised binary. This method also makes header files unnecessary, as nothing needs to be forward declared when the entire code based coexists in a translation unit.
 
-
+\newpage
 
 # Testing and Evaluation
 <!-- Discuss the knowledge gathered about how games are tested. -->
@@ -409,7 +397,7 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 
 <!-- Discuss the cycles of iteration. -->
 
-
+\newpage
 
 # Conclusion
 <!-- Evaluate the methods used to construct the game. -->
@@ -438,7 +426,7 @@ https://linux.die.net/man/2/setrlimit
 getpagesize(2)
 https://linux.die.net/man/2/getpagesize
 
-
+\newpage
 
 # Appendix A
 ## Thoughts on the Use of Game Engines, and the Preservation of Video Games
@@ -452,13 +440,13 @@ For video games to be culturally significant one should be able to examine the h
 
 Until we as developers stop believing in the idea that we loose when other gain from our knowledge, we will be held back from becoming an undeniable art form. A painter doesn't actively hide their technique from others, nor a musician.
 
-
+\newpage
 
 # Appendix B
 ## Source Code
 <!-- Program source code. -->
 
-
+\newpage
 
 # Appendix C
 ## Original Project Proposal
@@ -522,7 +510,7 @@ Audio sample data will be in '.wav' format unless there is so much of it that a 
 
 A basic (probably plain-text) file format will be used if any player settings or save data needs to be stored.
 
-
+\newpage
 
 # Appendix D
 ## Weekly Development Logs
