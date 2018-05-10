@@ -223,7 +223,7 @@ void heart_start(void * state)
     s->heart = assets.heart_animation;
     s->heart.frame_duration_ms = 30;
     s->target_beats_per_minute = 60.0;
-    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
+    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, false);
 }
 
 void heart_frame(void * state, f32 delta_time)
@@ -317,7 +317,7 @@ void lungs_start(void * state)
     s->right_lung = assets.right_lung_animation;
     s->left_lung.frame_duration_ms = 60.0;
     s->right_lung.frame_duration_ms = 60.0;
-    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
+    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, false);
 }
 
 void lungs_frame(void * state, f32 delta_time)
@@ -416,8 +416,8 @@ void digestion_start(void * state)
     Digestion_State * s = state;
     *s = (Digestion_State){};
     s->digestion = assets.digestion_animation;
-    s->digestion.frame_duration_ms = 50;
-    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, true);
+    s->digestion.frame_duration_ms = 30;
+    play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, false);
 }
 
 void digestion_frame(void * state, f32 delta_time)
@@ -444,6 +444,7 @@ void digestion_input(void * state, int player, bool pressed, u32 time_stamp_ms)
         {
             s->current_beat = (s->current_beat + 1) % 6;
             s->digestion.start_time_ms = time_stamp_ms;
+            play_sound(&mixer, assets.shaker_sound, 0.5, 0.5, false);
         }
     }
 }

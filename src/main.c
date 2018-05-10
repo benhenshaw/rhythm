@@ -194,31 +194,34 @@ int main(int argument_count, char ** arguments)
                     }
 
                     // DEBUG:
-                    else if (sc == SDL_SCANCODE_1)
+                    if (event.key.state)
                     {
-                        set_scene(heart_scene);
-                    }
-                    else if (sc == SDL_SCANCODE_2)
-                    {
-                        set_scene(lungs_scene);
-                    }
-                    else if (sc == SDL_SCANCODE_3)
-                    {
-                        set_scene(digestion_scene);
-                    }
-                    else if (sc == SDL_SCANCODE_I)
-                    {
-                        if (event.key.state)
+                        if (sc == SDL_SCANCODE_1)
                         {
-                            heart_state.draw_interface = !heart_state.draw_interface;
-                            lungs_state.draw_interface = !lungs_state.draw_interface;
+                            set_scene(heart_scene);
                         }
-                    }
-                    else if (sc == SDL_SCANCODE_O)
-                    {
-                        if (event.key.state)
+                        else if (sc == SDL_SCANCODE_2)
                         {
-                            heart_state.target_beats_per_minute += 10;
+                            set_scene(lungs_scene);
+                        }
+                        else if (sc == SDL_SCANCODE_3)
+                        {
+                            set_scene(digestion_scene);
+                        }
+                        else if (sc == SDL_SCANCODE_I)
+                        {
+                            if (event.key.state)
+                            {
+                                heart_state.draw_interface = !heart_state.draw_interface;
+                                lungs_state.draw_interface = !lungs_state.draw_interface;
+                            }
+                        }
+                        else if (sc == SDL_SCANCODE_O)
+                        {
+                            if (event.key.state)
+                            {
+                                heart_state.target_beats_per_minute += 10;
+                            }
                         }
                     }
                 }
