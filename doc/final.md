@@ -638,12 +638,6 @@ Until we as developers stop believing in the idea that we loose when other gain 
 \newpage
 
 # Appendix B
-## Source Code
-<!-- Program source code. -->
-
-\newpage
-
-# Appendix C
 ## Original Project Proposal
 This section contains the project proposal, handed in on the 15th of December, 2017.
 
@@ -843,4 +837,10 @@ The resulting stream of numbers will be the mixed sound, and will appear to cont
 
 My implementation of audio mixing is based on `channel`s. Each `channel` can hold one sound (an array of numbers), and a set of parameters for playing the sound, such as how loud it should sound in each ear. These channels also keep track of how much of the sound has been played, and what should be played next. I have a fixed (but quite large) number of channels, as this is both simple and efficient.
 
-Since the frequencies of audio data are much higher than video (48000hz vs 60hz), the data often needs its own thread to ensure that it is being handled without delay. While I investigated handling the audio on the main thread (as it would provide better synchronisation with input events), it was difficult to avoid occasional hitches in the sound as the frame loop is not currently time-locked strongly enough. Thus I conceded to using another thread in the form of an asynchronous callback. This meant that the data shared between threads must be handled carefully, and ideally not modified too often. I used a simple built-in locking mechanism to achieve synchronisation, and set my buffer size to a relatively small value (~64 samples) to keep latency low. The performance of this implementation is adequate, but I will keep a close eye on it to see if it must be improved later on.
+Since the frequencies of audio data are much higher than video (48000hz vs 60hz), the data often needs its own thread to ensure that it is being handled without delay. While I investigated handling the audio on the main thread (as it would provide better synchronisation with input events), it was difficult to avoid occasional hitches in the sound as the frame loop is not currently time-locked strongly enough. Thus I conceded to using another thread in the form of an asynchronous callback. This meant that the data shared between threads must be handled carefully, and ideally not modified too often. I used a simple built-in locking mechanism to achieve synchronisation, and set my buffer size to a relatively small value (64 samples) to keep latency low. The performance of this implementation is adequate, but I will keep a close eye on it to see if it must be improved later on.
+
+\newpage
+
+# Appendix C
+## Source Code
+<!-- Program source code. -->
