@@ -20,7 +20,9 @@ When setting out to develop a video game -- as with any software -- there are ma
 
 In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
 
-One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use; see [Appendix A] for more on this topic. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
+One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use[^1]. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
+
+[^1]: See [Appendix A] for more on this topic.
 
 ## Goals
 Before I began the project, I had a set of goals. See the conclusion in section 7 for an evaluation of how well the goals were met.
@@ -34,7 +36,7 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Sections 5 ([Testing]) and 6 ([Evaluation]) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 ([Conclusion]) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in [Appendix A].
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Sections 5 ([Testing]) and 6 ([Evaluation]) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 ([Conclusion]) provides an overview of the resulting software, and the development practices carried out.
 
 \newpage
 
@@ -552,14 +554,30 @@ All of these technical systems were designed to support a specific game. This ga
 \newpage
 
 # Conclusion
-<!-- Evaluate the methods used to construct the game. -->
+In this section I will discuss various aspects of the project, including the development process and the resulting software, stating my thoughts on each topic.
 
-<!-- Evaluate the software performance and responsiveness with timings and user feedback. -->
+## Self Imposed Limitations
+To examine the process of developing this project, I begin by looking at the decision to use the C programming language. C is my preferred language, but it has trade-offs as with any language. C's main selling point is that it is *low-level*, providing more direct access to the underlying machine, though this is perhaps becoming less true as technologies change\[14]. In any case, it certainly facilitated my goal of furthering my understanding of how to implement many components of a video game and engine, as it C does not provide the assistance that many contemporary languages provide in the form of language features or built-in libraries.
 
-<!-- Discuss the topics learned, evaluating their importance and difficulty. -->
+Secondly, I would like to evaluate my use of C standard library features, such as avoiding `malloc`. Implementing a specific-purpose memory allocator was a goal I had set, as purpose built memory allocators are used judiciously in video games\[12]. I felt that it was important to better my understanding of this topic. While I did not use `malloc`, there are other standard library features that I did rely on: `snprintf` was used in several places including formatting of strings for display on screen in the `draw_text` function, and for generating debug output. I considered building a replacement of this, as it is an area of great importance, but considering the scope of the project and that string formatting is less of a priority (though certainly used often) in video games, I left it off the table.
 
-<!-- Evaluate the final game produced, stating my opinions and how the outcome relates to the initial goals. -->
-*good example of tailored solutions, not a good example of technology allowing design innovation*
+There is another major component of the project that I did not write: the platform layer. In the final iteration of the project, the window management, event queueing, graphical output and audio output are all handled by the SDL2 library. While this library is not used extensively -- there are many of its features that I avoided, including a complete 2D renderer -- the final executable is dependent on it. I initially intended to write platform layers for Windows, macOS and Linux after using SDL2 as a crutch to get the project going, but as it progressed I found that there were aspects of the project that I considered more important. I did design the inputs and outputs of the engine to be relatively simple to re-target: the renderer produces a final bitmap in a common format each frame, the audio mixer produces a buffer of any size on request, and user input can be sent in by a simple function call. Platform layers are also often considered boilerplate for video games\[15], as most video games want the same things from each OS's API. Considering this, I felt it acceptable to not delve into the development of a platform layer in this project.
+
+## The Engine and The Game
+I began this document discussing the use of game engines in video game development, expressing that I considered their use subtly harmful to the medium -- a topic worthy of debate. While this project serves as a good example of technical solutions tailored to support the design of a video game, it does not demonstrate how custom built technical solutions can empower the design of a game. The example game makes use of every feature of the underlying engine, but does not innovate in the area of game design. While it may be a reasonable demonstration of the components of the engine, a more satisfying conclusion would be to be able to demonstrate custom technology being a source of design innovation.
+
+## Final Thoughts
+To conclude this document, I will reflect on my initial goals for the project.
+
+**To, wherever possible, only use code that I have written.**
+
+**To tailor every aspect of the code to the design of the game.**
+
+**To produce a good quality piece of software.**
+
+**To learn about many areas of game development, and document them.**
+
+
 
 
 
@@ -620,6 +638,21 @@ https://www.gamasutra.com/view/feature/130728/one_button_games.php\
 Acton, Mike; 2014\
 *CppCon 2014: Mike Acton "Data-Oriented Design and C++"*\
 https://youtu.be/rX0ItVEVjHc?t=10m46s\
+
+[13]
+Richie, Dennis; 1993
+*The Development of the C Language*
+https://www.bell-labs.com/usr/dmr/www/chist.html
+
+[14]
+Chisnall, David; 2018
+*C Is Not a Low-level Language*
+https://queue.acm.org/detail.cfm?id=3212479
+
+[15]
+Muratori, Casey; 2014 (updated 2018)
+*Windows Platform Layer*
+https://www.youtube.com/playlist?list=PLEMXAbCVnmY4ZDrwfTpTdQeFe5iWtKxyb
 
 \newpage
 
