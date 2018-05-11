@@ -20,7 +20,7 @@ When setting out to develop a video game -- as with any software -- there are ma
 
 In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
 
-One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use; see Appendix A for more on this topic. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
+One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use; see [Appendix A] for more on this topic. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
 
 ## Goals
 Before I began the project, I had a set of goals. See the conclusion in section 7 for an evaluation of how well the goals were met.
@@ -29,12 +29,12 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 
 **To tailor every aspect of the code to the design of the game.** I wanted to implement every system as a solution to a known problem. While this may seem obvious, one could take the opposite route and write code that performs many functions in an attempt to make it flexible. This flexibility may have significant costs, and must be fully justified; if it is not, it serves only as a poor solution to the problem.
 
-**To produce a good quality piece of software.** I wanted to produce software that doesn't crash, is highly responsive to user input, and makes effective use of system resources (CPU cycles, RAM, storage, etc.).
+**To produce a good quality piece of software.** I wanted to produce software that doesn't crash, is highly responsive to user input, and makes effective use of system resources (CPU cycles, RAM, storage, etc.). My concrete performance goals are rendering graphics at a minimum of 60 frames per second, playing audio without any hitches (not 'dropping' any samples), and handling user input such that the game responds within 10ms.
 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 (Background) describes some components found in video games and some concerns for their implementation. Section 3 (Specification) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 (Design and Implementation) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Sections 5 (Testing) and 6 (Evaluation) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 (Conclusion) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in Appendix A.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Sections 5 ([Testing]) and 6 ([Evaluation]) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 ([Conclusion]) provides an overview of the resulting software, and the development practices carried out. Additional writing on adjacent topics is presented in [Appendix A].
 
 \newpage
 
@@ -103,7 +103,9 @@ Initially, I intended to implement the project atop the SDL2 platform layer to h
 
 # Design and Implementation
 ## Design of the Mini-Games
-There are three mini-games implemented in the final iteration of the project. The first, requires players to press their buttons on the beat, alternating between each other. This is visualised with a beating heart: one player's press expands the heart, the other player's press contracts it. The second mini-game is based on the lungs, with players having to press, hold, and release in time with the beat, and do it together; their presses inhaling into the lungs, and their releases exhaling. The third and final mini-game is based on the digestive system, with one players presses moving food through the system, and the other player expelling the waste. This is done in 5/4 time, with one player tapping the first four beats, and the other player tapping the final beat.
+I will begin by discussing the design of the example game, as it informs the technical decisions made in supporting engine. There are three mini-games implemented in the final iteration of the project. The first, requires players to press their buttons on the beat, alternating between each other. This is visualised with a beating heart: one player's press expands the heart, the other player's press contracts it. The second mini-game is based on the lungs, with players having to press, hold, and release in time with the beat, and do it together; their presses inhaling into the lungs, and their releases exhaling. The third and final mini-game is based on the digestive system, with one players presses moving food through the system, and the other player expelling the waste. This is done in 5/4 time, with one player tapping the first four beats, and the other player tapping the final beat. Each of these mini-games has frame-based animated graphics, and a visual interface that utilises graphical primitives and text rendering.
+
+![Screenshots of various parts of the example game.](data/game_shots.png)
 
 ## Technical Overview
 <!-- Discuss the high-level design and structure of the software. -->
@@ -389,7 +391,7 @@ Here is my assessment of the memory concerns for my project:
 
 **Some things only last one frame.** Some objects are created for rendering purposes, such as dynamic strings, and will simply be discarded after use. One could use stack memory for some of these things, but it would be more reliable to have some way to ensure their allocation.
 
-#### The solution
+#### The Solution
 The project employs a pool-based approach. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
 
 This is both easier to use (as `free` never needs to be called) and faster than `malloc` as the implementation is vastly simpler. The trade off is more memory is allocated than absolutely necessary, but in the final iteration of the memory allocator only 32 megabytes are allocated up front, and that limit has never been reached in my testing.
@@ -440,39 +442,112 @@ In order to effectively iterate on the project, testing with users was a must. I
 
 The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people who stated that they play lots of games, and people who don't. Many participants were studying in fields surrounding computing, including game design and development.
 
-### Confusion When Understanding the Goals
+## Confusion When Understanding the Goals
 While one of my desires when designing the example game was to force players to figure out what they need to do, I found that many players with whom I tested the game got confused. In order to improve the experience of these players I added an overlay which appears if the players have spent a long time on a mini-game, but have not made any progress. This overlay attempts to give hints to the players by showing buttons on screen with arrows demonstrating when to press, and a scale which shows their accuracy.
 
-### Testing the Heart Mini-Game
+## Testing the Heart Mini-Game
 The heart mini-game is the first interaction with the game that players will have. Therefore, I started to test it early on in development. I wanted to avoid upfront explanation and tutorial, so needed to ensure that players could figure out what was happening, and what was expected of them. Here are some of the points that I received, which helped to inform the final mini-game:
 
-#### The Timing Bar Looks Like A Charge Up Bar Used In Other Games
+### The Timing Bar
 This mini-game contains a bar that indicates how accurate the players are tapping on the beat, on a meter of slow to fast with the correct timing in the centre. One piece of feedback that I received was that this bar looks like a 'charge-up' bar used in other video games, causing an interpretation that they should press their button when the dial on the bar is in the green area. They interpreted the bar to be giving instruction, instead of simply displaying state.
 
 Mid-session, I turned off the entire interface, and the player quickly realised that they needed to be focussed on the sound and not the bar. I learned that while I constructed the interface to help players learn how to play, it could increase confusion about what the focus was, and what they were expected to do. The final version of this mini-game displays only the heart beating with the metronome sound to highlight that the sound is the focus, and then introduces the interface when the player begins to struggle.
 
-### Testing the Lungs Mini-Game
+## Testing the Lungs Mini-Game
 This mini-game is meant to contradict the previous (Heart) mini-game by having the players do the opposite action; press together instead of alternating. This is confusing to players, but as with the previous, an overlay appears after some time to help guide them. I felt that players were not deterred by the lack of understanding of this mini-game, and enjoyed persevering and learning how it worked.
 
-### Testing the Digestion Mini-Game
-This mini-game was developed later on in project, and so did not have as much opportunity to be tested. It focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, and adding that it was in a less complete state, found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap, but did not have the opportunity to test this.
+## Testing the Digestion Mini-Game
+This mini-game was developed later on in the project, and so did not have as much opportunity to be tested. It focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, and adding that it was in a less complete state, found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap, but did not have the opportunity to test this.
 
 \newpage
 
 # Evaluation
-This section contains an evaluation of a several features and aspects of the project.
+This section contains an evaluation of a several features and aspects of the project. In general, the technical components are evaluated based on the factors of performance, ease of use, and ease of implementation.
 
 ## Rendering Graphics
+The rendering system can display various kinds of graphics. It has the capability of drawing still bitmap images, frame-based animated images, rendering text, and drawing some graphical primitives.
+
+#### Performance
+I had the target of rendering at a minimum of 60 frames per second. In the final iteration of the project, the game runs at an average of 380FPS on my 2.3GHz laptop with integrated graphics, and runs at an average of 160FPS on the Raspberry Pi Model 3. I consider this good performance, and that my initial goal was met.
+
+#### Ease of Use
+The capabilities that the renderer presents to the example game are designed to support it as best as it can. There are several functions, for example the verbosely named `draw_animated_image_frames_and_wait` function allows the caller to specify a range of frames to draw to the screen, and once all of those frames have been displayed will leave the final frame on screen. This directly supports the desired use of the animation system in several areas of the example game. Considering that this is a very specific requirement of the animation system, it is likely that to achieve the same affect with other technologies additional work would need to be done; it would not be as simple as a single function call.
+
+Rendering text is done in a single function call, which takes in several parameters which affect the presentation of the text; font, colour and position. While passing these as parameters makes usage simple, many calls to the function have the same colour and font arguments. I could have simplified this system, having a way to set font parameters which persist between calls; though this has its own trade-offs. One key aspect of the font rendering that was very flexible and useful, especially when debugging, is the use of a 'format string'. The C standard library function `printf` allows the caller to print the values of variables with the use of a format string, and this same functionality is supported in the renderer function `draw_text`.
+
+I consider the resulting interface to the graphics renderer to be relatively simple and easy to use for the development of the example game. As the project was not intended to become a general purpose game engine, it has fulfilled its role as intended.
+
+#### Ease of Implementation
+The graphical rendering system has many features that support the example game. Despite providing a range of functionality, the system itself is quite simple. This can be described more concretely by the following facts: the file `graphics.c`, which contains the entire renderer implementation, is 268 lines long (including white space and comments.). While the number of lines of any piece of code does not accurately describe its complexity, it can give an idea of an upper ceiling of complexity. Also, the file defines 15 functions, and three data structures, which I would consider a small number of each.
 
 ## Mixing and Playing Audio
+The audio mixer can be used to play several pieces of audio at the same time. It has capabilities for managing the loudness of the audio, the stereo balance, and looping.
+
+#### Performance
+My initial goal for the performance of the audio mixer was simply to not drop any samples. This was achieved with minimal effort: the first iteration of the mixer successfully performed this. I had intentions to build a system to perform *live* audio synthesis which would have been more taxing on the hardware and may have required some more work to achieve good performance, but this was never implemented.
+
+#### Ease of Use
+Most of the use of the audio mixer is via the function `play_sound`, which, given some parameters including gain for each channel, and whether or not to loop the sound, will begin playback of a sound. This is very simple and easy to use. The mixer does not provide extensive functionality; most notably the absence of volume control over time. This was not implemented as it was not required for the example game.
+
+#### Ease of Implementation
+The audio mixer has very few components; it keeps a list of active sounds, each of which most importantly having an array of samples which are mixed together into a given buffer when `mix_audio` is called. Given that there is a very simple entry point and exit point for the data, with minimal state kept in between, I consider this system to be simple and the implementation did not occupy much of the development time of the project: approximately one week.
 
 ## Managing Memory
+The custom memory allocator is used in many aspects of the project. For example, it is called to allocate space for every asset that is loaded, and for temporary memory when dealing with file paths.
+
+#### Performance
+The memory allocator performs a successful allocation in 8 instructions:
+
+~~~
+pool_alloc:
+  movsx rdi, edi                             1
+  xor eax, eax                               2
+  sal rdi, 5                                 3
+  mov r8, QWORD PTR memory_pools[rdi+16]     4
+  lea rcx, [r8+rsi]                          5
+  cmp rcx, QWORD PTR memory_pools[rdi+8]     6
+  ja .L1                                     7
+  mov rax, QWORD PTR memory_pools[rdi]
+  mov QWORD PTR memory_pools[rdi+16], rcx
+  mov QWORD PTR memory_pools[rdi+24], rsi
+  add rax, r8
+.L1:
+  ret                                        8
+~~~
+
+A pool deallocation is performed in 5 instructions:
+
+~~~
+flush_pool:
+  movsx rdi, edi                             1
+  sal rdi, 5                                 2
+  mov QWORD PTR memory_pools[rdi+16], 0      3
+  mov QWORD PTR memory_pools[rdi+24], 0      4
+  ret                                        5
+~~~
+
+While number of instructions is not a highly accurate measurement of performance, it is a reasonable indicator. I consider this system to be low cost, and therefore has met my performance goals for the allocator.
+
+#### Ease of Use
+The function `pool_alloc` is the main way in which the allocator is used. As this function allows the caller to specify which memory pool to draw the allocation from, any function which internally allocates memory via `pool_alloc` can pass this responsibility to its caller. This system allows functions such as `read_image_file` to load data from a file on disk into a memory pool of the caller's choosing. This selection of pools is the alternative to calling `free` on memory when a caller of `malloc` is done with it, as pools are self-managing. If one forgets to call `free` when necessary the program will *leak* memory. In this allocation system, memory leaks are not possible.
+
+#### Ease of Implementation
+While there may not be a large amount of code in the allocation system, it was written taking into account much research. There are many factors, such as byte-boundary alignment, handling the initial allocation (discusses in section 4.2.4, under the subheading [The Only Allocation]), and ensuring the pools are of adequate capacity. The final allocator is simple and features many utilities that allow affective use of memory. One notably missing feature is 'reallocation', wherein memory is copied to a location with a larger capacity. This feature could have been used when loading in files from disk for example, but as the file formats were chosen to state their size in the headed this was unnecessary. The basic implementation of the allocator was done in a matter of hours, but small refinements were made throughout the project as more information on the topic was learned.
 
 ## Loading Assets
+Assets are files loaded from disk. All asset loading occurs immediately on launching the game. Custom loaders are used to read in and interpret the data in these asset files.
 
-## Game-Play Code
+#### Performance
+My only concern for performance was that all asset files could be loaded at launch without a perceivable delay. This was achieved, although it is likely that the performance of this action was bound by the time taken to load data from disk to memory, and the code that I had written to perform asset loading had minimal impact on the performance.
 
-## The Example Game
+#### Ease of Use
+As mentioned in earlier (Managing Memory), all calls to functions that perform asset loading take in a parameter to select a memory pool to use. This, and the name of the desired file, are all that is needed to load an asset. There is another function, `load_assets`, which handles the loading of the specific assets that the example game requires. This function takes in a path to the folder which contains the assets. This extra functionality makes moving the binary or assets around much simpler, as one can simply insert the correct path into this function call.
+
+#### Ease of Implementation
+The asset formats are simple in that they do not use compression and have simple plain text headers. These aspects of the formats used make them easy to load, and the functions that perform this are not complex. Despite this, there were some details which needed to be handled correctly, including swapping the order of each pixel's channels in the `.pam` image format as they were stored in a different arrangement to what was required by the graphical renderer.
+
+## Implementation of the Example Game
+All of these technical systems were designed to support a specific game. This game consists of several mini-games featuring graphics and sound, and uses two buttons -- one for each player. These requirements were met directly by the technical systems: functions for rendering and playing audio were designed to be as simple as possible for use in the game. If the game wanted to perform an action that was not supported by the technical system, it was implemented. Thus, the resulting game and engine fit together. I argue that the resulting piece of software is relatively simple, unlike any game that is implemented in Unity, for example, as Unity is a complex piece of software, and if the game that is being developed with it does not require that complexity, the resulting piece of software as a whole is overly complex and will likely not perform (in CPU, memory, and storage usage) as well as it could.
 
 \newpage
 
@@ -542,9 +617,9 @@ Green, Berbank; 2005\
 https://www.gamasutra.com/view/feature/130728/one_button_games.php\
 
 [12]\
-Acton, Mike; 2014
-*CppCon 2014: Mike Acton "Data-Oriented Design and C++"*
-https://youtu.be/rX0ItVEVjHc?t=10m46s
+Acton, Mike; 2014\
+*CppCon 2014: Mike Acton "Data-Oriented Design and C++"*\
+https://youtu.be/rX0ItVEVjHc?t=10m46s\
 
 \newpage
 
