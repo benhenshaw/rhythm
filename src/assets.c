@@ -170,6 +170,7 @@ struct
     Sound wood_block_sound;
     Sound yay_sound;
     Sound shaker_sound;
+    Sound tap_sound;
 }
 assets;
 
@@ -276,6 +277,9 @@ bool load_assets(char * assets_dir)
 
     assets.wood_block_sound = read_raw_sound(PERSIST_POOL, "woodblock.f32");
     if (!assets.wood_block_sound.samples) return false;
+
+    assets.tap_sound = read_raw_sound(PERSIST_POOL, "tap.f32");
+    if (!assets.tap_sound.samples) return false;
 
     assets.yay_sound = read_raw_sound(PERSIST_POOL, "yay.f32");
     if (!assets.yay_sound.samples) return false;

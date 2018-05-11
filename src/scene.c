@@ -264,7 +264,10 @@ void heart_input(void * state, int player, bool pressed, u32 time_stamp_ms)
     s->player_states[player] = pressed;
     if (pressed)
     {
-        play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, false);
+        play_sound(&mixer, assets.wood_block_sound,
+            player ? 0.1 : 1.0,
+            player ? 1.0 : 0.1,
+            false);
         if (s->expanding != player)
         {
             s->time_stamps[player] = time_stamp_ms;
@@ -379,12 +382,12 @@ void lungs_input(void * state, int player, bool pressed, u32 time_stamp_ms)
     if (player == 0)
     {
         s->left_lung.start_time_ms = SDL_GetTicks();
-        play_sound(&mixer, assets.shaker_sound, 0.4, 0.4, false);
+        play_sound(&mixer, assets.shaker_sound, 0.4, 0.04, false);
     }
     else
     {
         s->right_lung.start_time_ms = SDL_GetTicks();
-        play_sound(&mixer, assets.shaker_sound, 0.4, 0.4, false);
+        play_sound(&mixer, assets.shaker_sound, 0.04, 0.4, false);
     }
 }
 
@@ -446,11 +449,11 @@ void digestion_input(void * state, int player, bool pressed, u32 time_stamp_ms)
             s->digestion.start_time_ms = time_stamp_ms;
             if (s->current_beat == 5)
             {
-                play_sound(&mixer, assets.wood_block_sound, 1.0, 1.0, false);
+                play_sound(&mixer, assets.wood_block_sound, 0.3, 1.0, false);
             }
             else
             {
-                play_sound(&mixer, assets.shaker_sound, 0.5, 0.5, false);
+                play_sound(&mixer, assets.tap_sound, 1.0, 0.3, false);
             }
         }
     }

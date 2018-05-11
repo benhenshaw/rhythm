@@ -70,7 +70,7 @@ int main(int argument_count, char ** arguments)
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN_DESKTOP);
+        WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         panic_exit("Could not create a window.\n%s", SDL_GetError());
@@ -79,7 +79,7 @@ int main(int argument_count, char ** arguments)
     SDL_SetWindowMinimumSize(window, WIDTH, HEIGHT);
 
     SDL_Renderer * renderer = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        SDL_RENDERER_ACCELERATED /*| SDL_RENDERER_PRESENTVSYNC*/);
     if (!renderer)
     {
         panic_exit("Could not create a rendering context.\n%s", SDL_GetError());
@@ -239,7 +239,7 @@ int main(int argument_count, char ** arguments)
         // DEBUG:
         // clear(0);
         // draw_image(l, 0, 0);
-        // draw_text(assets.main_font, 270, 182, ~0, "FPS: %.0f", 1.0f / delta_time);
+        // draw_text(assets.main_font, 270, 226, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);
