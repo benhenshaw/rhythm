@@ -56,6 +56,31 @@ The Game Boy Advance has twelve inputs that can be used by games that run on it.
 
 Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these games don't utilise many buttons for input, the timing of button presses is given more focus. This is easier to achieve on dedicated hardware such as the Game Boy Advance, but may be more difficult on platforms that aren't design with this concern in mind, as many modern consumer computers are.
 
+## Overview of Game Engines, Frameworks and Libraries
+An overview of some game engines and libraries is provided below.
+
+Name             Platforms  Languages        Graphics      Audio
+---------------- ---------- ---------------- ------------- --------------------
+Unity            Multi      C# (Cg, HLSL)    3D, 2D;       Built-in mixer
+                 Consoles                    Shaders       No buffer access
+Unreal           Multi      C++, Blueprints, 3D; Shaders   Built-in mixer
+                 Consoles   UnrealScript,                  No buffer access
+                            (GLSL, HLSL, Cg)
+LÖVE             Multi      Lua              2D; Shaders   OpenAL-based
+                                                           No buffer access
+SDL2             Multi      C, C++           2D            Callback, Queueing
+                 Consoles   (Many bindings)  DirectX       Indirect buffer
+                                             OpenGL        access
+                                             Buffer access
+Microsoft XNA    Windows    C# (.NET)        2D, 3D;       Built-in mixer
+                 XBox 360   DirectX                        No buffer access
+Cocos2D          Multi      Objective-C      2D; Buffer    Implementation-based
+                            (Many bindings)                (often OpenAL)
+**This Project** Multi      C                2D            Built-in mixer
+                                             Buffer access Buffer access
+
+As mentioned earlier in this document, there are many tools available for the creation of video games on many platforms. Some of these tools, such as Unity and Unreal are attempting to provide a vast amount of functionality in an attempt to be general purpose and provide a useful foundation for any video game. Others, such as LÖVE and Cocos2D are attempting to support only games with 2D graphics. Each of these tools are targetting certain platforms, some of which include video game consoles. This project has a narrower scope than all of the given examples, as it is designed around supporting a specific game.
+
 ## Design in One-Button Games
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Tengoku, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
@@ -416,6 +441,18 @@ I wanted to avoid the overhead of calling `malloc`, as I did not need its intern
 After some time, I returned to this question. I had noticed that I had not considered another option: static memory. Considering that I had modest requirements, I looked into what the characteristics of static allocation are. On Windows, static data is limited to 2GB on both 32-bit and 64-bit versions of the OS\[1]. On macOS and Linux, I could not so easily find an answer, but in my own testing the programme would crash at values higher than 2GB on macOS, but did not crash on Linux at any value. These limits are far beyond what I require, and the implementation is simpler that the previous; both in that it does not require even a function call, and that it is identical on all platforms. This is the implementation that remains in the final iteration of the project.
 
 A compile-time flag allows the use of the previous `mmap` implementation, as it produced better memory debugging information on my macOS machine.
+
+Kind         Limits[^6] Cross-platform Notes
+----------   ---------- -------------- ----------------------------------
+Stack        1MB        Yes            Flexible if supported by platform.
+Static       2GB        Yes            Fixed size only.
+malloc       None[^7]   Yes            Internally manages pages.
+mmap         None       Some           Allows control over page flags.
+VirtualAlloc None       No             Some control over page flags.
+
+[^6]: Lists the most limiting values across the Windows, macOS, and Linux platforms: those targeted by this project.
+
+[^7]: Note that limits marked as 'None' are still limited by the platform, including hardware and decisions made in the OS.
 
 ##### Pre-faulting Pages
 On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this access is called a page fault. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`) and calling an allocator without modifying the memory. This is counter-acted by the `mmap` argument `MAP_POPULATE`[6], which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
