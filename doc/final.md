@@ -569,17 +569,15 @@ I began this document discussing the use of game engines in video game developme
 ## Final Thoughts
 To conclude this document, I will reflect on my initial goals for the project.
 
-**To, wherever possible, only use code that I have written.**
+**To, wherever possible, only use code that I have written.** When stating this goal, I clarified that the reasoning behind it was to force myself to learn new techniques. While the project is not built off the bare metal -- or even atop the OS API, I still constructed many features that are often provided by libraries. This goal is achieved in part, but I am satisfied with the outcome.
 
-**To tailor every aspect of the code to the design of the game.**
+**To tailor every aspect of the code to the design of the game.** This point is my personal rally against the widespread practices of building generic code. In the final iteration of the project, I feel that there are few aspects of the code base that do not serve their purpose simply and succinctly, and so am pleased with the results.
 
-**To produce a good quality piece of software.**
+**To produce a good quality piece of software.** This goal stated some concrete objectives. Firstly, hitting a frame-rate target of 60FPS: this was done successfully. Secondly, playing audio without hitches or dropped samples: also successful. Finally, to respond to input within 10ms; this objective was is harder to test. Since input is handled within the frame in which it was detected, I can be sure that my own code responds to this detection within this time -- taking my laptop hardware as an example, hitting an average frame-rate of 380FPS means an average frame time of 2.6ms, which is well below 10ms. Having a numerical target was simply a way of striving for responsive input, but I am not certain that I have achieved this. I have a suspicion that the latency, while low, is not constant, and this has an affect on the player's ability to use the inputs in rhythmic ways.
 
-**To learn about many areas of game development, and document them.**
+**To learn about many areas of game development, and document them.** This is the overarching goal for the project. Being an undergraduate dissertation, I feel that learning is the true outcome to strive for. There are many techniques that I studied intensively in order to produce this project, including memory allocation, 2D rendering, file management, game-play programming, input handling, and more. When I look over the code base, I can see the ways in which I have improved as a games programmer. I have a strong understanding of the processes going on in the code. To understand how video games work; this was my true goal when starting this degree.
 
-
-
-
+\newpage
 
 # Bibliography
 [1]\
