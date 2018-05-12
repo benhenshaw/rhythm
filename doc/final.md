@@ -732,7 +732,7 @@ A basic (probably plain-text) file format will be used if any player settings or
 
 \newpage
 
-# Appendix D
+# Appendix C
 ## Weekly Development Logs
 This section contains several blog posts made during the development of the project. They are listed in chronological order.
 
@@ -872,6 +872,9 @@ Since the frequencies of audio data are much higher than video (48000hz vs 60hz)
 
 \newpage
 
-# Appendix C
+# Appendix D
 ## Source Code
-<!-- Program source code. -->
+This section presents the source code of the project in its entirety. It is presented, arranged by source file, in an order designed to assist in the reading of the code.
+
+## Build System
+This section presents the short and simple build system used to construct the project.
