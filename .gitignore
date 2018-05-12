@@ -7,3 +7,5 @@
 !*.sh
 !*.md
 !.gitignore
+!.f32
+!.pam
