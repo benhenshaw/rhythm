@@ -47,7 +47,7 @@ void audio_callback(void * data, u8 * stream, int byte_count)
 
 int main(int argument_count, char ** arguments)
 {
-    // DEBUG: Unbuffered logging.
+    // Use unbuffered logging.
     setbuf(stdout, 0);
 
     //
@@ -235,11 +235,7 @@ int main(int argument_count, char ** arguments)
         // Render the scene.
         current_scene.frame(current_scene.state, delta_time);
 
-
-        // DEBUG:
-        // clear(0);
-        // draw_image(l, 0, 0);
-        // draw_text(assets.main_font, 270, 226, ~0, "FPS: %.0f", 1.0f / delta_time);
+        draw_text(assets.main_font, 270, 226, ~0, "FPS: %.0f", 1.0f / delta_time);
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);

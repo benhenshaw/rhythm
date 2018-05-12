@@ -48,7 +48,6 @@ typedef struct
 }
 Mixer;
 
-// TODO: Where should the mixer live?
 Mixer mixer;
 
 // Initialise the audio mixer.

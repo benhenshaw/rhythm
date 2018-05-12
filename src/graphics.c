@@ -105,7 +105,6 @@ void draw_image(Image image, int x, int y)
     {
         for (int sx = x, ix = 0; sx < max_x; ++sx, ++ix)
         {
-            // TODO: Checks done by set_pixel can be moved outside the loop.
             u32 p = image.pixels[ix + iy * image.width];
             if (get_alpha(p) != 0)
             {
@@ -253,8 +252,6 @@ void draw_text(Font font, int x, int y, u32 colour, char * text, ...)
             {
                 for (int sx = x, ix = text_start_x; sx < max_x; ++sx, ++ix)
                 {
-                    // TODO: Checks done by set_pixel can be moved outside the loop.
-                    // TODO: Find out why font is rendering red, and remove this hack.
                     if (font.pixels[ix + iy * total_width])
                     {
                         set_pixel(sx + x_offset, sy, colour);

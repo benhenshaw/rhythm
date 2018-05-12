@@ -9,7 +9,7 @@ FLAGS="main.c -o rhythm -Wall"
 clang $FLAGS -framework SDL2
 
 # windows (MinGW)
-# gcc $FLAGS -mwindows -lmingw32 -lSDL2main -lSDL2
+gcc $FLAGS -mwindows -lmingw32 -lSDL2main -lSDL2
 
 # Run on successful build.
 if [[ $? -eq 0 ]]; then
