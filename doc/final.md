@@ -489,6 +489,26 @@ In order to effectively iterate on the project, testing with users was a must. I
 
 The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people who stated that they play lots of games, and people who don't. Many participants were studying in fields surrounding computing, including game design and development.
 
+Here is an overview of the information gathered from participants who took part in the testing of this project:
+
+No. Input is Responsive Favourite Mini-Game Understood How to Play[^8]
+--- ------------------- ------------------- --------------------------
+1   Yes                 Heart               Partially
+2   Yes                 Digestion           Yes
+3   Unsure              Heart               Yes
+4   Yes                 Digestion           Partially
+5   Yes                 Digestion           No
+6   No                  Digestion           Yes
+7   Yes                 Lungs               Yes
+8   Unsure              Heart               No
+9   Unsure              Lungs               Partially
+10  Yes                 Heart               Yes
+11  No                  Heart               Yes
+
+[^8]: Whether the person needed to ask me how to play the game, or if they understood intuitively.
+
+Both participants 6 and 11 stated that they felt the input was not responsive. Both of these people also identified as being musically trained or having experience with performing music. Participants 1, 4 and 9 -- who each asked for assistance to understand how to play -- stated that they were not focussed on the sounds the game was making; these participants played a version of the game wherein the assisting UI is always on screen. Some of the reasons given for favouring a particular mini-game were: "The animation is good."; "I think it is funny."; "I like that sound" (in reference to the 'shaker' sound used in the lungs mini-game).
+
 ## Confusion When Understanding the Goals
 While one of my desires when designing the example game was to force players to figure out what they need to do, I found that many players with whom I tested the game got confused. In order to improve the experience of these players I added an overlay which appears if the players have spent a long time on a mini-game, but have not made any progress. This overlay attempts to give hints to the players by showing buttons on screen with arrows demonstrating when to press, and a scale which shows their accuracy.
 
