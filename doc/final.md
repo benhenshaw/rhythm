@@ -48,13 +48,13 @@ Features most commonly found in video games are input, visuals, and sound. Behin
 
 The game that I have taken most inspiration from, Rhythm Tengoku, appears to utilise detailed bitmap graphics, with frame-based and motion based animation. That is to say, it animates things on screen both by displaying a series of discrete images in succession, and by drawing the same image in changing locations on the screen. It also performs rotation and scaling of bitmaps to further animate them.
 
-As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM[^2] sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, it has sections with vocals and recorded instruments. While the quality is does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
+As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM[^2] sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, the game has sections with vocals and recorded instruments. While the quality is does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
 
 [^2]: Pulse Code Modulation -- A method of representing an analogue signal with digital samples.
 
-The Game Boy Advance has twelve inputs that can be used by games that run on it. Rhythm Tengoku rarely uses more than four of them (and often less than that). When it does, multiple buttons are often mapped to the same function. I was very interested in the limited number of inputs, as it turns the focus of the game partially away from player dexterity. Games like Guitar Hero (2005) and Dance Dance Revolution (1998) do have a focus on player dexterity, but that was not my area of interest for this project.
+The Game Boy Advance has twelve inputs that can be used by games that run on it. Rhythm Tengoku rarely uses more than four of them, and often less than that. When it does, multiple buttons are often mapped to the same function. I was very interested in the limited number of inputs, as it turns the focus of the game partially away from player dexterity. Games like Guitar Hero (2005) and Dance Dance Revolution (1998) do have a focus on player dexterity, but that was not my area of interest for this project.
 
-Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these games don't utilise many buttons for input, the timing of button presses is given more focus. This is easier to achieve on dedicated hardware such as the Game Boy Advance, but may be more difficult on platforms that aren't design with this concern in mind, as many modern consumer computers are.
+Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these games don't utilise many buttons for input, the timing of button presses is given more focus. This is easier to achieve on dedicated hardware such as the Game Boy Advance, but may be more difficult on platforms that aren't designed with this concern in mind, as many modern consumer computers are.
 
 ## Overview of Game Engines, Frameworks and Libraries
 An overview of some game engines and libraries is provided below.
@@ -81,16 +81,29 @@ Cocos2D          Multi      Objective-C      2D; Buffer    Implementation-based
 
 As mentioned earlier in this document, there are many tools available for the creation of video games on many platforms. Some of these tools, such as Unity and Unreal are attempting to provide a vast amount of functionality in an attempt to be general purpose and provide a useful foundation for any video game. Others, such as LÖVE and Cocos2D are attempting to support only games with 2D graphics. Each of these tools are targetting certain platforms, some of which include video game consoles. This project has a narrower scope than all of the given examples, as it is designed around supporting a specific game.
 
+Many of these tools offer 3D graphics, support for many programming languages (some of which include an embedded interpreter or virtual machine for these languages), and impose limits on the use control of audio output. These are all features that I did not want in this project, and their existence in the final binary of the game make it more complex with no gain. This was the initial inspiration for this project: to produce a piece of software that only includes necessary components.
+
+### Why Does It Matter How Large the Code Base Is?
+A talk given recently by Casey Muratori\[15] illustrates this point very clearly. To summarise the points relevant to this project:
+
+**Every line of source code (or instruction in the binary) is a possible target for malicious attack.** Given that mistakes happen and things go unaccounted for, any line of code could provide a way for an attacker to perform malicious actions on a user's computer. Removing that code -- especially if it is not completely necessary ('cruft', as described by Muratori) -- will improve the security of the system as a whole.
+
+**There are millions of lines of code between a user process and the hardware.** Given the size of operating systems, drivers, and firmware in the modern world, this has become true. As expressed in the 2015 paper by S. Peter et al[16] on Arrakis -- a modified Linux kernel, one can gain very large performance gains by creating a shorter code path in the operating system that allows the hardware to perform the actions that user-space code wants to achieve with less overhead. The same hardware, and the same code in the programme, can achieve an almost 5x performance gain (in the example of HTTP transaction throughput) by lowering the overhead of the OS. One might suggest that a trade-off was made; perhaps eschewing some security code, but I leave the reader with this quote from the paper itself:
+
+> We conclude that it is possible to provide the same kind of QoS enforcement in this case, rate-limiting in Arrakis, as in Linux. Thus, we are able to retain the protection and policing benefits of user-level application execution while providing improved network performance.
+
+To summarise: all the code I am writing is sitting atop enough *cruft* already; if I can choose to have less I will.
+
 ## Design in One-Button Games
 In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Tengoku, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
 
-Further research in the area of limited input games brought up the burgeoning field of one button games\[11]. These kinds of games are often taught when introducing students to game design as force designers to consider player interaction closely.
+Further research in the area of limited input games brought up the burgeoning field of one button games\[11]. These kinds of games are often taught when introducing students to game design as they force designers to consider player interaction closely.
 
 ## Management of Assets
 Video games built for platforms which are purpose built to run them have a very different approach to the management of assets (such as image and sound data). On the Game Boy Advance, all assets must be stored on the 'GamePak'; a small cartridge that slots into the console itself. Once the game has booted up, any assets stored on the cart are accessible via mapped memory. This means that assets are not loaded in at will as games on other platforms need to do. Video games developed for a Windows computer, for example, may need to load data from any number of files into the virtual memory of the process in order to access them. This process requires significantly more effort, although there are many approaches with their own costs and benefits.
 
 ## Planning the Implementation
-Since the initial idea was conceived, I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
+From the initial conception of the idea from this project I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
 
 \newpage
 
@@ -487,9 +500,9 @@ For this project, I compile the entire source as a single translation unit. This
 <!-- Discuss the knowledge gathered about how games are tested. -->
 In order to effectively iterate on the project, testing with users was a must. I gathered some information from testing with users here, and describes how the project (mostly the example game) was influenced by the feedback.
 
-The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people who stated that they play lots of games, and people who don't. Many participants were studying in fields surrounding computing, including game design and development.
+The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people who stated that they play lots of games, and people who don't. Many participants were studying in fields surrounding computing, including game design and development. They were selected by availability (whoever was around during several unrelated public events), and each played the example game for up to five minutes.
 
-Here is an overview of the information gathered from participants who took part in the testing of this project:
+Below is an overview of the information gathered from participants who took part in the testing of this project:
 
 No. Input is Responsive Favourite Mini-Game Understood How to Play[^8]
 --- ------------------- ------------------- --------------------------
@@ -565,7 +578,7 @@ The custom memory allocator is used in many aspects of the project. For example,
 #### Performance
 The memory allocator performs a successful allocation in 8 instructions:
 
-~~~
+~~~ASM
 pool_alloc:
   movsx rdi, edi                             1
   xor eax, eax                               2
@@ -584,7 +597,7 @@ pool_alloc:
 
 A pool deallocation is performed in 5 instructions:
 
-~~~
+~~~ASM
 flush_pool:
   movsx rdi, edi                             1
   sal rdi, 5                                 2
@@ -622,11 +635,11 @@ All of these technical systems were designed to support a specific game. This ga
 In this section I will discuss various aspects of the project, including the development process and the resulting software, stating my thoughts on each topic.
 
 ## Self Imposed Limitations
-To examine the process of developing this project, I begin by looking at the decision to use the C programming language. C is my preferred language, but it has trade-offs as with any language. C's main selling point is that it is *low-level*, providing more direct access to the underlying machine, though this is perhaps becoming less true as technologies change\[14]. In any case, it certainly facilitated my goal of furthering my understanding of how to implement many components of a video game and engine, as it C does not provide the assistance that many contemporary languages provide in the form of language features or built-in libraries.
+To examine the process of developing this project, I begin by looking at the decision to use the C programming language. C is my preferred language, but it has trade-offs as with any language. C's main selling point is that it is *low-level*, providing more direct access to the underlying machine, though this is perhaps becoming less true as technologies change\[13]. In any case, it certainly facilitated my goal of furthering my understanding of how to implement many components of a video game and engine, as C does not provide the assistance that many contemporary languages provide in the form of language features or built-in libraries.
 
 Secondly, I would like to evaluate my use of C standard library features, such as avoiding `malloc`. Implementing a specific-purpose memory allocator was a goal I had set, as purpose built memory allocators are used judiciously in video games\[12]. I felt that it was important to better my understanding of this topic. While I did not use `malloc`, there are other standard library features that I did rely on: `snprintf` was used in several places including formatting of strings for display on screen in the `draw_text` function, and for generating debug output. I considered building a replacement of this, as it is an area of great importance, but considering the scope of the project and that string formatting is less of a priority (though certainly used often) in video games, I left it off the table.
 
-There is another major component of the project that I did not write: the platform layer. In the final iteration of the project, the window management, event queueing, graphical output and audio output are all handled by the SDL2 library. While this library is not used extensively -- there are many of its features that I avoided, including a complete 2D renderer -- the final executable is dependent on it. I initially intended to write platform layers for Windows, macOS and Linux after using SDL2 as a crutch to get the project going, but as it progressed I found that there were aspects of the project that I considered more important. I did design the inputs and outputs of the engine to be relatively simple to re-target: the renderer produces a final bitmap in a common format each frame, the audio mixer produces a buffer of any size on request, and user input can be sent in by a simple function call. Platform layers are also often considered boilerplate for video games\[15], as most video games want the same things from each OS's API. Considering this, I felt it acceptable to not delve into the development of a platform layer in this project.
+There is another major component of the project that I did not write: the platform layer. In the final iteration of the project, the window management, event queueing, graphical output and audio output are all handled by the SDL2 library. While this library is not used extensively -- there are many of its features that I avoided, including a complete 2D renderer -- the final executable is dependent on it. I initially intended to write platform layers for Windows, macOS and Linux after using SDL2 as a crutch to get the project going, but as it progressed I found that there were aspects of the project that I considered more important. I did design the inputs and outputs of the engine to be relatively simple to re-target: the renderer produces a final bitmap in a common format each frame, the audio mixer produces a buffer of any size on request, and user input can be sent in by a simple function call. Platform layers are also often considered boilerplate for video games\[14], as most video games want the same things from each OS's API. Considering this, I felt it acceptable to not delve into the development of a platform layer in this project.
 
 ## The Engine and The Game
 I began this document discussing the use of game engines in video game development, expressing that I considered their use subtly harmful to the medium -- a topic worthy of debate. While this project serves as a good example of technical solutions tailored to support the design of a video game, it does not demonstrate how custom built technical solutions can empower the design of a game. The example game makes use of every feature of the underlying engine, but does not innovate in the area of game design. While it may be a reasonable demonstration of the components of the engine, a more satisfying conclusion would be to be able to demonstrate custom technology being a source of design innovation.
@@ -703,19 +716,26 @@ Acton, Mike; 2014\
 https://youtu.be/rX0ItVEVjHc?t=10m46s\
 
 [13]\
-Richie, Dennis; 1993\
-*The Development of the C Language*\
-https://www.bell-labs.com/usr/dmr/www/chist.html\
-
-[14]\
 Chisnall, David; 2018\
 *C Is Not a Low-level Language*\
 https://queue.acm.org/detail.cfm?id=3212479\
 
-[15]\
+[14]\
 Muratori, Casey; 2014 (updated 2018)\
 *Windows Platform Layer*\
 https://www.youtube.com/playlist?list=PLEMXAbCVnmY4ZDrwfTpTdQeFe5iWtKxyb\
+
+[15]\
+Muratori, Casey; 2018\
+*The Thirty Million Line Problem*\
+https://www.youtube.com/watch?v=kZRE7HIO3vk\
+
+[16]\
+Simon Peter, Jialin Li, Irene Zhang, Dan R. K. Ports, Doug Woos, Arvind Krishnamurthy, Thomas Anderson -- University Of Washington\
+Timothy Roscoe -- Eth Zurich\
+2015\
+*Arrakis: The Operating System Is the Control Plane*\
+https://www.inf.ethz.ch/personal/troscoe/pubs/peter_tocs_15.pdf\
 
 \newpage
 
@@ -735,7 +755,7 @@ Until we as developers stop believing in the idea that we loose when other gain 
 
 # Appendix B
 ## Original Project Proposal
-This section contains the project proposal, handed in on the 15th of December, 2017.
+This section contains the project proposal, handed in on the 15th of December, 2017. This initial proposal differs in many ways from the final iteration of the project. My own goals for the project changed; my interests changed from the creation of a video game to the creation of supporting technologies. Also, note that this document still proposes the development of many custom components.
 
 ### Final Project
 BSc Games Programming
@@ -799,7 +819,7 @@ A basic (probably plain-text) file format will be used if any player settings or
 
 # Appendix C
 ## Weekly Development Logs
-This section contains several blog posts made during the development of the project. They are listed in chronological order.
+This section contains several blog posts made during the development of the project. They are listed in chronological order, and presented unedited.
 
 ### Getting Started (2017-09-30)
 I want to build rhythm game for my final year project.
