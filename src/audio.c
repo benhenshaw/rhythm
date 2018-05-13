@@ -215,3 +215,30 @@ bool pause_channel(Mixer * mixer, int channel_index)
     }
     return false;
 }
+
+// Stop all instances of a sound that are playing.
+bool stop_sound(Mixer * mixer, Sound sound)
+{
+    for (int i = 0; i < mixer->channel_count; ++i)
+    {
+        if (mixer->channels[i].samples == sound.samples)
+        {
+            mixer->channels[i] = (Mixer_Channel){};
+            return true;
+        }
+    }
+    return false;
+}
+
+// Returns true if the given sound is playing in a channel.
+bool sound_is_playing(Mixer * mixer, Sound sound)
+{
+    for (int i = 0; i < mixer->channel_count; ++i)
+    {
+        if (mixer->channels[i].samples == sound.samples)
+        {
+            return true;
+        }
+    }
+    return false;
+}

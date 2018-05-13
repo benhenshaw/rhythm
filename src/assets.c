@@ -171,6 +171,8 @@ struct
     Sound yay_sound;
     Sound shaker_sound;
     Sound tap_sound;
+    Sound clock_sound;
+    Sound brown_sound;
 }
 assets;
 
@@ -283,6 +285,12 @@ bool load_assets(char * assets_dir)
 
     assets.yay_sound = read_raw_sound(PERSIST_POOL, "yay.f32");
     if (!assets.yay_sound.samples) return false;
+
+    assets.clock_sound = read_raw_sound(PERSIST_POOL, "clock.f32");
+    if (!assets.clock_sound.samples) return false;
+
+    assets.brown_sound = read_raw_sound(PERSIST_POOL, "brown.f32");
+    if (!assets.brown_sound.samples) return false;
 
     return true;
 }

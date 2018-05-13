@@ -223,6 +223,10 @@ void heart_start(void * state)
     s->heart = assets.heart_animation;
     s->heart.frame_duration_ms = 30;
     s->target_beats_per_minute = 60.0;
+    if (!sound_is_playing(&mixer, assets.brown_sound))
+    {
+        play_sound(&mixer, assets.brown_sound, 0.05, 0.05, true);
+    }
 }
 
 void heart_frame(void * state, f32 delta_time)

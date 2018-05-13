@@ -155,6 +155,7 @@ int main(int argument_count, char ** arguments)
     //
 
     blank_cut(2.0, 0, &heart_scene, NULL);
+    play_sound(&mixer, assets.clock_sound, 1.0, 1.0, true);
 
     while (true)
     {
@@ -169,7 +170,9 @@ int main(int argument_count, char ** arguments)
         {
             if (event.type == SDL_QUIT)
             {
+#ifdef DEBUG
                 print_memory_stats();
+#endif
                 exit(0);
             }
             else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
@@ -235,7 +238,10 @@ int main(int argument_count, char ** arguments)
         // Render the scene.
         current_scene.frame(current_scene.state, delta_time);
 
-        draw_text(assets.main_font, 270, 226, ~0, "FPS: %.0f", 1.0f / delta_time);
+#ifdef DEBUG
+        draw_text(assets.main_font, 270, 226, ~0,
+            "FPS: %.0f", 1.0f / delta_time);
+#endif
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);

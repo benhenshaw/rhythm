@@ -537,7 +537,7 @@ Mid-session, I turned off the entire interface, and the player quickly realised 
 This mini-game is meant to contradict the previous (Heart) mini-game by having the players do the opposite action; press together instead of alternating. This is confusing to players, but as with the previous, an overlay appears after some time to help guide them. I felt that players were not deterred by the lack of understanding of this mini-game, and enjoyed persevering and learning how it worked.
 
 ## Testing the Digestion Mini-Game
-This mini-game was developed later on in the project, and so did not have as much opportunity to be tested. It focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, and adding that it was in a less complete state, found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap, but did not have the opportunity to test this.
+This mini-game focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, some found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap.
 
 \newpage
 
@@ -961,8 +961,8 @@ Since the frequencies of audio data are much higher than video (48000hz vs 60hz)
 ## Source Code
 This section presents the source code of the project in its entirety. It is presented, arranged by source file, in an order designed to assist in the reading of the code.
 
-#### `main.c`
-~~~ {.c .numberLines}
+#### main.c
+~~~{.c .numberLines}
 //
 // main.c
 //
@@ -1120,6 +1120,7 @@ int main(int argument_count, char ** arguments)
     //
 
     blank_cut(2.0, 0, &heart_scene, NULL);
+    play_sound(&mixer, assets.clock_sound, 1.0, 1.0, true);
 
     while (true)
     {
@@ -1134,7 +1135,9 @@ int main(int argument_count, char ** arguments)
         {
             if (event.type == SDL_QUIT)
             {
+#ifdef DEBUG
                 print_memory_stats();
+#endif
                 exit(0);
             }
             else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
@@ -1200,7 +1203,10 @@ int main(int argument_count, char ** arguments)
         // Render the scene.
         current_scene.frame(current_scene.state, delta_time);
 
-        draw_text(assets.main_font, 270, 226, ~0, "FPS: %.0f", 1.0f / delta_time);
+#ifdef DEBUG
+        draw_text(assets.main_font, 270, 226, ~0,
+            "FPS: %.0f", 1.0f / delta_time);
+#endif
 
         // Render the internal pixel buffer to the screen.
         SDL_RenderClear(renderer);
@@ -1209,10 +1215,11 @@ int main(int argument_count, char ** arguments)
         SDL_RenderPresent(renderer);
     }
 }
+
 ~~~
 
-#### `common.c`
-~~~ {.c .numberLines}
+#### common.c
+~~~{.c .numberLines}
 //
 // common.c
 //
@@ -1380,10 +1387,11 @@ void issue_warning(char * message, ...)
     void *:                   "%p\n",   \
     default:                  "")
 #define put(x) printf(GFMT(x),x)
+
 ~~~
 
-#### `memory.c`
-~~~ {.c .numberLines}
+#### memory.c
+~~~{.c .numberLines}
 //
 // memory.c
 //
@@ -1631,10 +1639,11 @@ void print_memory_stats()
             (f32)memory_pools[FRAME_POOL].bytes_available * 100,
         memory_pools[FRAME_POOL].byte_count_of_last_alloc);
 }
+
 ~~~
 
-#### `graphics.c`
-~~~ {.c .numberLines}
+#### graphics.c
+~~~{.c .numberLines}
 //
 // graphics.c
 //
@@ -1899,10 +1908,11 @@ void draw_text(Font font, int x, int y, u32 colour, char * text, ...)
         }
     }
 }
+
 ~~~
 
-#### `audio.c`
-~~~ {.c .numberLines}
+#### audio.c
+~~~{.c .numberLines}
 //
 // audio.c
 //
@@ -2121,10 +2131,37 @@ bool pause_channel(Mixer * mixer, int channel_index)
     return false;
 }
 
+// Stop all instances of a sound that are playing.
+bool stop_sound(Mixer * mixer, Sound sound)
+{
+    for (int i = 0; i < mixer->channel_count; ++i)
+    {
+        if (mixer->channels[i].samples == sound.samples)
+        {
+            mixer->channels[i] = (Mixer_Channel){};
+            return true;
+        }
+    }
+    return false;
+}
+
+// Returns true if the given sound is playing in a channel.
+bool sound_is_playing(Mixer * mixer, Sound sound)
+{
+    for (int i = 0; i < mixer->channel_count; ++i)
+    {
+        if (mixer->channels[i].samples == sound.samples)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 ~~~
 
-#### `assets.c`
-~~~ {.c .numberLines}
+#### assets.c
+~~~{.c .numberLines}
 //
 // assets.c
 //
@@ -2298,6 +2335,8 @@ struct
     Sound yay_sound;
     Sound shaker_sound;
     Sound tap_sound;
+    Sound clock_sound;
+    Sound brown_sound;
 }
 assets;
 
@@ -2411,12 +2450,19 @@ bool load_assets(char * assets_dir)
     assets.yay_sound = read_raw_sound(PERSIST_POOL, "yay.f32");
     if (!assets.yay_sound.samples) return false;
 
+    assets.clock_sound = read_raw_sound(PERSIST_POOL, "clock.f32");
+    if (!assets.clock_sound.samples) return false;
+
+    assets.brown_sound = read_raw_sound(PERSIST_POOL, "brown.f32");
+    if (!assets.brown_sound.samples) return false;
+
     return true;
 }
+
 ~~~
 
-#### `scene.c`
-~~~ {.c .numberLines}
+#### scene.c
+~~~{.c .numberLines}
 //
 // scene.c
 //
@@ -2642,6 +2688,10 @@ void heart_start(void * state)
     s->heart = assets.heart_animation;
     s->heart.frame_duration_ms = 30;
     s->target_beats_per_minute = 60.0;
+    if (!sound_is_playing(&mixer, assets.brown_sound))
+    {
+        play_sound(&mixer, assets.brown_sound, 0.05, 0.05, true);
+    }
 }
 
 void heart_frame(void * state, f32 delta_time)
@@ -2885,6 +2935,7 @@ Scene digestion_scene =
     .input = digestion_input,
     .state = &digestion_state,
 };
+
 ~~~
 
 \newpage
