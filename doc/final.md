@@ -18,11 +18,15 @@ This document describes the design and development of a game engine -- a set of 
 # Introduction
 When setting out to develop a video game -- as with any software -- there are many choices one can make: platforms, languages, libraries, and more. It is very common in modern game development to use a 'game engine', such as Unity\[7] or Unreal\[8], or any number of libraries\[9]\[10]. As these tools are available and accessible, many developers rely on them and do not build their games from scratch. I argue that this causes a subtle stagnation of the technologies that are used in game development, and of the design of the games themselves. Each library or engine will have its own strengths and weaknesses, and this imparts some friction on the development process. An engine developer can only account for so much, so a designer using an engine may find it difficult to design something new that pushes the boundaries of the medium.
 
-In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game; one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003), both of which were released on the Nintendo Game Boy Advance. These games feature mini-games, often use a small number of inputs, and have a humorous theme, represented in their graphics and mechanics. I chose these games as inspiration both because I enjoy them, and because they did not appear to require a large amount of complex technology as they do not use 3D graphics, have simulated physics, or rely on complex input systems, among other reasons.
+In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game: one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003). I have chosen to do this as an attempt to avoid the constraints of any currently available game engines, and to learn more about (and document) how to write the technical systems that support a video game.
+
+Both Rhythm Tengoku and WarioWare feature 2D graphics, game-play that is divided up into mini-games, they often use a small number of inputs, have a humorous theme, and were both released on the Nintendo Game Boy Advance; they were in-fact developed by much of the same team. I chose these games as inspiration both because I enjoy them, and because they do not have complex designs. These are 'rhythm' games, which are mostly concerned with the players ability to tap a button to music. They do not have complex simulation or player decision making, narrative or vast amounts of content. Drawing inspiration from these games in particular allows the focus of the project to be on the supporting technical systems and not the game-play of the game.
 
 One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use[^1]. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
 
 [^1]: See [Appendix A] for more on this topic.
+
+\pagebreak
 
 ## Goals
 Before I began the project, I had a set of goals. See the conclusion in section 7 for an evaluation of how well the goals were met.
@@ -36,25 +40,13 @@ Before I began the project, I had a set of goals. See the conclusion in section 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, and explains aspects of how the software works, and how development was carried out. Sections 5 ([Testing]) and 6 ([Evaluation]) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 ([Conclusion]) provides an overview of the resulting software, and the development practices carried out.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, explains aspects of how the software works, and how development was carried out. Sections 5 ([Testing]) and 6 ([Evaluation]) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 ([Conclusion]) provides an overview of the resulting software and its development.
 
 \newpage
 
 # Background
 <!-- Compare technologies. -->
 Features most commonly found in video games are input, visuals, and sound. Behind these features there are many commonly occurring technical systems, such as graphical rendering systems, audio mixing and effects systems, memory allocation and management systems, timing systems, and more.
-
-![Screen shots of various mini-games from Rhythm Tengoku.](data/rhythm_tengoku_shots.png)
-
-The game that I have taken most inspiration from, Rhythm Tengoku, appears to utilise detailed bitmap graphics, with frame-based and motion based animation. That is to say, it animates things on screen both by displaying a series of discrete images in succession, and by drawing the same image in changing locations on the screen. It also performs rotation and scaling of bitmaps to further animate them.
-
-As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM[^2] sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, the game has sections with vocals and recorded instruments. While the quality is does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
-
-[^2]: Pulse Code Modulation -- A method of representing an analogue signal with digital samples.
-
-The Game Boy Advance has twelve inputs that can be used by games that run on it. Rhythm Tengoku rarely uses more than four of them, and often less than that. When it does, multiple buttons are often mapped to the same function. I was very interested in the limited number of inputs, as it turns the focus of the game partially away from player dexterity. Games like Guitar Hero (2005) and Dance Dance Revolution (1998) do have a focus on player dexterity, but that was not my area of interest for this project.
-
-Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these games don't utilise many buttons for input, the timing of button presses is given more focus. This is easier to achieve on dedicated hardware such as the Game Boy Advance, but may be more difficult on platforms that aren't designed with this concern in mind, as many modern consumer computers are.
 
 ## Overview of Game Engines, Frameworks and Libraries
 An overview of some game engines and libraries is provided below.
@@ -79,7 +71,7 @@ Cocos2D          Multi      Objective-C      2D; Buffer    Implementation-based
 **This Project** Multi      C                2D            Built-in mixer
                                              Buffer access Buffer access
 
-As mentioned earlier in this document, there are many tools available for the creation of video games on many platforms. Some of these tools, such as Unity and Unreal are attempting to provide a vast amount of functionality in an attempt to be general purpose and provide a useful foundation for any video game. Others, such as LÖVE and Cocos2D are attempting to support only games with 2D graphics. Each of these tools are targetting certain platforms, some of which include video game consoles. This project has a narrower scope than all of the given examples, as it is designed around supporting a specific game.
+As mentioned earlier in this document, there are many tools available for the creation of video games on many platforms. Some of these tools, such as Unity and Unreal are attempting to provide a vast amount of functionality in an attempt to be general purpose and provide a useful foundation for any video game. Others, such as LÖVE and Cocos2D are attempting to support only games with 2D graphics. Each of these tools target certain platforms, some of which include video game consoles. This project has a narrower scope than all of the given examples, as it is designed around supporting a specific game.
 
 Many of these tools offer 3D graphics, support for many programming languages (some of which include an embedded interpreter or virtual machine for these languages), and impose limits on the use control of audio output. These are all features that I did not want in this project, and their existence in the final binary of the game make it more complex with no gain. This was the initial inspiration for this project: to produce a piece of software that only includes necessary components.
 
@@ -88,19 +80,35 @@ A talk given recently by Casey Muratori\[15] illustrates this point very clearly
 
 **Every line of source code (or instruction in the binary) is a possible target for malicious attack.** Given that mistakes happen and things go unaccounted for, any line of code could provide a way for an attacker to perform malicious actions on a user's computer. Removing that code -- especially if it is not completely necessary ('cruft', as described by Muratori) -- will improve the security of the system as a whole.
 
-**There are millions of lines of code between a user process and the hardware.** Given the size of operating systems, drivers, and firmware in the modern world, this has become true. As expressed in the 2015 paper by S. Peter et al[16] on Arrakis -- a modified Linux kernel, one can gain very large performance gains by creating a shorter code path in the operating system that allows the hardware to perform the actions that user-space code wants to achieve with less overhead. The same hardware, and the same code in the programme, can achieve an almost 5x performance gain (in the example of HTTP transaction throughput) by lowering the overhead of the OS. One might suggest that a trade-off was made; perhaps eschewing some security code, but I leave the reader with this quote from the paper itself:
+**There are millions of lines of code between a user process and the hardware.** Given the size of operating systems, drivers, and firmware in the modern world, this has become true. As expressed in the 2015 paper by S. Peter et al\[16] on Arrakis -- a modified Linux kernel, one can obtain very large performance gains by creating a shorter code path in the operating system that allows the hardware to perform the actions that user-space code wants to achieve with less overhead. The same hardware, and the same code in the programme, can achieve an almost 5x performance gain (in the example of HTTP transaction throughput) by lowering the overhead of the OS. One might suggest that a trade-off was made; perhaps eschewing some security code, but I leave the reader with this quote from the paper itself:
 
 > We conclude that it is possible to provide the same kind of QoS enforcement in this case, rate-limiting in Arrakis, as in Linux. Thus, we are able to retain the protection and policing benefits of user-level application execution while providing improved network performance.
 
 To summarise: all the code I am writing is sitting atop enough *cruft* already; if I can choose to have less I will.
 
-## Design in One-Button Games
-In order to differentiate my project from games that have come before it, I sought to find an aspect of the game-play to innovate on. I decided to explore the concept of multi-player, and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Tengoku, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
+## Inspiration
 
-Further research in the area of limited input games brought up the burgeoning field of one button games\[11]. These kinds of games are often taught when introducing students to game design as they force designers to consider player interaction closely.
+The game that I have taken most inspiration from, Rhythm Tengoku, appears to utilise detailed bitmap graphics, with frame-based and motion based animation. That is to say, it animates things on screen both by displaying a series of discrete images in succession, and by drawing the same image in changing locations on the screen. It also performs rotation and scaling of bitmaps to further animate them.
 
-## Management of Assets
-Video games built for platforms which are purpose built to run them have a very different approach to the management of assets (such as image and sound data). On the Game Boy Advance, all assets must be stored on the 'GamePak'; a small cartridge that slots into the console itself. Once the game has booted up, any assets stored on the cart are accessible via mapped memory. This means that assets are not loaded in at will as games on other platforms need to do. Video games developed for a Windows computer, for example, may need to load data from any number of files into the virtual memory of the process in order to access them. This process requires significantly more effort, although there are many approaches with their own costs and benefits.
+As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM[^2] sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, the game has sections with vocals and recorded instruments. While the quality is does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
+
+[^2]: Pulse Code Modulation -- A method of representing an analogue signal with digital samples.
+
+The Game Boy Advance has twelve inputs that can be used by games that run on it. Rhythm Tengoku rarely uses more than four of them, and often less than that. When it does, multiple buttons are often mapped to the same function. I was very interested in the limited number of inputs, as it turns the focus of the game partially away from player dexterity. Many successful music games like Guitar Hero (2005) and Dance Dance Revolution (1998) do have a focus on player dexterity, but that was not my area of interest for this project.
+
+Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these games don't utilise many buttons for input, the timing of button presses is given more focus. This is easier to achieve on dedicated hardware such as the Game Boy Advance, but may be more difficult on platforms that aren't designed with this concern in mind, as many modern consumer computers are.
+
+![Screen shots of various mini-games from Rhythm Tengoku.](data/rhythm_tengoku_shots.png)
+
+### Game-play
+Each mini-game of Rhythm Tengoku is reminiscent of a music video. It has some (usually minimal) animated graphics, and features a track of music that is the same every time. The player is given a tutorial at the start of the mini-game which explains what they need to do -- essentially what their cue to tap a certain button is. Given that the game is in Japanese (and there has never been an official translation), this tutorial has limited use for me as a non-Japanese speaker. I found that it is very interesting to have to figure out what you as the player are expected to do.
+
+As the game progresses, the complexity of the mini-games increases requiring more attention and timing ability. Each mini-game introduces a different kind of rhythmic interaction; some are about tapping to a certain note of a repeating melody, some are about keeping a constant beat going, some ask that the player press a certain button based on the animation on screen, and some are more abstract.
+
+## Design in One Button Games
+Although this project is focussed on the technical foundation, I still felt the need to differentiate my project from games that have come before it. I sought to find an aspect of the game-play to innovate on, so I decided to explore the concept of multi-player and the experiences that two players have when they need to interact together directly. While my initial inspiration came from Rhythm Tengoku, in which each mini-game's solution is a pattern that can be memorised perfectly, I wanted to explore more free-form interaction. Wrought rhythm tracks also do not allow the game to react to the player's actions beyond giving them a score. Also, if the game can react to player action, in a two-player context, one player's actions can affect the other.
+
+Further research in the area of limited input games brings up the burgeoning field of 'one button' games\[11]. These kinds of games are often taught when introducing students to game design as they force designers to consider player interaction closely. Neither Rhythm Tengoku or WarioWare are strictly *one* button games, so I felt that this was another way in which my project could stand on its own.
 
 ## Planning the Implementation
 From the initial conception of the idea from this project I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
@@ -117,13 +125,18 @@ In the titles that inspired this project, mini-games allow highly varied styles 
 
 Considering that I prefer the aspects of rhythm games that emphasise timing and de-emphasise dexterity, I decided that a one-button game would align with these ideals. I also enjoy the experience of playing with other players, and the games that I have taken inspiration from do not have multi-player. I decided that constructing a game made for two players would allow it to be novel, despite the game mainly being a showcase for technical implementation.
 
+### Theme
+To make the mini-games feel like a more cohesive whole, I decided to find an overarching theme for the game. My initial proposal for this project (which can be found in Appendix B) laid out some ideas for mini-games that could be included, but none of these were implemented as they were either too artistically demanding (I produced all of the artwork for the project myself), or did not fit with the theme.
+
+The final theme for the showcase game is the human body. It is titled "Rhythms of the Body". There are three mini-games: the first is a beating heart, the second is breathing lungs, and the third is the digestive system.
+
 ## Technical Specification
 In order to approach the task of building a software stack for a video game, I sought to figure out what kinds of data I would be dealing with. I took this approach, as I find working with data and understanding the structure and patterns of data to be the most affective mindset, as opposed to constructing software in a more conceptual way.
 
 There were several kinds of data that I needed to manage. Data for graphics in the form of bitmaps, data for audio in the form of sample streams, data for user input, and the specifics of any on-disk asset formats.
 
 ### Graphical Data
-Graphical data for reproduction on a video screen is often handled in pixels. These pixels can have a number of separate components, each of which representing some *primary* colour. These primaries are mixed to produce a final colour. One can also use an index based method, in which a table of colours is kept, and bitmap images have an index at each location, referring to a colour from the table. As I did not know what direction the art style would take, and what concerns the graphical system would have, I decided that I would use a very flexible format: RGBA. This format is very common; it has four channels for the primaries, red, green, and blue, and a channel for alpha which is used for blending colours for transparency. While this storage format is larger than others, it is simple to manipulate, and supports a large number of possible colours.
+Graphical data for reproduction on a video screen is often handled in pixels. These pixels can have a number of separate components, each of which representing some *primary* colour. These primaries are mixed to produce a final colour. One can also use an index-based method, in which a table of colours is kept, and bitmap images have an index at each location referring to a colour from the table. As I did not know what direction the art style would take, and what concerns the graphical system would have, I decided that I would use a very flexible format: RGBA. This format is very common; it has four channels for the primaries, red, green, and blue, and a channel for alpha which is used for blending colours for transparency. While this storage format is larger than others, it is simple to manipulate, and supports a large number of possible colours.
 
 In order to display the data on screen, pixels need to be sent to the graphical hardware to be output. This process can be done in many ways, but I intended to use a buffer which would be regularly updated and sent off to be displayed. This buffer has its own format, and if this format differs from the format used by my renderer conversions would need to be made. Using the RGBA format helps avoid this, as this is a format natively supported by lots of graphics hardware and software. I also intended to use a low resolution buffer, as this more closely matches the games I took inspiration from, and also lowers the performance requirements of some aspects of the rendering.
 
@@ -132,26 +145,40 @@ To play sounds digitally from a speaker, one needs to produce vibrations by sett
 
 [^3]: The order in which bytes are stored within the register of a computer -- whether it starts with the *big end* or the *small end*.
 
-Along with the format of each audio sample, there is the concern of the frequency of samples. Frequency has a major affect on the range of pitch that can be expressed by the data. 48KHz is the frequency used by DVD audio, and is widely supported, thus I went with this format. 44.1KHz is also very common, being the format of CD audio, having lower fidelity but smaller storage space per second of audio. As I did not expect to have large amounts of audio data, and as I am not hard-bound by storage space, I considered the trade off acceptable.
+Along with the format of each audio sample, there is the concern of the frequency of samples. Frequency has a major affect on the range of pitch that can be expressed by the data. 48KHz is the frequency used by DVD audio, and is widely supported by consumer computers. 44.1KHz is also very common, being the format of CD audio, having slightly lower fidelity but smaller storage space per second of audio. As I did not expect to have large amounts of audio data, and am also not hard-bound by storage space, I chose to use 48KHz audio.
 
-### Input Data
-User input differers greatly from the other forms of data being input into the program. Input is concerned with timing as much as it is with content. For my project, I decided to construct a 'one button' game (described further below), so I was even less concerned with what button the player is pressing, but mainly the time at which they pressed.
+### User Input Data
+User input differers greatly from the other forms of data being input into the program. Input is concerned with timing -- and the process's ability to react quickly to it -- as much as it is with content. As I decided to construct a 'one button' game for this project, so I was even less concerned with what button the player is pressing, but mainly the time at which they pressed.
 
 ### File Formats
 As I intended to not rely on libraries for as many aspects of the project as possible, I also sought to write custom file readers. These file readers were intended to be simple, but facilitate all the features needed by the game. Ideally, the file formats used would specify enough information such that the file reader could check that all of the data has been read in successfully. I decided to utilised a common file format for bitmap graphics called Portable Arbitrary Map (an extension of Portable Pixel Map[^4]), and a custom audio format inspired by this bitmap format.
 
+### Management of Assets
+Video games built for platforms which are purpose built to run them have a very different approach to the management of assets (such as image and sound data). On the Game Boy Advance -- the console on which Rhythm Tengoku and WarioWare run -- all assets must be stored on the 'GamePak'; a small cartridge that slots into the console itself. Once the game has booted up, any assets stored on the cart are accessible via mapped memory. This means that assets are not loaded in at will as games on other platforms need to do. Video games developed for a Windows computer, for example, may need to load data from any number of files into the virtual memory of the process in order to access them. This process requires significantly more effort, although there are many approaches with their own costs and benefits.
+
+
 [^4]: Both of these formats are part of the wider Netpbm family of file formats.
 
 ### Platform Layer
-Initially, I intended to implement the project atop the SDL2 platform layer to help facilitate development across multiple platforms. Once the project was more mature, I would replace the features used from this library with custom code on each platform.
+I sought to target Windows, macOS, and Linux for this project. I intended to implement the project atop the SDL2 platform layer to help facilitate development across multiple platforms. Once the project was more mature, I would replace the features used from this library with custom code on each platform. This platform layer provides -- among other things -- a way to create a window, open the audio device (via callback or buffer queueing), and handle user input via an event queue. In order to implement my own platform layer, I would need to implement separate methods of handling each of these things on each platform, and I felt that this was lower priority that other aspects of the project, so I left it as a possible goal for later on.
 
 \newpage
 
 # Design and Implementation
 ## Design of the Mini-Games
-I will begin by discussing the design of the example game, as it informs the technical decisions made in supporting engine. There are three mini-games implemented in the final iteration of the project. The first, requires players to press their buttons on the beat, alternating between each other. This is visualised with a beating heart: one player's press expands the heart, the other player's press contracts it. The second mini-game is based on the lungs, with players having to press, hold, and release in time with the beat, and do it together; their presses inhaling into the lungs, and their releases exhaling. The third and final mini-game is based on the digestive system, with one players presses moving food through the system, and the other player expelling the waste. This is done in 5/4 time, with one player tapping the first four beats, and the other player tapping the final beat. Each of these mini-games has frame-based animated graphics, and a visual interface that utilises graphical primitives and text rendering.
+I will begin by discussing the design of the example game, as it informs the technical decisions made in supporting engine. There are three mini-games implemented in the final iteration of the project.
 
-![Screenshots of various parts of the example game.](data/game_shots.png)
+![Screenshot of the beating heart mini-game.](data/heart_shot.png)
+
+The first mini-game requires players to press their buttons on the beat, alternating between each other. This is visualised with a beating heart: one player's press expands the heart, the other player's press contracts it. Together, they must hold a stable rhythm at a target beats per minute. Once they have held this rhythm for a number of seconds, they will have successfully completed the mini-game.
+
+![Screenshot of the breathing lungs mini-game.](data/lungs_shot.png)
+
+The second mini-game is based on the lungs, with players having to press, hold, and release in time with the beat, and do it together; their presses inhaling into the lungs, and their releases exhaling. This game is similar to the first, but they must press together instead of alternating. If both players can successfully keep a stable rhythm going at a target BPM they will have completed the mini-game.
+
+![Screenshot of the digestive system mini-game.](data/digestion_shot.png)
+
+The third and final mini-game is based on the digestive system, with one player's press moving food through the system, and the other player expelling the waste. This is done in 5/4 time, with one player tapping the first four beats, and the other player tapping the final beat. If the players can hold a target BPM at this time signature for long enough they will have successfully completed the mini-game.
 
 ## Technical Overview
 <!-- Discuss the high-level design and structure of the software. -->
@@ -427,7 +454,7 @@ This system is incredibly simple and straightforward to implement. The downside 
 
 ### Memory
 <!-- Discuss the management of memory. -->
-While custom memory allocators are often considered a must-have for large high-performance video games[12], many projects settle for standard memory allocation utilities; many don't consider the possibility. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors.
+While custom memory allocators are often considered a must-have for large high-performance video games\[12], many projects settle for standard memory allocation utilities; many don't consider the possibility. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors.
 
 As with any general-purpose or generic approach, there are trade-offs. A general purpose allocator tries to do its best at the problems of wasting as little memory as possible, allocating and deallocating as fast as possible, and avoiding fragmentation. I propose that it can be very easy to beat a general purpose allocator (such as `malloc`) on all of these fronts, simply by constructing a solution that more directly supports the project that is being made.
 
@@ -468,7 +495,7 @@ VirtualAlloc None       No             Some control over page flags.
 [^7]: Note that limits marked as 'None' are still limited by the platform, including hardware and decisions made in the OS.
 
 ##### Pre-faulting Pages
-On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this access is called a page fault. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`) and calling an allocator without modifying the memory. This is counter-acted by the `mmap` argument `MAP_POPULATE`[6], which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
+On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this access is called a page fault. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`) and calling an allocator without modifying the memory. This is counter-acted by the `mmap` argument `MAP_POPULATE`\[6], which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
 
 ##### Thread Safety
 One aspect not implemented in the final code-base, but researched, was making the allocator thread-safe. Initially, my implementation used a `mutex` to guarantee that allocations could be made from any thread without interference, but after more of the project was implemented, I found that I never allocated memory from a thread other than the main one, and so this feature was removed as it added cost with no benefit.
