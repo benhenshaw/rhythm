@@ -20,7 +20,7 @@ When setting out to develop a video game -- as with any software -- there are ma
 
 In this document, I describe the process of developing the technical components of a video game; the parts that one could call an 'engine'. These technical components are *not* intended to be generic and applicable to the design of any game. They are designed to support a specific game: one that roughly models the video games 'Rhythm Tengoku' (2006) and 'WarioWare' (2003). I have chosen to do this as an attempt to avoid the constraints of any currently available game engines, and to learn more about (and document) how to write the technical systems that support a video game.
 
-Both Rhythm Tengoku and WarioWare feature 2D graphics, game-play that is divided up into mini-games, they often use a small number of inputs, have a humorous theme, and were both released on the Nintendo Game Boy Advance; they were in-fact developed by much of the same team. I chose these games as inspiration both because I enjoy them, and because they do not have complex designs. These are 'rhythm' games, which are mostly concerned with the players ability to tap a button to music. They do not have complex simulation or player decision making, narrative or vast amounts of content. Drawing inspiration from these games in particular allows the focus of the project to be on the supporting technical systems and not the game-play of the game.
+Both Rhythm Tengoku and WarioWare feature 2D graphics, game-play that is divided up into mini-games, use a small number of inputs, have a humorous theme, and were both released on the Nintendo Game Boy Advance. They were in-fact developed by much of the same team. I chose these games as inspiration both because I enjoy them, and because they do not have complex designs. These are 'rhythm' games, which are mostly concerned with the players ability to tap a button to music. They do not have complex simulation or player decision making, narrative or vast amounts of content. Drawing inspiration from these games in particular allows the focus of the project to be on the supporting technical systems and not the game-play of the game.
 
 One might question the decision to build engine-level technology that is not designed to support many kinds of games. Firstly, I did not want to tackle the problem of developing a generic game engine, as I do not advocate their use[^1]. Secondly, I think that generic solutions are not good solutions. I believe one always has a specific problem at hand and should design a solution that best solves that problem. In my opinion, a lot of poor quality software is built by combining a set of generic solutions to perform a specific task. Therefore, I want all of the code in the project to work together to directly solve the problems put forward by the design of the game.
 
@@ -31,16 +31,16 @@ One might question the decision to build engine-level technology that is not des
 ## Goals
 Before I began the project, I had a set of goals. See the conclusion in section 7 for an evaluation of how well the goals were met.
 
-**To, wherever possible, only use code that I have written.** I wanted to learn a breadth of techniques from this project. I did not want to leave major aspects of the software, such as memory allocation or rendering up to a library to carry out.
+**To, wherever possible, only use code that I have written.** I wanted to learn a breadth of techniques from this project. I did not want to leave major aspects of the software, such as memory allocation or rendering, up to a library to carry out.
 
-**To tailor every aspect of the code to the design of the game.** I wanted to implement every system as a solution to a known problem. While this may seem obvious, one could take the opposite route and write code that performs many functions in an attempt to make it flexible. This flexibility may have significant costs, and must be fully justified; if it is not, it serves only as a poor solution to the problem.
+**To tailor every aspect of the code to the design of the game.** I wanted to implement every system as a solution to a known problem. While this may seem obvious, one could take the opposite route and write code that performs many functions in an attempt to make it flexible. This flexibility may have significant costs, and must be fully justified. If it is not, it serves only as a poor solution to the problem.
 
 **To produce a good quality piece of software.** I wanted to produce software that doesn't crash, is highly responsive to user input, and makes effective use of system resources (CPU cycles, RAM, storage, etc.). My concrete performance goals are rendering graphics at a minimum of 60 frames per second, playing audio without any hitches (not 'dropping' any samples), and handling user input such that the game responds within 10ms.
 
 **To learn about many areas of game development, and document them.** Learning new techniques was always a key motivator for this project. I would also like to document what I learned in a detailed way, which I have done in this dissertation.
 
 ## Structure
-This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, explains aspects of how the software works, and how development was carried out. Sections 5 ([Testing]) and 6 ([Evaluation]) describes how this software was tested and evaluated, and the results of those evaluations. Section 7 ([Conclusion]) provides an overview of the resulting software and its development.
+This report will cover in detail the conceptual development of the project, as well as the planning, implementation, testing, and evaluation of the software. Section 2 ([Background]) describes some components found in video games and some concerns for their implementation. Section 3 ([Specification]) concretely defines the task that was attempted, outlining the entire project at a high level. Section 4 ([Design and Implementation]) describes the design decisions made, explains aspects of how the software works, and how development was carried out. Section 5 ([Testing]) describes how this software was tested and how the information gathered informed its development. Section 6 ([Evaluation]) evaluates and critiques various aspects of the project. Section 7 ([Conclusion]) provides a brief discussion of the resulting software and its development.
 
 \newpage
 
@@ -73,14 +73,14 @@ Cocos2D          Multi      Objective-C      2D; Buffer    Implementation-based
 
 As mentioned earlier in this document, there are many tools available for the creation of video games on many platforms. Some of these tools, such as Unity and Unreal are attempting to provide a vast amount of functionality in an attempt to be general purpose and provide a useful foundation for any video game. Others, such as LÖVE and Cocos2D are attempting to support only games with 2D graphics. Each of these tools target certain platforms, some of which include video game consoles. This project has a narrower scope than all of the given examples, as it is designed around supporting a specific game.
 
-Many of these tools offer 3D graphics, support for many programming languages (some of which include an embedded interpreter or virtual machine for these languages), and impose limits on the use control of audio output. These are all features that I did not want in this project, and their existence in the final binary of the game make it more complex with no gain. This was the initial inspiration for this project: to produce a piece of software that only includes necessary components.
+Many of these tools offer 3D graphics, support for many programming languages (some of which include an embedded interpreter or virtual machine), and impose limits on the control of audio output. These are all features that I did not want in this project, and their existence in the final binary of the game make it more complex with no gain. This was the initial inspiration for this project: to produce a piece of software that only includes necessary components.
 
 ### Why Does It Matter How Large the Code Base Is?
 A talk given recently by Casey Muratori\[15] illustrates this point very clearly. To summarise the points relevant to this project:
 
 **Every line of source code (or instruction in the binary) is a possible target for malicious attack.** Given that mistakes happen and things go unaccounted for, any line of code could provide a way for an attacker to perform malicious actions on a user's computer. Removing that code -- especially if it is not completely necessary ('cruft', as described by Muratori) -- will improve the security of the system as a whole.
 
-**There are millions of lines of code between a user process and the hardware.** Given the size of operating systems, drivers, and firmware in the modern world, this has become true. As expressed in the 2015 paper by S. Peter et al\[16] on Arrakis -- a modified Linux kernel, one can obtain very large performance gains by creating a shorter code path in the operating system that allows the hardware to perform the actions that user-space code wants to achieve with less overhead. The same hardware, and the same code in the programme, can achieve an almost 5x performance gain (in the example of HTTP transaction throughput) by lowering the overhead of the OS. One might suggest that a trade-off was made; perhaps eschewing some security code, but I leave the reader with this quote from the paper itself:
+**There are millions of lines of code between a user process and the hardware.** Given the size of operating systems, drivers, and firmware in the modern world, this has become true. As expressed in the 2015 paper by S. Peter et al\[16] on Arrakis -- a modified Linux kernel, one can obtain very large performance gains by creating a shorter code path in the operating system that allows the hardware to perform the actions that user-space code wants to achieve with less overhead. The same hardware, and the same code in the program, can achieve an almost 5x performance gain (in the example of HTTP transaction throughput) by lowering the overhead of the OS. One might suggest that a trade-off was made; perhaps eschewing some security code, but I leave the reader with this quote from the paper itself:
 
 > We conclude that it is possible to provide the same kind of QoS enforcement in this case, rate-limiting in Arrakis, as in Linux. Thus, we are able to retain the protection and policing benefits of user-level application execution while providing improved network performance.
 
@@ -101,7 +101,7 @@ Input latency is also a major concern for Rhythm Tengoku and WarioWare. As these
 ![Screen shots of various mini-games from Rhythm Tengoku.](data/rhythm_tengoku_shots.png)
 
 ### Game-play
-Each mini-game of Rhythm Tengoku is reminiscent of a music video. It has some (usually minimal) animated graphics, and features a track of music that is the same every time. The player is given a tutorial at the start of the mini-game which explains what they need to do -- essentially what their cue to tap a certain button is. Given that the game is in Japanese (and there has never been an official translation), this tutorial has limited use for me as a non-Japanese speaker. I found that it is very interesting to have to figure out what you as the player are expected to do.
+Each mini-game in Rhythm Tengoku is reminiscent of a music video. It has some (usually minimal) animated graphics, and features a track of music that is the same every time. The player is given a tutorial at the start of the mini-game which explains what they need to do -- essentially what their cue to tap a certain button is. Given that the game is in Japanese (and there has never been an official translation), this tutorial has limited use for me as a non-Japanese speaker. I found it very interesting to have to figure out what you as the player are expected to do, without instruction.
 
 As the game progresses, the complexity of the mini-games increases requiring more attention and timing ability. Each mini-game introduces a different kind of rhythmic interaction; some are about tapping to a certain note of a repeating melody, some are about keeping a constant beat going, some ask that the player press a certain button based on the animation on screen, and some are more abstract.
 
@@ -111,7 +111,7 @@ Although this project is focussed on the technical foundation, I still felt the 
 Further research in the area of limited input games brings up the burgeoning field of 'one button' games\[11]. These kinds of games are often taught when introducing students to game design as they force designers to consider player interaction closely. Neither Rhythm Tengoku or WarioWare are strictly *one* button games, so I felt that this was another way in which my project could stand on its own.
 
 ## Planning the Implementation
-From the initial conception of the idea from this project I wanted to implement as much of the project as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
+From the initial conception of the idea for this project, I wanted to implement as much of the it as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
 
 \newpage
 
@@ -121,16 +121,18 @@ This section contains an outline of the design and technical features of the pro
 ## Design of the Showcased Game
 This project is primarily designed to exemplify the ways in which the technical systems of a video game can be built, and how those systems can be tailored to support a specific game. For that goal to be realised a game must be designed to showcase the usage of these features. The following is a description of some high-level decisions that I made about this example game and their motivations.
 
-In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, broadening the range of experiences that a player can have. Therefore, I wanted implement a system that facilitates mini-games, including swapping between them.
+In the titles that inspired this project, mini-games allow highly varied styles of game-play and aesthetics to be employed in a way that does not confuse the player; their expectations are to see something new and unexpected each time they start a new mini-game. To me, this is an enticing aspect of the design of these games as it opens the door to much creative freedom, in all aspects of design, and broadens the range of experiences that a player can have. Therefore, I wanted implement a system that facilitates mini-games, including swapping between them.
 
-Considering that I prefer the aspects of rhythm games that emphasise timing and de-emphasise dexterity, I decided that a one-button game would align with these ideals. I also enjoy the experience of playing with other players, and the games that I have taken inspiration from do not have multi-player. I decided that constructing a game made for two players would allow it to be novel, despite the game mainly being a showcase for technical implementation.
+Considering that I prefer the aspects of rhythm games that emphasise timing and de-emphasise dexterity, I decided that a one button game would align with these ideals. I also enjoy the experience of playing with other players, and the games that I have taken inspiration from do not have multi-player. I decided that constructing a game made for two players would allow it to be novel, despite the game mainly being a showcase for technical implementation.
 
 ### Theme
 To make the mini-games feel like a more cohesive whole, I decided to find an overarching theme for the game. My initial proposal for this project (which can be found in Appendix B) laid out some ideas for mini-games that could be included, but none of these were implemented as they were either too artistically demanding (I produced all of the artwork for the project myself), or did not fit with the theme.
 
 The final theme for the showcase game is the human body. It is titled "Rhythms of the Body". There are three mini-games: the first is a beating heart, the second is breathing lungs, and the third is the digestive system.
 
-## Technical Specification
+\pagebreak
+
+## Technical Overview
 In order to approach the task of building a software stack for a video game, I sought to figure out what kinds of data I would be dealing with. I took this approach, as I find working with data and understanding the structure and patterns of data to be the most affective mindset, as opposed to constructing software in a more conceptual way.
 
 There were several kinds of data that I needed to manage. Data for graphics in the form of bitmaps, data for audio in the form of sample streams, data for user input, and the specifics of any on-disk asset formats.
@@ -138,29 +140,32 @@ There were several kinds of data that I needed to manage. Data for graphics in t
 ### Graphical Data
 Graphical data for reproduction on a video screen is often handled in pixels. These pixels can have a number of separate components, each of which representing some *primary* colour. These primaries are mixed to produce a final colour. One can also use an index-based method, in which a table of colours is kept, and bitmap images have an index at each location referring to a colour from the table. As I did not know what direction the art style would take, and what concerns the graphical system would have, I decided that I would use a very flexible format: RGBA. This format is very common; it has four channels for the primaries, red, green, and blue, and a channel for alpha which is used for blending colours for transparency. While this storage format is larger than others, it is simple to manipulate, and supports a large number of possible colours.
 
-In order to display the data on screen, pixels need to be sent to the graphical hardware to be output. This process can be done in many ways, but I intended to use a buffer which would be regularly updated and sent off to be displayed. This buffer has its own format, and if this format differs from the format used by my renderer conversions would need to be made. Using the RGBA format helps avoid this, as this is a format natively supported by lots of graphics hardware and software. I also intended to use a low resolution buffer, as this more closely matches the games I took inspiration from, and also lowers the performance requirements of some aspects of the rendering.
+In order to display the data on screen, pixels need to be sent to the graphical hardware to be output. This process can be done in many ways, but I intended to use a buffer which would be regularly updated and sent off to be displayed. This buffer has its own format, and if this format differs from the format used by my renderer conversions would need to be made. Using the RGBA format helps avoid this, as this is a format natively supported by lots of graphics hardware and software -- this is another major reason why I chose to use this format for graphical assets. I also intended to use a low resolution buffer, as this more closely matches the games I took inspiration from, and also lowers the performance requirements of some aspects of the rendering.
 
 ### Audio Data
-To play sounds digitally from a speaker, one needs to produce vibrations by setting the speaker's position rapidly. This can be done on-the-fly, meaning the speaker positions are generated by the software itself (synthesis). This can also be done by using a set of pre-recorded positions. While I did want to perform some audio synthesis, I also knew that I would need to handle pre-recorded sounds. Audio formats (when not compressed) are relatively simple, in that they are usually just a buffer of numbers. But, this still leaves room for incompatibility as there are many ways to store a number on a computer (not to mention endianness[^3]). As with pixel data, I decided that I would support one of the more flexible and high quality formats: 32-bit floating point. Within the audio mixer, I intended to use a floating point format to simplify the mixing process. As I was less constrained by storage and memory space than developers on other platforms, I decided that it would be reasonable to store my audio recordings in this format on disk, and load them into the process without conversion, where they can be used directly by the mixer.
+To play sounds digitally from a speaker, one needs to produce vibrations by setting the speaker's position rapidly. This can be done on-the-fly, meaning the speaker positions are generated by the software itself (synthesis). This can also be done by using a set of pre-recorded positions. While I did want to perform some audio synthesis, I also knew that I would need to handle pre-recorded sounds.
 
-[^3]: The order in which bytes are stored within the register of a computer -- whether it starts with the *big end* or the *small end*.
+Audio formats (when not compressed) are relatively simple, in that they are usually just a buffer of numbers. But, this still leaves room for incompatibility as there are many ways to store a number on a computer (not to mention endianness[^3]). As with pixel data, I decided that I would support one of the more flexible and high quality formats for storing audio: 32-bit floating point. Within the audio mixer I intended to use a floating point format regardless as it simplifies the mixing process, as mixing using integers requires implementing a method to handle overflow.
+
+[^3]: The order in which bytes are stored within the register of a computer -- whether it starts with the *big end* or the *small end*. The term was originally used in reference to the book Gulliver's Travels, wherein two tribes of people wage war over which end of a boiled egg one should crack open first -- the big end or the small.
+
+While 32-bit float is a relatively large format -- audio such as that on a CD is commonly in 16-bit format -- I was less constrained by storage and memory space than developers on other platforms, and I decided that it would be reasonable to store my audio recordings in this format on disk, loading them into the process without conversion where they can be used directly by the mixer.
 
 Along with the format of each audio sample, there is the concern of the frequency of samples. Frequency has a major affect on the range of pitch that can be expressed by the data. 48KHz is the frequency used by DVD audio, and is widely supported by consumer computers. 44.1KHz is also very common, being the format of CD audio, having slightly lower fidelity but smaller storage space per second of audio. As I did not expect to have large amounts of audio data, and am also not hard-bound by storage space, I chose to use 48KHz audio.
 
 ### User Input Data
-User input differers greatly from the other forms of data being input into the program. Input is concerned with timing -- and the process's ability to react quickly to it -- as much as it is with content. As I decided to construct a 'one button' game for this project, so I was even less concerned with what button the player is pressing, but mainly the time at which they pressed.
+User input differers greatly from the other forms of data being input into the program. Input is concerned with timing -- and the process's ability to react quickly to it -- as much as it is with content. As I decided to construct a 'one button' game for this project, I was even less concerned with what button the player is pressing, but mainly the exact time at which they pressed.
 
 ### File Formats
-As I intended to not rely on libraries for as many aspects of the project as possible, I also sought to write custom file readers. These file readers were intended to be simple, but facilitate all the features needed by the game. Ideally, the file formats used would specify enough information such that the file reader could check that all of the data has been read in successfully. I decided to utilised a common file format for bitmap graphics called Portable Arbitrary Map (an extension of Portable Pixel Map[^4]), and a custom audio format inspired by this bitmap format.
+As I intended to not rely on libraries for as many aspects of the project as possible, I also sought to write custom file readers. These file readers were intended to be simple, but facilitate all the features needed by the game. Ideally, the file formats used would specify enough information in their headers such that the file reader could check that all of the data had been read in successfully. I decided to utilise a common file format for bitmap graphics called Portable Arbitrary Map (an extension of Portable Pixel Map[^4]) as it is simple to generate and parse, and to use a custom audio format inspired by this bitmap format.
+
+[^4]: Both of these formats are part of the wider Netpbm family of file formats.
 
 ### Management of Assets
 Video games built for platforms which are purpose built to run them have a very different approach to the management of assets (such as image and sound data). On the Game Boy Advance -- the console on which Rhythm Tengoku and WarioWare run -- all assets must be stored on the 'GamePak'; a small cartridge that slots into the console itself. Once the game has booted up, any assets stored on the cart are accessible via mapped memory. This means that assets are not loaded in at will as games on other platforms need to do. Video games developed for a Windows computer, for example, may need to load data from any number of files into the virtual memory of the process in order to access them. This process requires significantly more effort, although there are many approaches with their own costs and benefits.
 
-
-[^4]: Both of these formats are part of the wider Netpbm family of file formats.
-
 ### Platform Layer
-I sought to target Windows, macOS, and Linux for this project. I intended to implement the project atop the SDL2 platform layer to help facilitate development across multiple platforms. Once the project was more mature, I would replace the features used from this library with custom code on each platform. This platform layer provides -- among other things -- a way to create a window, open the audio device (via callback or buffer queueing), and handle user input via an event queue. In order to implement my own platform layer, I would need to implement separate methods of handling each of these things on each platform, and I felt that this was lower priority that other aspects of the project, so I left it as a possible goal for later on.
+I sought to target Windows, macOS, and Linux for this project. I intended to implement the project atop the SDL2 platform layer to help facilitate development across multiple platforms. Once the project was more mature, I would replace the features used from this library with custom code on each platform. This platform layer provides -- among other things -- a way to create a window, open an audio device (via callback or buffer queueing), and handle user input via an event queue. In order to implement my own platform layer, I would need to implement separate methods of handling each of these things on each platform, and I felt that this was lower priority that other aspects of the project, so I left it as a possible goal for later on.
 
 \newpage
 
@@ -182,11 +187,11 @@ The third and final mini-game is based on the digestive system, with one player'
 
 ## Technical Overview
 <!-- Discuss the high-level design and structure of the software. -->
-The project has five major sub-systems, and a core that ties them together. These sub-systems are Assets, Audio, Graphics, Memory, and Scenes. Each sub-system resides in a single C source file.
+The project has five major sub-systems, and a core that ties them together. These sub-systems are Assets, Audio, Graphics, Memory, and Scenes. Each sub-system resides in a single C source file, and an additional file -- `main.c` -- ties them together, and defines the program entry point.
 
 There are two major kinds of assets in this project: bitmap graphics, and PCM audio. Graphics are stored using a file format called Portable Arbitrary Map, which contains a brief ASCII text header followed by a block of uncompressed pixel data. Audio is stored in a custom file format designed to match the PAM format used for graphics, following the same principal of plain-text header and uncompressed raw data.
 
-Audio is outputted to the sound hardware via a callback supplied by the platform (initially, the SDL2 library). This callback is run on a separate high-priority thread, meaning it is given more CPU time by the OS scheduler. In this callback, a custom audio mixer creates a single stream of floating-point PCM data and copies it into the output buffer. The mixer holds several separate sounds along with some parameters for how it should be played.
+Audio is outputted to the sound hardware via a callback supplied by the platform (initially, the SDL2 library). This callback is run on a separate high-priority thread, meaning it is given more CPU time by the OS scheduler. In this callback, a custom audio mixer creates a single stream of floating-point PCM data and copies it into the output buffer. The mixer holds several separate sounds along with some parameters for how they should be played.
 
 Graphics, much like sound, is handled by a custom renderer that produces a single final bitmap to be displayed on screen. While there is support for some graphical primitive rendering, the core functionality of the renderer is drawing bitmap graphics to the screen. These bitmap graphics can be any size, supporting transparency. They can also also be animated (composed of several bitmaps), or text, generated from a set of character bitmaps.
 
@@ -196,7 +201,7 @@ Scenes are used to encapsulate different pieces of the game. Each scene contains
 
 ### Assets
 #### Bitmap Graphics Files
-Here is an example header for a Portable Arbitrary Map, for a file with a width and height of 256, in RGBA format, one byte per channel:
+Portable Arbitrary Map is a simple file format consisting of a plain (ASCII) text header and a block of uncompressed pixel data. It was chosen for its simplicity and widespread support in image conversion software. Here is an example file header for an image with a width and height of 256, in RGBA format, with one byte per channel:
 
 ~~~C
 P7
@@ -208,7 +213,7 @@ TUPLTYPE RGB_ALPHA
 ENDHDR
 ~~~
 
-For my project I am able to curate all of the files that will be read by my code, so I chose to only support the exact format that I would be using. With this in mind, I could parse the entire header with this single call to `fscanf`, given that all parameters except width and height are constant:
+While the Portable Arbitrary Map format supports several pixel formats, for my project I am able to curate all of the files that will be read by my code, so I chose to only support the exact format that I would be using -- RGBA, with one byte per channel. With this in mind, I could parse the entire header with this single call to `fscanf`, given that all parameters except width and height are constant:
 
 ~~~C
 fscanf(file,
@@ -222,7 +227,7 @@ fscanf(file,
        &width, &height);
 ~~~
 
-Once the header is parsed and the width and height are known, the pixel data can be read into a buffer as so:
+The `DEPTH` of 4 and the `MAXVAL` of 255 specify that the format is four channels, and that each channel occupies one byte as 255 is the maximum number a byte can hold. Once the header is parsed and the width and height are known, the pixel data can be read into a buffer as so:
 
 ~~~C
 int pixels_read = fread(pixels, sizeof(u32), width * height, file);
@@ -236,12 +241,19 @@ Unfortunately, the pixel format used by .pam files is big-endian, and I am targe
 for (int pixel_index = 0; pixel_index < pixel_count; ++pixel_index)
 {
     u32 p = pixels[pixel_index];
-    pixels[pixel_index] = rgba(get_alpha(p), get_blue(p),
-        get_green(p), get_red(p));
+
+    // Pull out each component separately.
+    u8 red   = (p & 0x000000ff) >>  0;
+    u8 green = (p & 0x0000ff00) >>  8;
+    u8 blue  = (p & 0x00ff0000) >> 16;
+    u8 alpha = (p & 0xff000000) >> 24;
+
+    // Combine the components in the correct order.
+    pixels[pixel_index] = (red << 24) | (green << 16) | (blue << 8) | (alpha);
 }
 ~~~
 
-See the Graphics sub-section of this major section for the definition of `rgba` and `get_red`, etcetera. Finally the image's pixel data and dimensions are returned in an `Image` structure:
+Finally the image's pixel data and dimensions are returned in an `Image` structure:
 
 ~~~C
 typedef struct
@@ -254,7 +266,7 @@ Image;
 ~~~
 
 #### PCM Audio Files
-The format used for audio samples in this project is single-precision IEEE floating-point, making each sample 32 bits long. All audio data has a sample rate of 48KHz. Here is an example file header containing one second (48000 samples) of audio:
+The format used for audio samples in this project is single-precision IEEE floating-point, making each sample 32 bits wide. All audio data has a sample rate of 48KHz. Here is an example file header containing one second (48000 samples) of audio:
 
 ~~~C
 SND
@@ -262,7 +274,7 @@ SAMPLE_COUNT 48000
 ENDHDR
 ~~~
 
-Much the same as above, the header is parsed in a single call to `fscanf`, the raw data read with a call to `fread`, and the byte order must be swapped before returning in a `Sound` structure:
+Much the same as above, the header is parsed in a single call to `fscanf`, and the raw data read with a call to `fread` before returning in a `Sound` structure:
 
 ~~~C
 typedef struct
@@ -273,9 +285,11 @@ typedef struct
 Sound;
 ~~~
 
+As I had defined this format myself, and I knew that my target was little-endian machines, the raw data contained in this file is in little-endian format.
+
 ### Audio
 <!-- Discuss the playback of audio and the mixer. -->
-All sound is in 32-bit floating-point format at a 48KHz sample rate. This uniformity of format allows all audio data to be handled in the same way, without conversions during loading or transformation. Not all platforms support this format for output, so this format can be converted to the relevant format as a final stage before playback. Here is a basic example of how to convert to signed 16-bit integer format:
+All sound is in 32-bit floating-point format at a 48KHz sample rate, the same format used in the mixer. This uniformity of format allows all audio data to be handled in the same way, without conversions during loading or transformation. Not all platforms support this format for output, so this it can be converted to the relevant format as a final stage before playback. Here is a basic example of how to convert to a signed 16-bit integer format:
 
 ~~~C
 for (int sample_index = 0; sample_index < sample_count; ++sample_index)
@@ -284,7 +298,7 @@ for (int sample_index = 0; sample_index < sample_count; ++sample_index)
 }
 ~~~
 
-This works as sound in `f32` format expresses all waveforms in the range -1.0 to +1.0; multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting, as the type of the result of the expression is a floating-point number, and can hold any values that may exceed the desired range without wrapping.
+This works as sound in 32-bit float format expresses all waveforms in the range -1.0 to +1.0. Multiplying by the highest value that can be stored in a signed 16-bit integer (32,767) will produce an array of samples in the range (-32,767 to +32,767), which is correct for the audio format desired. One must be certain that their floating-point samples do not exceed the range -1.0 to +1.0 or the resulting integer values will wrap. Thus it may be sensible to clamp the value, which must be done *before* casting to `u16` but after the multiply, as the expression will be promoted to floating-point (as per the rules laid out in the C standard) and can hold any values that may exceed the desired range without wrapping.
 
 #### Mixing
 Audio is output by a high-frequency callback. This callback requests a number of samples, which is produced at will by the custom audio mixer. This audio mixer has a list of all playing sounds and their current state, and uses this to mix together a single stream of audio for playback. Each individual sound is simply a chunk of audio samples:
@@ -343,7 +357,12 @@ int play_sound(Mixer * mixer, Sound sound,
 }
 ~~~
 
-Sound can also be queued up, so that it is ready to be played by setting a boolean on the relevant channel. This is helpful for critical sounds as it reserves a channel, as it is possible to run out of channels and have an attempt to play a sound fail (although the number of channels is set to be higher than the common case). One can also set the `sample_index` of a channel to a negative number. The mixer will increment this index without producing any sound, and thus allowing a sound to be queued up with sample-accurate timing.
+Sound can also be queued up, so that it is ready to be played by setting a boolean on the relevant channel. This is helpful for critical sounds as it reserves a channel, and it is possible to run out of channels and have an attempt to play a sound fail (although the number of channels is set to be far higher than the common case). One can also set the `sample_index` of a channel to a negative number. The mixer will increment this index without producing any sound until it is non-negative, and thus allows a sound to be queued up with sample-accurate timing.
+
+\pagebreak
+
+#### Synthesis
+I had initially intended to perform live audio synthesis to generate sounds during the game. This was never implemented as it was a feature considered less important, and the development of the project had time constraints. However, the audio mixer does support synthesis, as one can write data directly into an audio channel's buffer and the mixer will output it.
 
 ### Graphics
 <!-- Discuss general graphics info. -->
@@ -372,7 +391,9 @@ u32 get_alpha(u32 colour) { return (colour & 0x000000ff) >>  0; }
 ~~~
 
 #### Displaying Graphics
-The software renderer holds an internal pixel buffer of a fixed resolution. This pixel buffer is where the results of the renderer are written. To display a frame on screen, the internal pixel buffer is sent to the GPU via a streaming texture for display. One can also directly access the window's buffer and copy the pixel data into it, but there is no guarantee of the format of these pixels (although one can detect and convert appropriately), no way to render with vertical sync to avoid screen tearing, and visual artefacts can occur when the window interacts with other programs, such as Valve's Steam Overlay. Thus, the GPU is utilised for the final stage of rendering, and performs up-scaling to the monitor resolution.
+The software renderer holds an internal pixel buffer of a fixed resolution. This pixel buffer is where the results of the renderer are written. To display a frame on screen, the internal pixel buffer is sent to the GPU via a streaming texture for display. One can also directly access the window's buffer and copy the pixel data into it, but there is no guarantee of the format of these pixels (although one can detect and convert appropriately), no way to render with vertical sync to avoid screen tearing, and visual artefacts can occur when the window interacts with other programs, such as Valve's Steam Overlay. Thus, the GPU is utilised for the final stage of rendering, and also performs up-scaling to the full monitor resolution.
+
+\pagebreak
 
 #### Bitmaps
 As all pixels are stored in the same format, the bulk of the work required to display an image on screen is done by directly copying data from the image's pixel buffer to the software renderer's buffer. As all pixel buffers are stored as a single array of packed RGBA values, a simple formula is used to access two-dimensional data from the one-dimensional array:
@@ -416,6 +437,8 @@ for (int sy = y, iy = 0; sy < max_y; ++sy, ++iy)
 
 The key aspect of this method is that one must keep track of both the current pixel on screen to be written to, and the current pixel in the image to be read from. Some checks are done to ensure that neither buffer will be improperly accessed (which is not shown here).
 
+\pagebreak
+
 #### Animation
 <!-- Discuss the rendering of animations. -->
 Animations have a time in milliseconds that states how long each frame of the animation will be displayed on screen. Using this time, and a time-stamp from when the animation started playing, the current frame can be deduced and displayed much the same way as a still bitmap.
@@ -436,7 +459,7 @@ Image frame =
 draw_image(frame, x, y);
 ~~~
 
-This method relies on the bitmap holding the frames of animation to store them vertically; with each succeeding frame below the previous. This differs from frames being stored horizontally, as when vertically stacked the pitch -- being the number of pixels between the start of each row of pixel data -- and width -- being simply the number of pixels to be draw -- are equal.
+This method relies on the bitmap holding the frames of animation to store them vertically; with each succeeding frame below the previous. This differs from frames being stored horizontally as when vertically stacked, the *pitch* -- being the number of pixels between the start of each row of pixel data -- and *width* -- being simply the number of pixels to be draw -- are equal. If they were not the pitch would need to be calculated by multiplying the number of frames by the width of a single frame, so it is simply easier if these values are made equal.
 
 #### Text
 <!-- Discuss the rendering of text. -->
@@ -454,7 +477,7 @@ This system is incredibly simple and straightforward to implement. The downside 
 
 ### Memory
 <!-- Discuss the management of memory. -->
-While custom memory allocators are often considered a must-have for large high-performance video games\[12], many projects settle for standard memory allocation utilities; many don't consider the possibility. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors.
+While custom memory allocators are often considered a must-have for large high-performance video games\[12], many projects settle for standard memory allocation utilities, and don't consider the possibility of a custom solution. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors, otherwise it is not worth the effort.
 
 As with any general-purpose or generic approach, there are trade-offs. A general purpose allocator tries to do its best at the problems of wasting as little memory as possible, allocating and deallocating as fast as possible, and avoiding fragmentation. I propose that it can be very easy to beat a general purpose allocator (such as `malloc`) on all of these fronts, simply by constructing a solution that more directly supports the project that is being made.
 
@@ -469,33 +492,50 @@ Here is my assessment of the memory concerns for my project:
 #### The Solution
 The project employs a pool-based approach. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
 
-This is both easier to use (as `free` never needs to be called) and faster than `malloc` as the implementation is vastly simpler. The trade off is more memory is allocated than absolutely necessary, but in the final iteration of the memory allocator only 32 megabytes are allocated up front, and that limit has never been reached in my testing.
+~~~C
+void * pool_alloc(int pool_index, u64 byte_count)
+{
+    void * result = NULL;
+    byte_count = align_byte_count(byte_count);
+    Memory_Pool * pool = &memory_pools[pool_index];
+    if (pool->bytes_filled + byte_count <= pool->bytes_available)
+    {
+        result = pool->memory + pool->bytes_filled;
+        pool->bytes_filled += byte_count;
+        pool->byte_count_of_last_alloc = byte_count;
+    }
+    return result;
+}
+~~~
+
+This is both easier to use (as `free` never needs to be called) and faster than `malloc` as the implementation is vastly simpler. Fragmentation as also impossible as individual allocations cannot be freed and so no empty holes in the pool can appear. The trade off is more memory is allocated than absolutely necessary, but in the final iteration of the memory allocator only 32 megabytes are allocated up front, and that limit has never been reached in my testing.
 
 ##### The Only Allocation
-There are many options once can choose when allocating memory. There are language-level features, such as the `malloc` family of functions, or `new` in other languages. There are OS API calls, such as `VirtualAlloc` on Windows, or `mmap` on UNIX and other POSIX-compliant systems. Allocations can also be made using stack memory, or static memory. There are trade-offs for each, so I first had to discover what my requirements were to make an educated decision.
+There are many options one can choose when allocating memory. There are language-level features, such as the `malloc` family of functions, or `new` in other languages. There are OS API calls, such as `VirtualAlloc` on Windows, or `mmap` on UNIX and other POSIX-compliant systems. Allocations can also be made using stack memory, or static memory. There are trade-offs for each, so I first had to discover what my requirements were to make an educated decision.
 
 As stated earlier in this section, I calculated that a fixed upper limit of 32 megabytes would satisfy the needs of my project. This ruled out stack memory, as the default stack limit in clang and GCC is 8MB (which I found by calling `getrlimit`)\[2], and in MSVC it is 1MB\[5]. While the limits of stack memory can be specified at link time, this would require different actions to build the program on each platform and tool-chain.
 
-I wanted to avoid the overhead of calling `malloc`, as I did not need its internal management of memory. I also wanted to avoid platform-specific functions if possible, but since this case would likely be a single function call I was happy to make an exception. I initially allocated the memory using `mmap`, and only using a subset of its features so that it would be compatible on Linux and macOS. I then put in a compile-time condition to use `VirtualAlloc` if building on Windows. Since I happened to be using the MinGW tool-kit on Windows, `mmap` was also supported, so both options are available.
+I wanted to avoid the overhead of calling `malloc`, as I did not need its internal management of memory. I also wanted to avoid platform-specific functions if possible, but since this case would likely be a single function call I was happy to make an exception. I initially allocated the memory using `mmap`, and only used a subset of its features so that it would be compatible on Linux and macOS. I then put in a compile-time condition to use `VirtualAlloc` if building on Windows. Since I happened to be using the MinGW tool-kit on Windows, `mmap` was also supported, so both options are available.
 
-After some time, I returned to this question. I had noticed that I had not considered another option: static memory. Considering that I had modest requirements, I looked into what the characteristics of static allocation are. On Windows, static data is limited to 2GB on both 32-bit and 64-bit versions of the OS\[1]. On macOS and Linux, I could not so easily find an answer, but in my own testing the programme would crash at values higher than 2GB on macOS, but did not crash on Linux at any value. These limits are far beyond what I require, and the implementation is simpler that the previous; both in that it does not require even a function call, and that it is identical on all platforms. This is the implementation that remains in the final iteration of the project.
+After some time, I returned to this question. I had noticed that I had not considered another option: static memory. Considering that I had modest requirements, I looked into what the characteristics of static allocation are. On Windows, static data is limited to 2GB on both 32-bit and 64-bit versions of the OS\[1]. On macOS and Linux, I could not so easily find an answer, but in my own testing the program would crash at values higher than 2GB on macOS, but did not crash on Linux at any value. These limits are far beyond what I require, and the implementation is simpler than the previous; both in that it does not require even a function call, and that it is identical on all platforms. This is the implementation that remains in the final iteration of the project.
 
 A compile-time flag allows the use of the previous `mmap` implementation, as it produced better memory debugging information on my macOS machine.
 
 Kind         Limits[^6] Cross-platform Notes
-----------   ---------- -------------- ----------------------------------
-Stack        1MB        Yes            Flexible if supported by platform.
+----------   ---------- -------------- ----------------------------------------
+Stack        1MB        Yes            Flexible size, if supported by platform.
 Static       2GB        Yes            Fixed size only.
 malloc       None[^7]   Yes            Internally manages pages.
-mmap         None       Some           Allows control over page flags.
-VirtualAlloc None       No             Some control over page flags.
+mmap         None       Some           Allows access control, including execut-
+                                       able pages.
+VirtualAlloc None       No             Same as above.
 
 [^6]: Lists the most limiting values across the Windows, macOS, and Linux platforms: those targeted by this project.
 
 [^7]: Note that limits marked as 'None' are still limited by the platform, including hardware and decisions made in the OS.
 
 ##### Pre-faulting Pages
-On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this access is called a page fault. If the program never touches the memory, it is not allocated. This can be demonstrated by watching the program in a system resource monitor (such as Task Manager, Activity Monitor or `top`) and calling an allocator without modifying the memory. This is counter-acted by the `mmap` argument `MAP_POPULATE`\[6], which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
+On most modern operating systems, memory pages are not actually allocated when requested, but when modified; this first access causes a page fault which forces the operating system to map that memory to the process, thus allocating it. If the program never touches the memory, it is not actually allocated. This is counter-acted by the `mmap` argument `MAP_POPULATE`\[6], which pre-faults every allocated page to ensure they are available and there is no overhead when accessing pages for the first time. This argument is unfortunately not cross-platform (it is not available on macOS), so immediately after the initial allocation is made, the game manually accesses the first byte of each page to ensure that all pages are readily available.
 
 ##### Thread Safety
 One aspect not implemented in the final code-base, but researched, was making the allocator thread-safe. Initially, my implementation used a `mutex` to guarantee that allocations could be made from any thread without interference, but after more of the project was implemented, I found that I never allocated memory from a thread other than the main one, and so this feature was removed as it added cost with no benefit.
@@ -504,6 +544,11 @@ One aspect not implemented in the final code-base, but researched, was making th
 Scenes are sets of function pointers that can be swapped out at will. These function pointers are called at specific times, including when the user presses a button, or when a frame of graphics needs to be rendered.
 
 ~~~C
+typedef void (* Frame_Func)(void * state, f32 delta_time);
+typedef void (* Start_Func)(void * state);
+typedef void (* Input_Func)(void * state,
+    int player, bool pressed, u32 time_stamp_ms);
+
 typedef struct
 {
     Start_Func start;
@@ -514,12 +559,30 @@ typedef struct
 Scene;
 ~~~
 
-Each mini-game is implemented in a single scene. There can only be one active scene at a time, and this active scene can be set with a single function call. When a scene begins, it's `start` function will be called. This will allow it to perform any necessary set-up. Once this has completed the next iteration of the main frame loop will call the `frame` function, which will manipulate the pixel buffer, rendering the scene to the screen. Any time a player presses a button, the `input` function will be called, with which player pressed their button, and the time at which they pressed passed in as arguments. All of these functions have access to the scene's `state`, which is a struct defined along with the scene functions and will hold any state that is required to run the scene.
+Each mini-game is implemented in a single scene. When a scene begins, it's `start` function will be called. This will allow it to perform any necessary set-up. Once this has completed the next iteration of the main frame loop will call the `frame` function, which will manipulate the pixel buffer, rendering the scene to the screen. Any time a player presses a button, the `input` function will be called, with the ID of the player that pressed the button, and the time at which they pressed passed. All of these functions have access to the scene's `state`, which is a structure defined along with the scene functions and will hold any state that is required to run the scene. Only one scene is active at a time, and the currently active scene can be changed using the function `set_scene`.
+
+~~~C
+bool set_scene(Scene scene)
+{
+    // Clear scene and frame memory pools.
+    flush_pool(SCENE_POOL);
+    flush_pool(FRAME_POOL);
+    // Set function pointers.
+    if (scene.start && scene.frame && scene.input && scene.state)
+    {
+        current_scene = scene;
+        // Call the start function for the new scene.
+        current_scene.start(current_scene.state);
+        return true;
+    }
+    return false;
+}
+~~~
 
 Within the scene functions, the game-play of the game is implemented. Audio can be played using the mixer functions, and graphics displayed using the renderer. Each scene has its own goals, and so calculates and keeps track of how well the players are doing itself. Once the players have achieved the goal of the scene, the `set_scene` function will be called from within the scene code and the next frame iteration will begin whichever scene was passed into that call.
 
 ### Building the Binary
-For this project, I compile the entire source as a single translation unit. This is sometimes called a 'Unity Build'; achieved by using the `#include` preprocessor directive to combine all source files into a single file and compiling it. It builds faster than more traditional methods which wherein each file becomes a separate translation unit, and can allow the compiler to produce a better optimised binary. This method also makes header files unnecessary, as nothing needs to be forward declared when the entire code base coexists in a translation unit. The trade-off for this is that all root-level symbols once declared are global, so one must guard their naming of functions and types. In practice, this is very achievable and the simplicity of not having to forward declare anything is very convenient.
+For this project, I compile the entire source as a single translation unit. This is sometimes called a 'Unity Build'; achieved by using the `#include` preprocessor directive to combine all source files into a single file and compiling it. It builds faster than more traditional methods which wherein each file becomes a separate translation unit, and can allow the compiler to produce a better optimised binary. This method also makes header files unnecessary, as nothing needs to be forward declared when the entire code base coexists in a translation unit. The trade-off for this is that all root-level symbols once declared are global, so one must guard their naming of functions and types. In practice, this is very achievable -- especially for such a small project -- and the simplicity of not having to forward declare anything is very convenient.
 
 \newpage
 
@@ -527,7 +590,7 @@ For this project, I compile the entire source as a single translation unit. This
 <!-- Discuss the knowledge gathered about how games are tested. -->
 In order to effectively iterate on the project, testing with users was a must. I gathered some information from testing with users here, and describes how the project (mostly the example game) was influenced by the feedback.
 
-The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people who stated that they play lots of games, and people who don't. Many participants were studying in fields surrounding computing, including game design and development. They were selected by availability (whoever was around during several unrelated public events), and each played the example game for up to five minutes.
+The mini-games were tested voluntarily with people at the Goldsmiths, University of London. Participants were a mix of people, some who stated that they play lots of games, and some who don't. Many participants were studying in fields surrounding computing, including game design and development. They were selected by availability (whoever was around during several unrelated public events), and each played the example game for up to five minutes.
 
 Below is an overview of the information gathered from participants who took part in the testing of this project:
 
@@ -547,7 +610,7 @@ No. Input is Responsive Favourite Mini-Game Understood How to Play[^8]
 
 [^8]: Whether the person needed to ask me how to play the game, or if they understood intuitively.
 
-Both participants 6 and 11 stated that they felt the input was not responsive. Both of these people also identified as being musically trained or having experience with performing music. Participants 1, 4 and 9 -- who each asked for assistance to understand how to play -- stated that they were not focussed on the sounds the game was making; these participants played a version of the game wherein the assisting UI is always on screen. Some of the reasons given for favouring a particular mini-game were: "The animation is good."; "I think it is funny."; "I like that sound" (in reference to the 'shaker' sound used in the lungs mini-game).
+Both participants 6 and 11 stated that they felt the input was not responsive. Both of these people also identified as being musically trained or having experience with performing music, so were likely used to the responsiveness of a musical instrument and found it hard to use the keyboard buttons as a substitute. Participants 1, 4 and 9 -- who each asked for assistance to understand how to play -- stated that they were not focussed on the sounds the game was making; these participants played a version of the game wherein the assisting UI is always on screen, which informed my decision to partially remove it. Some of the reasons given for favouring a particular mini-game were: "The animation is good."; "I think it is funny."; "I like that sound" (in reference to the 'shaker' sound used in the lungs mini-game).
 
 ## Confusion When Understanding the Goals
 While one of my desires when designing the example game was to force players to figure out what they need to do, I found that many players with whom I tested the game got confused. In order to improve the experience of these players I added an overlay which appears if the players have spent a long time on a mini-game, but have not made any progress. This overlay attempts to give hints to the players by showing buttons on screen with arrows demonstrating when to press, and a scale which shows their accuracy.
@@ -558,13 +621,13 @@ The heart mini-game is the first interaction with the game that players will hav
 ### The Timing Bar
 This mini-game contains a bar that indicates how accurate the players are tapping on the beat, on a meter of slow to fast with the correct timing in the centre. One piece of feedback that I received was that this bar looks like a 'charge-up' bar used in other video games, causing an interpretation that they should press their button when the dial on the bar is in the green area. They interpreted the bar to be giving instruction, instead of simply displaying state.
 
-Mid-session, I turned off the entire interface, and the player quickly realised that they needed to be focussed on the sound and not the bar. I learned that while I constructed the interface to help players learn how to play, it could increase confusion about what the focus was, and what they were expected to do. The final version of this mini-game displays only the heart beating with the metronome sound to highlight that the sound is the focus, and then introduces the interface when the player begins to struggle.
+Mid-session, I turned off the entire interface, and the player quickly realised that they needed to be focussed on the sound and not the bar. I learned that while I constructed the interface to help players learn how to play, it could increase confusion about what the focus was, and what they were expected to do. This was the inspiration for the assisting overlay mentioned earlier in this section. The final version of this mini-game displays only the heart beating with the metronome sound to highlight that the sound is the focus, and then introduces the interface when the player begins to struggle.
 
 ## Testing the Lungs Mini-Game
-This mini-game is meant to contradict the previous (Heart) mini-game by having the players do the opposite action; press together instead of alternating. This is confusing to players, but as with the previous, an overlay appears after some time to help guide them. I felt that players were not deterred by the lack of understanding of this mini-game, and enjoyed persevering and learning how it worked.
+This mini-game is meant to contradict the previous (Heart) mini-game by having the players do the opposite action; press together instead of alternating. This is confusing to players, but as with the previous, an overlay appears after some time to help guide them. I felt that players were not deterred by the lack of understanding of this mini-game, and enjoyed persevering and learning what they needed to do to succeed.
 
 ## Testing the Digestion Mini-Game
-This mini-game focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, some found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap.
+This mini-game focusses on the player's ability to keep time in a less common signature. Those who did play this game found it more difficult, some found it too difficult to complete. I added some sound cues to help players understand the order in which they must tap, which helped players know who's turn it was to tap, but not in keeping time correctly. After testing, I felt that this mini-game may be more difficult than the others, especially for players without a musical background.
 
 \newpage
 
@@ -578,14 +641,16 @@ The rendering system can display various kinds of graphics. It has the capabilit
 I had the target of rendering at a minimum of 60 frames per second. In the final iteration of the project, the game runs at an average of 380FPS on my 2.3GHz laptop with integrated graphics, and runs at an average of 160FPS on the Raspberry Pi Model 3. I consider this good performance, and that my initial goal was met.
 
 #### Ease of Use
-The capabilities that the renderer presents to the example game are designed to support it as best as it can. There are several functions, for example the verbosely named `draw_animated_image_frames_and_wait` function allows the caller to specify a range of frames to draw to the screen, and once all of those frames have been displayed will leave the final frame on screen. This directly supports the desired use of the animation system in several areas of the example game. Considering that this is a very specific requirement of the animation system, it is likely that to achieve the same affect with other technologies additional work would need to be done; it would not be as simple as a single function call.
+The capabilities that the renderer presents to the example game are designed to support it as best as it can. There are several functions, for example the verbosely named `draw_animated_image_frames_and_wait` function allows the caller to specify a range of frames to draw to the screen, and once all of those frames have been displayed will leave the final frame on screen. This is a very specific feature, and it directly supports the desired use of the animation system in several areas of the example game. Considering that this is a specific requirement of the animations used in the game, it is likely that to achieve the same affect with other technologies additional work would need to be done -- it would not be as simple as a single function call.
 
-Rendering text is done in a single function call, which takes in several parameters which affect the presentation of the text; font, colour and position. While passing these as parameters makes usage simple, many calls to the function have the same colour and font arguments. I could have simplified this system, having a way to set font parameters which persist between calls; though this has its own trade-offs. One key aspect of the font rendering that was very flexible and useful, especially when debugging, is the use of a 'format string'. The C standard library function `printf` allows the caller to print the values of variables with the use of a format string, and this same functionality is supported in the renderer function `draw_text`.
+Rendering text is done in a single function call, which takes in several parameters which affect the presentation of the text; font, colour and position. While passing these as parameters makes usage simple, many calls to the function have the same colour and font arguments. I could have simplified this system, having a way to set font parameters which persist between calls; though this has its own trade-offs.
 
-I consider the resulting interface to the graphics renderer to be relatively simple and easy to use for the development of the example game. As the project was not intended to become a general purpose game engine, it has fulfilled its role as intended.
+One key aspect of the font rendering that was very flexible and useful, especially when debugging, is the use of a 'format string'. The C standard library function `printf` allows the caller to print the values of variables with the use of a format string, and this same functionality is supported in the renderer function `draw_text`.
+
+I consider the resulting interface to the graphics renderer to be relatively simple and easy to use for the development of the specific example game. As the project was not intended to become a general purpose game engine, it has fulfilled its role as intended.
 
 #### Ease of Implementation
-The graphical rendering system has many features that support the example game. Despite providing a range of functionality, the system itself is quite simple. This can be described more concretely by the following facts: the file `graphics.c`, which contains the entire renderer implementation, is 268 lines long (including white space and comments.). While the number of lines of any piece of code does not accurately describe its complexity, it can give an idea of an upper ceiling of complexity. Also, the file defines 15 functions, and three data structures, which I would consider a small number of each.
+The graphical rendering system has many features that support the example game. Despite providing a range of functionality, the system itself is quite simple. This can be described more concretely by the following facts: the file `graphics.c`, which contains the entire renderer implementation, is 268 lines long (including white space and comments.) which I consider to be quite short. While the number of lines of any piece of code does not accurately describe its complexity, it can give an idea of an upper ceiling of complexity. Also, the file defines 15 functions, and three data structures, which I would also consider a small number of each.
 
 ## Mixing and Playing Audio
 The audio mixer can be used to play several pieces of audio at the same time. It has capabilities for managing the loudness of the audio, the stereo balance, and looping.
@@ -638,8 +703,10 @@ While number of instructions is not a highly accurate measurement of performance
 #### Ease of Use
 The function `pool_alloc` is the main way in which the allocator is used. As this function allows the caller to specify which memory pool to draw the allocation from, any function which internally allocates memory via `pool_alloc` can pass this responsibility to its caller. This system allows functions such as `read_image_file` to load data from a file on disk into a memory pool of the caller's choosing. This selection of pools is the alternative to calling `free` on memory when a caller of `malloc` is done with it, as pools are self-managing. If one forgets to call `free` when necessary the program will *leak* memory. In this allocation system, memory leaks are not possible.
 
+\pagebreak
+
 #### Ease of Implementation
-While there may not be a large amount of code in the allocation system, it was written taking into account much research. There are many factors, such as byte-boundary alignment, handling the initial allocation (discusses in section 4.2.4, under the subheading [The Only Allocation]), and ensuring the pools are of adequate capacity. The final allocator is simple and features many utilities that allow affective use of memory. One notably missing feature is 'reallocation', wherein memory is copied to a location with a larger capacity. This feature could have been used when loading in files from disk for example, but as the file formats were chosen to state their size in their header this was unnecessary. The basic implementation of the allocator was done in a matter of hours, but small refinements were made throughout the project as more information on the topic was learned.
+While there may not be a large amount of code in the allocation system, it was written taking into account much research. There are many factors, such as byte-boundary alignment, handling the initial allocation (discussed in section 4.2.4, under the subheading [The Only Allocation]), and ensuring the pools are of adequate capacity. The final allocator is simple and features many utilities that allow affective use of memory. One notably missing feature is 'reallocation', wherein memory is copied to a location with a larger capacity. This feature could have been used when loading in files from disk for example, but as the file formats were chosen to state their size in their header this was unnecessary. The basic implementation of the allocator was done in a matter of hours, but many small refinements were made throughout the project as more information on the topic was learned.
 
 ## Loading Assets
 Assets are files loaded from disk. All asset loading occurs immediately on launching the game. Custom loaders are used to read in and interpret the data in these asset files.
@@ -648,7 +715,7 @@ Assets are files loaded from disk. All asset loading occurs immediately on launc
 My only concern for performance was that all asset files could be loaded at launch without a perceivable delay. This was achieved, although it is likely that the performance of this action was bound by the time taken to load data from disk to memory, and the code that I had written to perform asset loading had minimal impact on the performance.
 
 #### Ease of Use
-As mentioned in earlier (Managing Memory), all calls to functions that perform asset loading take in a parameter to select a memory pool to use. This, and the name of the desired file, are all that is needed to load an asset. There is another function, `load_assets`, which handles the loading of the specific assets that the example game requires. This function takes in a path to the folder which contains the assets. This extra functionality makes moving the binary or assets around much simpler, as one can simply insert the correct path into this function call.
+As mentioned earlier in section 6.3 ([Managing Memory]), all calls to functions that perform asset loading take in a parameter to select a memory pool to use. This, and the name of the desired file, are all that is needed to load an asset. There is another function, `load_assets`, which handles the loading of the specific assets that the example game requires. This function takes in a path to the folder which contains the assets. This extra functionality makes moving the binary or assets around in the file system much simpler, as one can simply insert the correct path into this function call.
 
 #### Ease of Implementation
 The asset formats are simple in that they do not use compression and have simple plain text headers. These aspects of the formats used make them easy to load, and the functions that perform this are not complex. Despite this, there were some details which needed to be handled correctly, including swapping the order of each pixel's channels in the `.pam` image format as they were stored in a different arrangement to what was required by the graphical renderer.
@@ -666,10 +733,12 @@ To examine the process of developing this project, I begin by looking at the dec
 
 Secondly, I would like to evaluate my use of C standard library features, such as avoiding `malloc`. Implementing a specific-purpose memory allocator was a goal I had set, as purpose built memory allocators are used judiciously in video games\[12]. I felt that it was important to better my understanding of this topic. While I did not use `malloc`, there are other standard library features that I did rely on: `snprintf` was used in several places including formatting of strings for display on screen in the `draw_text` function, and for generating debug output. I considered building a replacement of this, as it is an area of great importance, but considering the scope of the project and that string formatting is less of a priority (though certainly used often) in video games, I left it off the table.
 
-There is another major component of the project that I did not write: the platform layer. In the final iteration of the project, the window management, event queueing, graphical output and audio output are all handled by the SDL2 library. While this library is not used extensively -- there are many of its features that I avoided, including a complete 2D renderer -- the final executable is dependent on it. I initially intended to write platform layers for Windows, macOS and Linux after using SDL2 as a crutch to get the project going, but as it progressed I found that there were aspects of the project that I considered more important. I did design the inputs and outputs of the engine to be relatively simple to re-target: the renderer produces a final bitmap in a common format each frame, the audio mixer produces a buffer of any size on request, and user input can be sent in by a simple function call. Platform layers are also often considered boilerplate for video games\[14], as most video games want the same things from each OS's API. Considering this, I felt it acceptable to not delve into the development of a platform layer in this project.
+There is another major component of the project that I did not write: the platform layer. In the final iteration of the project, the window management, event queueing, graphical output and audio output are all handled by the SDL2 library. While this library is not used extensively -- there are many of its features that I avoided, including a complete 2D renderer -- the final executable is dependent on it. I initially intended to write platform layers for Windows, macOS and Linux after using SDL2 as a crutch to get the project going, but as it progressed I found that there were aspects of the project that I considered more important. I did design the inputs and outputs of the engine to be relatively simple to re-target, leaving the door open for future development: the renderer outputs a final bitmap in a common format, the audio mixer produces a buffer of any size on request, and user input can be sent in by a simple function call. Platform layers are also often considered boilerplate for video games\[14], as most video games want the same things from each OS's API. Considering this, I felt it acceptable to not delve into the development of a platform layer in this project.
+
+\pagebreak
 
 ## The Engine and The Game
-I began this document discussing the use of game engines in video game development, expressing that I considered their use subtly harmful to the medium -- a topic worthy of debate. While this project serves as a good example of technical solutions tailored to support the design of a video game, it does not demonstrate how custom built technical solutions can empower the design of a game. The example game makes use of every feature of the underlying engine, but does not innovate in the area of game design. While it may be a reasonable demonstration of the components of the engine, a more satisfying conclusion would be to be able to demonstrate custom technology being a source of design innovation.
+I began this document discussing the use of game engines in video game development, expressing that I considered their use subtly harmful to the medium -- a topic worthy of debate. I believe this project serves as a good example of technical solutions tailored to support the design of a specific video game. The example game makes use of every feature of the underlying engine, and this engine does not provide functionality that is not used by the game. As a result, the compiled binary does not contain anything unnecessary. The example game is, however, not especially complex, and it would be an interesting endeavour to construct an engine such as this for a more technically demanding game -- this is something to be done with a longer development time.
 
 ## Final Thoughts
 To conclude this document, I will reflect on my initial goals for the project.
@@ -678,9 +747,9 @@ To conclude this document, I will reflect on my initial goals for the project.
 
 **To tailor every aspect of the code to the design of the game.** This point is my personal rally against the widespread practices of building generic code. In the final iteration of the project, I feel that there are few aspects of the code base that do not serve their purpose simply and succinctly, and so am pleased with the results.
 
-**To produce a good quality piece of software.** This goal stated some concrete objectives. Firstly, hitting a frame-rate target of 60FPS: this was done successfully. Secondly, playing audio without hitches or dropped samples: also successful. Finally, to respond to input within 10ms; this objective was is harder to test. Since input is handled within the frame in which it was detected, I can be sure that my own code responds to this detection within this time -- taking my laptop hardware as an example, hitting an average frame-rate of 380FPS means an average frame time of 2.6ms, which is well below 10ms. Having a numerical target was simply a way of striving for responsive input, but I am not certain that I have achieved this. I have a suspicion that the latency, while low, is not constant, and this has an affect on the player's ability to use the inputs in rhythmic ways.
+**To produce a good quality piece of software.** This goal stated some concrete objectives. Firstly, hitting a frame-rate target of 60FPS: this was done successfully. Secondly, playing audio without hitches or dropped samples: also successful. Finally, to respond to input within 10ms: this objective was is harder to test. Since input is handled within the frame in which it was detected, I can be sure that my own code responds to this detection within this time. Taking my laptop hardware as an example, hitting an average frame-rate of 380FPS means an average frame duration time of 2.6ms, which is well below 10ms. It is possible that there is some amount of delay incurred by the operating system's handling of the input, or the hardware itself, and so the time between depression of a button and output from the game may be longer than 10ms.
 
-**To learn about many areas of game development, and document them.** This is the overarching goal for the project. Being an undergraduate dissertation, I feel that learning is the true outcome to strive for. There are many techniques that I studied intensively in order to produce this project, including memory allocation, 2D rendering, file management, game-play programming, input handling, and more. When I look over the code base, I can see the ways in which I have improved as a games programmer. I have a strong understanding of the processes going on in the code. To understand how video games work; this was my true goal when starting this degree.
+**To learn about many areas of game development, and document them.** This is the overarching goal for the project. Being an undergraduate dissertation, I feel that learning is the true outcome to strive for. There are many techniques that I studied intensively in order to produce this project, including memory allocation, 2D rendering, file management, game-play programming, input handling, and more. When I look over the code base, I can see the ways in which I have improved as a games programmer, and I have a strong understanding of the processes going on in the code. To understand how video games work; this was my true goal when starting this degree.
 
 \newpage
 
