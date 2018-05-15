@@ -314,6 +314,8 @@ Sound;
 
 Mixer channels are used to manage the playback of sounds:
 
+\pagebreak
+
 ~~~C
 typedef struct
 {
@@ -331,7 +333,6 @@ Mixer_Channel;
 When one wants to play a sound, they must stop the audio callback and insert their sound into a channel. There is a fixed number of sound channels, so the first unused channel is found and used. Some parameters must also be set, such as how loud the sound should be, or whether it should loop.
 
 ~~~C
-// Immediately start playing a sound.
 // Returns the index of the channel that holds the sound,
 // or -1 if no channel was available.
 int play_sound(Mixer * mixer, Sound sound,
@@ -358,8 +359,6 @@ int play_sound(Mixer * mixer, Sound sound,
 ~~~
 
 Sound can also be queued up, so that it is ready to be played by setting a boolean on the relevant channel. This is helpful for critical sounds as it reserves a channel, and it is possible to run out of channels and have an attempt to play a sound fail (although the number of channels is set to be far higher than the common case). One can also set the `sample_index` of a channel to a negative number. The mixer will increment this index without producing any sound until it is non-negative, and thus allows a sound to be queued up with sample-accurate timing.
-
-\pagebreak
 
 #### Synthesis
 I had initially intended to perform live audio synthesis to generate sounds during the game. This was never implemented as it was a feature considered less important, and the development of the project had time constraints. However, the audio mixer does support synthesis, as one can write data directly into an audio channel's buffer and the mixer will output it.
@@ -491,6 +490,8 @@ Here is my assessment of the memory concerns for my project:
 
 #### The Solution
 The project employs a pool-based approach. It is simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
+
+\pagebreak
 
 ~~~C
 void * pool_alloc(int pool_index, u64 byte_count)
@@ -664,6 +665,8 @@ Most of the use of the audio mixer is via the function `play_sound`, which, give
 #### Ease of Implementation
 The audio mixer has very few components; it keeps a list of active sounds, each of which most importantly having an array of samples which are mixed together into a given buffer when `mix_audio` is called. Given that there is a very simple entry point and exit point for the data, with minimal state kept in between, I consider this system to be simple and the implementation did not occupy much of the development time of the project: approximately one week.
 
+\pagebreak
+
 ## Managing Memory
 The custom memory allocator is used in many aspects of the project. For example, it is called to allocate space for every asset that is loaded, and for temporary memory when dealing with file paths.
 
@@ -721,7 +724,7 @@ As mentioned earlier in section 6.3 ([Managing Memory]), all calls to functions 
 The asset formats are simple in that they do not use compression and have simple plain text headers. These aspects of the formats used make them easy to load, and the functions that perform this are not complex. Despite this, there were some details which needed to be handled correctly, including swapping the order of each pixel's channels in the `.pam` image format as they were stored in a different arrangement to what was required by the graphical renderer.
 
 ## Implementation of the Example Game
-All of these technical systems were designed to support a specific game. This game consists of several mini-games featuring graphics and sound, and uses two buttons -- one for each player. These requirements were met directly by the technical systems: functions for rendering and playing audio were designed to be as simple as possible for use in the game. If the game wanted to perform an action that was not supported by the technical system, it was implemented. Thus, the resulting game and engine fit together. I argue that the resulting piece of software is relatively simple, unlike any game that is implemented in Unity, for example, as Unity is a complex piece of software, and if the game that is being developed with it does not require that complexity, the resulting piece of software as a whole is overly complex and will likely not perform (in CPU, memory, and storage usage) as well as it could.
+All of these technical systems were designed to support a specific game. This game consists of several mini-games featuring graphics and sound, and uses two buttons -- one for each player. These requirements were met directly by the technical systems: functions for rendering and playing audio were designed to be as simple as possible for use in the game. If the game wanted to perform an action that was not supported by the technical system, it was implemented. Thus, the resulting game and engine fit together. I argue that the resulting piece of software is relatively simple, unlike any game that is implemented in Unity. As Unity is a complex piece of software, and if the game that is being developed with it does not require that complexity, the resulting piece of software as a whole is overly complex and will likely not perform (in CPU, memory, and storage usage) as well as it could.
 
 \newpage
 
@@ -792,6 +795,8 @@ https://unity.com/madewith\
 [8]\
 *Unreal Showcase*\
 https://www.unrealengine.com/en-US/blog/category/showcase\
+
+\pagebreak
 
 [9]\
 *Games Made with Love2D*\
