@@ -90,7 +90,7 @@ To summarise: all the code I am writing is sitting atop enough *cruft* already; 
 
 The game that I have taken most inspiration from, Rhythm Tengoku, appears to utilise detailed bitmap graphics, with frame-based and motion based animation. That is to say, it animates things on screen both by displaying a series of discrete images in succession, and by drawing the same image in changing locations on the screen. It also performs rotation and scaling of bitmaps to further animate them.
 
-As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM[^2] sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, the game has sections with vocals and recorded instruments. While the quality is does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
+As Rhythm Tengoku runs on the Nintendo Game Boy Advance, it has limited audio output capabilities. The system has two 8-bit PCM[^2] sound channels, three programmable square wave channels, and one noise channel\[4]. Despite this, the game has sections with vocals and recorded instruments. While the quality does not compare favourably with modern standards, it performs well enough to add much to the experience of playing the game.
 
 [^2]: Pulse Code Modulation -- A method of representing an analogue signal with digital samples.
 
@@ -111,7 +111,7 @@ Although this project is focussed on the technical foundation, I still felt the 
 Further research in the area of limited input games brings up the burgeoning field of 'one button' games\[11]. These kinds of games are often taught when introducing students to game design as they force designers to consider player interaction closely. Neither Rhythm Tengoku or WarioWare are strictly *one* button games, so I felt that this was another way in which my project could stand on its own.
 
 ## Planning the Implementation
-From the initial conception of the idea for this project, I wanted to implement as much of the it as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
+From the initial conception of the idea for this project, I wanted to implement as much of it as possible, not relying on libraries or other tools. I wanted to do this for educational purposes, but also in an attempt to build a high-quality piece of software. Considering the technical aspects of the games that I took as inspiration, I decided on a set of features I aimed to implement in my engine. These included bitmap rendering, audio mixing and playback, low-latency input, memory management and asset management.
 
 \newpage
 
@@ -479,7 +479,7 @@ This system is incredibly simple and straightforward to implement. The downside 
 <!-- Discuss the management of memory. -->
 While custom memory allocators are often considered a must-have for large high-performance video games\[12], many projects settle for standard memory allocation utilities, and don't consider the possibility of a custom solution. When building a replacement, one must think of how they can improve upon a general purpose allocator's offerings; in performance, in ease of use, or other factors, otherwise it is not worth the effort.
 
-As with any general-purpose or generic approach, there are trade-offs. A general purpose allocator tries to do its best at the problems of wasting as little memory as possible, allocating and deallocating as fast as possible, and avoiding fragmentation. I propose that it can be very easy to beat a general purpose allocator (such as `malloc`) on all of these fronts, simply by constructing a solution that more directly supports the project that is being made.
+As with any general-purpose or generic approach, there are trade-offs. A general purpose allocator tries to do its best at the problems of wasting as little memory as possible, allocating and deallocating as fast as possible, and avoiding fragmentation. I propose that it can be easy to beat a general purpose allocator (such as `malloc`) on all of these fronts, simply by constructing a solution that more directly supports the project that is being made.
 
 Here is my assessment of the memory concerns for my project:
 
@@ -490,7 +490,7 @@ Here is my assessment of the memory concerns for my project:
 **Some things only last one frame.** Some objects are created for rendering purposes, such as dynamic strings, and will simply be discarded after use. One could use stack memory for some of these things, but it would be more reliable to have some way to ensure their allocation.
 
 #### The Solution
-The project employs a pool-based approach. It is very simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
+The project employs a pool-based approach. It is simple, with the main allocation function consisting of only 12 lines of code. This allocator follows a principal often employed in high-performance video games: allocate up front, and sub-allocate after that point. There are three pools: the persistent pool, the scene pool, and the frame pool. The persistent pool performs allocations that are never deallocated. The scene pool is emptied when the scene changes, so the next scene has the entire empty pool. The frame pool is emptied every frame after rendering occurs.
 
 ~~~C
 void * pool_alloc(int pool_index, u64 byte_count)
@@ -582,7 +582,7 @@ bool set_scene(Scene scene)
 Within the scene functions, the game-play of the game is implemented. Audio can be played using the mixer functions, and graphics displayed using the renderer. Each scene has its own goals, and so calculates and keeps track of how well the players are doing itself. Once the players have achieved the goal of the scene, the `set_scene` function will be called from within the scene code and the next frame iteration will begin whichever scene was passed into that call.
 
 ### Building the Binary
-For this project, I compile the entire source as a single translation unit. This is sometimes called a 'Unity Build'; achieved by using the `#include` preprocessor directive to combine all source files into a single file and compiling it. It builds faster than more traditional methods which wherein each file becomes a separate translation unit, and can allow the compiler to produce a better optimised binary. This method also makes header files unnecessary, as nothing needs to be forward declared when the entire code base coexists in a translation unit. The trade-off for this is that all root-level symbols once declared are global, so one must guard their naming of functions and types. In practice, this is very achievable -- especially for such a small project -- and the simplicity of not having to forward declare anything is very convenient.
+For this project, I compile the entire source as a single translation unit. This is sometimes called a 'Unity Build'; achieved by using the `#include` preprocessor directive to combine all source files into a single file and compiling it. It builds faster than more traditional methods which wherein each file becomes a separate translation unit, and can allow the compiler to produce a better optimised binary. This method also makes header files unnecessary, as nothing needs to be forward declared when the entire code base coexists in a translation unit. The trade-off for this is that all root-level symbols once declared are global, so one must guard their naming of functions and types. In practice, this is very achievable -- especially for such a small project -- and the simplicity of not having to forward declare anything is convenient.
 
 \newpage
 
@@ -659,7 +659,7 @@ The audio mixer can be used to play several pieces of audio at the same time. It
 My initial goal for the performance of the audio mixer was simply to not drop any samples. This was achieved with minimal effort: the first iteration of the mixer successfully performed this. I had intentions to build a system to perform *live* audio synthesis which would have been more taxing on the hardware and may have required some more work to achieve good performance, but this was never implemented.
 
 #### Ease of Use
-Most of the use of the audio mixer is via the function `play_sound`, which, given some parameters including gain for each channel, and whether or not to loop the sound, will begin playback of a sound. This is very simple and easy to use. The mixer does not provide extensive functionality; most notably the absence of volume control over time. This was not implemented as it was not required for the example game.
+Most of the use of the audio mixer is via the function `play_sound`, which, given some parameters including gain for each channel, and whether or not to loop the sound, will begin playback of a sound. This is simple and easy to use. The mixer does not provide extensive functionality; most notably the absence of volume control over time. This was not implemented as it was not required for the example game.
 
 #### Ease of Implementation
 The audio mixer has very few components; it keeps a list of active sounds, each of which most importantly having an array of samples which are mixed together into a given buffer when `mix_audio` is called. Given that there is a very simple entry point and exit point for the data, with minimal state kept in between, I consider this system to be simple and the implementation did not occupy much of the development time of the project: approximately one week.
