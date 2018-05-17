@@ -154,7 +154,7 @@ int main(int argument_count, char ** arguments)
     // Start the game.
     //
 
-    blank_cut(2.0, 0, &heart_scene, NULL);
+    blank_cut(3.0, 0, &heart_scene, NULL);
     play_sound(&mixer, assets.clock_sound, 1.0, 1.0, true);
 
     while (true)
@@ -212,6 +212,7 @@ int main(int argument_count, char ** arguments)
                             {
                                 heart_state.draw_interface = !heart_state.draw_interface;
                                 lungs_state.draw_interface = !lungs_state.draw_interface;
+                                digestion_state.draw_interface = !digestion_state.draw_interface;
                             }
                         }
                         else if (sc == SDL_SCANCODE_O)

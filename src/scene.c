@@ -31,6 +31,9 @@ Scene;
 // TODO: Where should the scenes live?
 Scene current_scene;
 extern Scene heart_scene;
+extern Scene lungs_scene;
+extern Scene digestion_scene;
+
 
 // Change the current scene.
 // Will call the start function for that scene.
@@ -209,6 +212,8 @@ typedef struct
     int delta_ms;
     f32 target_beats_per_minute;
     f32 accuracy;
+    f32 accuracy_timer;
+    f32 target_accuracy_time;
     bool expanding;
     bool draw_interface;
 }
@@ -223,6 +228,8 @@ void heart_start(void * state)
     s->heart = assets.heart_animation;
     s->heart.frame_duration_ms = 30;
     s->target_beats_per_minute = 60.0;
+    s->accuracy = -50.0;
+    s->target_accuracy_time = 10.0;
     if (!sound_is_playing(&mixer, assets.brown_sound))
     {
         play_sound(&mixer, assets.brown_sound, 0.05, 0.05, true);
@@ -233,7 +240,7 @@ void heart_frame(void * state, f32 delta_time)
 {
     Heart_State * s = state;
 
-    draw_noise(0.15);
+    draw_noise(s->accuracy_timer * 0.5);
 
     if (s->expanding)
     {
@@ -252,6 +259,10 @@ void heart_frame(void * state, f32 delta_time)
         d = clamp(-range * 10.0, -d, range * 10.0);
         s->accuracy += (d - s->accuracy) * 0.05;
     }
+
+    s->accuracy_timer += delta_time / s->target_accuracy_time;
+    if (fabsf(s->accuracy) > range) s->accuracy_timer = 0.0;
+    s->accuracy -= delta_time;
 
     if (s->draw_interface)
     {
@@ -281,6 +292,12 @@ void heart_input(void * state, int player, bool pressed, u32 time_stamp_ms)
             if (a && b) s->delta_ms = abs(a - b);
             s->expanding = player;
         }
+
+        if (s->accuracy_timer > 1.0)
+        {
+            stop_sound(&mixer, assets.brown_sound);
+            blank_cut(3.0, 0, &lungs_scene, NULL);
+        }
     }
 }
 
@@ -305,6 +322,8 @@ typedef struct
     Animated_Image right_lung;
     f32 target_beats_per_minute;
     f32 accuracy;
+    f32 accuracy_timer;
+    f32 target_accuracy_time;
     int delta_ms[2];
     int time_stamps[2][2];
     int current_stamp[2];
@@ -324,13 +343,19 @@ void lungs_start(void * state)
     s->right_lung = assets.right_lung_animation;
     s->left_lung.frame_duration_ms = 60.0;
     s->right_lung.frame_duration_ms = 60.0;
+    s->target_accuracy_time = 10.0;
+    s->accuracy = -50.0;
+    if (!sound_is_playing(&mixer, assets.brown_sound))
+    {
+        play_sound(&mixer, assets.brown_sound, 0.05, 0.05, true);
+    }
 }
 
 void lungs_frame(void * state, f32 delta_time)
 {
     Lungs_State * s = state;
 
-    draw_noise(0.15);
+    draw_noise(s->accuracy_timer * 0.5);
 
     if (s->player_states[0])
     {
@@ -363,6 +388,10 @@ void lungs_frame(void * state, f32 delta_time)
         s->accuracy += (target_delta - s->accuracy) * 0.05;
     }
 
+    s->accuracy_timer += delta_time / s->target_accuracy_time;
+    if (fabsf(s->accuracy) > range) s->accuracy_timer = 0.0;
+    s->accuracy -= delta_time;
+
     if (s->draw_interface)
     {
         draw_accuracy_interface(s->accuracy, range,
@@ -393,6 +422,12 @@ void lungs_input(void * state, int player, bool pressed, u32 time_stamp_ms)
         s->right_lung.start_time_ms = SDL_GetTicks();
         play_sound(&mixer, assets.shaker_sound, 0.04, 0.4, false);
     }
+
+    if (s->accuracy_timer > 1.0)
+    {
+        stop_sound(&mixer, assets.brown_sound);
+        blank_cut(3.0, 0, &digestion_scene, NULL);
+    }
 }
 
 Scene lungs_scene =
@@ -414,6 +449,14 @@ typedef struct
 {
     Animated_Image digestion;
     int current_beat;
+    f32 accuracy;
+    f32 accuracy_timer;
+    f32 target_accuracy_time;
+    f32 target_beats_per_minute;
+    int last_press_time_ms;
+    bool draw_interface;
+    bool player_states[2];
+
 }
 Digestion_State;
 
@@ -425,12 +468,20 @@ void digestion_start(void * state)
     *s = (Digestion_State){};
     s->digestion = assets.digestion_animation;
     s->digestion.frame_duration_ms = 30;
+    s->target_beats_per_minute = 60;
+    s->accuracy = -50.0;
+    s->target_accuracy_time = 10.0;
+    if (!sound_is_playing(&mixer, assets.brown_sound))
+    {
+        play_sound(&mixer, assets.brown_sound, 0.05, 0.05, true);
+    }
 }
 
 void digestion_frame(void * state, f32 delta_time)
 {
     Digestion_State * s = state;
-    draw_noise(0.15);
+    draw_noise(s->accuracy_timer * 0.5);
+
     if (s->current_beat == 5)
     {
         bool waiting = draw_animated_image_frames_and_wait(s->digestion, 4, 6, 117, 40);
@@ -440,13 +491,28 @@ void digestion_frame(void * state, f32 delta_time)
     {
         draw_animated_image_frame(s->digestion, s->current_beat, 117, 40);
     }
+
+    f32 range = 5.0;
+    s->accuracy_timer += delta_time / s->target_accuracy_time;
+    if (fabsf(s->accuracy) > range) s->accuracy_timer = 0.0;
+    s->accuracy -= delta_time;
+
+    if (s->draw_interface)
+    {
+        draw_accuracy_interface(s->accuracy,
+            range, s->target_beats_per_minute,
+            s->current_beat < 4, s->current_beat == 4,
+            s->player_states[0], s->player_states[1]);
+    }
 }
 
 void digestion_input(void * state, int player, bool pressed, u32 time_stamp_ms)
 {
     Digestion_State * s = state;
+    s->player_states[player] = pressed;
     if (pressed)
     {
+        s->accuracy = (time_stamp_ms - s->last_press_time_ms) * 0.001;
         if ((s->current_beat < 4 && player == 0) || (s->current_beat == 4 && player == 1))
         {
             s->current_beat = (s->current_beat + 1) % 6;
@@ -459,6 +525,13 @@ void digestion_input(void * state, int player, bool pressed, u32 time_stamp_ms)
             {
                 play_sound(&mixer, assets.tap_sound, 1.0, 0.3, false);
             }
+        }
+        s->last_press_time_ms = time_stamp_ms;
+
+        if (s->accuracy_timer > 1.0)
+        {
+            stop_sound(&mixer, assets.brown_sound);
+            blank_cut(3.0, 0, &heart_scene, NULL);
         }
     }
 }
